@@ -1,0 +1,95 @@
+name: bocom
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  intl: any
+  cupertino_icons: ^1.0.8
+  local_auth: ^2.2.0
+  sp_util: ^2.0.3
+  event_bus: ^2.0.0
+  flutter_screenutil: ^5.9.3
+  get: ^4.7.2
+  dio: ^5.3.2
+  lpinyin: 2.0.3
+  azlistview: 2.0.0
+  cached_network_image: ^3.2.1
+  permission_handler: any
+  path_provider: ^2.1.5  # 用于获取本地文件路径（可选）
+  flutter_smart_dialog: ^4.9.8+7
+  common_utils: 2.1.0
+  pull_to_refresh_flutter3: ^2.0.1
+  flutter_local_notifications: 19.0.0
+  flutter_inappwebview: 6.1.5
+  visibility_detector: 0.4.0+2
+  pinput: 4.0.0
+  scrollview_observer: ^1.26.2
+#  device_info_plus: ^9.0.0
+#  card_swiper: ^3.0.1
+#  syncfusion_flutter_charts: any
+#  scrollable_positioned_list: any
+#  easy_sticky_header: ^1.1.1
+#  lpinyin: 2.0.3
+#  azlistview: 2.0.0
+#  pretty_qr_code: ^3.5.0
+#  qr_code_scanner_plus: ^2.0.10+1
+#  flutter_neat_and_clean_calendar: ^0.4.16
+#  scroll_screenshot: any
+#  flutter_inappwebview: 6.1.5
+#  open_file: ^3.3.2
+  wb_base_widget:
+    path: modules/wb_base_widget
+#  flutter_picker_plus:
+#    path: modules/flutter_picker_plus
+#  f_verification_box:
+#    path: modules/f_verification_box
+#  gallery_saver_plus:
+#    path: modules/gallery_saver_plus
+  popup_menu: any
+  camera: 0.11.2+1
+  lunar: ^1.7.8
+
+
+dependency_overrides:
+  camera_android_camerax: 0.6.19+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+  camera_android_camerax: 0.6.19+1
+
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - assets/
+    - assets/images/
+    - assets/dist/
+    - assets/dist/static/
+    - assets/dist/static/img/
+    - assets/dist/static/js/
+    - assets/dist/static/css/
+    - assets/dist/static/js/
+
+
+
+  fonts:
+    - family: boc
+      fonts:
+        - asset: assets/ttf/boc.ttf
