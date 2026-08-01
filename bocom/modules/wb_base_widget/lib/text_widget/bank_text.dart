@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class BaseText extends StatefulWidget {
-  const BaseText( {
+  const BaseText({
     super.key,
     required this.text,
     this.color = Colors.black,
@@ -22,11 +22,17 @@ class BaseText extends StatefulWidget {
     this.decoration,
     this.scaleMaxLength,
     this.fontSize = 14,
+    this.fontWeight,
     this.fontFamily,
+    this.height,
+    this.isAmount = false,
   });
 
   /// 文本
   final String text;
+
+  /// 是否为金额文本。金额文本使用 wechatNum 字体。
+  final bool isAmount;
 
   /// 文本颜色
   final Color color;
@@ -56,15 +62,20 @@ class BaseText extends StatefulWidget {
   /// 如果不为 null ，则文字超过数量就缩放
   final int? scaleMaxLength;
 
+  /// 字重
+  final FontWeight? fontWeight;
+
+  /// 字体
   final String? fontFamily;
+
+  /// 行高（倍数，作用于 TextStyle.height）
+  final double? height;
 
   @override
   State<BaseText> createState() => _BaseTextState();
 }
 
 class _BaseTextState extends State<BaseText> {
-
-
   @override
   void initState() {
     super.initState();
@@ -72,44 +83,29 @@ class _BaseTextState extends State<BaseText> {
 
   @override
   Widget build(BuildContext context) {
-    // TextStyle textSt = TextStyle(
-    //     fontFamily: 'cbc',
-    //     fontSize: widget.fontSize.sp,
-    //     fontWeight: FontWeight.normal,
-    //     color: widget.color
-    // );
-    // 创建基础文本样式
-    TextStyle baseStyle = TextStyle(
-      fontFamily: widget.fontFamily??'boc',
+    TextStyle textSt = TextStyle(
       fontSize: widget.fontSize.sp,
-      fontWeight: FontWeight.normal,
+      fontWeight: widget.fontWeight ?? FontWeight.normal,
       color: widget.color,
       decoration: widget.decoration,
+      height: widget.height,
+      fontFamily: widget.fontFamily,
     );
-
-    // 如果传入了自定义样式，则合并样式
-    TextStyle finalStyle;
-    if (widget.style != null) {
-      // 合并样式，优先使用自定义样式中的属性
-      finalStyle = baseStyle.merge(widget.style).copyWith(
-        fontFamily: widget.style?.fontFamily ?? 'cbc',
-        fontSize: widget.style?.fontSize ?? widget.fontSize.sp,
-        fontWeight: widget.style?.fontWeight ?? FontWeight.normal,
-        color: widget.style?.color ?? widget.color,
-      );
-    } else {
-      finalStyle = baseStyle;
-    }
+    final fontFamily =
+        widget.fontFamily ?? (widget.isAmount ? 'wechatNum' : null);
+    final style = fontFamily == null
+        ? widget.style ?? textSt
+        : (widget.style ?? textSt).copyWith(fontFamily: fontFamily);
 
     return Text(
       widget.text,
-      style: finalStyle,
+      style: style,
       textAlign: widget.textAlign,
       strutStyle: widget.strutStyle,
       textDirection: widget.textDirection,
       locale: widget.locale,
       softWrap: widget.softWrap,
-      overflow: widget.overflow??TextOverflow.ellipsis,
+      overflow: widget.overflow ?? TextOverflow.ellipsis,
       textScaler: widget.textScaleFactor,
       maxLines: widget.maxLines,
       semanticsLabel: widget.semanticsLabel,

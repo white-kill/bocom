@@ -25,6 +25,7 @@ class AppBarWidget extends StatefulWidget {
   final Function(bool change)? onNotificationNavChange;
   final bool centerTitle;
   final bool resizeToAvoidBottomInset;
+  final bool keepBodyPositionOnOverscroll;
 
   const AppBarWidget({
     super.key,
@@ -46,6 +47,7 @@ class AppBarWidget extends StatefulWidget {
     this.showBackgroundColor,
     this.centerTitle = true,
     this.resizeToAvoidBottomInset = true,
+    this.keepBodyPositionOnOverscroll = false,
   });
 
   @override
@@ -99,7 +101,9 @@ class _AppBarWidgetState extends State<AppBarWidget> {
         children: [
           Positioned(
             left: 0,
-            top: _scrollDistance < 0 ? min(_scrollDistance, 0) : 0,
+            top: widget.keepBodyPositionOnOverscroll
+                ? 0
+                : (_scrollDistance < 0 ? min(_scrollDistance, 0) : 0),
             bottom: 0,
             right: 0,
             child: Scaffold(

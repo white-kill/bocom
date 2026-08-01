@@ -29,11 +29,12 @@ class IndexLogic extends GetxController {
       return BottomNavigationBarItem(
         icon: Obx(() => Image(
               image: AssetImage(
-                'assets/images/tabbar-${data["index"] + 1}'
-                '${taBarIdx.value == data["index"] ? '-hover' : ''}.png',
+                'assets/images/tabbar_'
+                '${taBarIdx.value == data["index"] ? 'select' : 'normal'}'
+                '${data["index"]}@3x.png',
               ),
-              width: 28.w,
-              height: 28.w,
+              width: 22.w,
+              height: 22.w,
             )),
         label: data["title"],
       );

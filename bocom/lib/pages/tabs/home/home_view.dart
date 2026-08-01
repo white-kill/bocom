@@ -33,6 +33,9 @@ class HomePage extends BaseStateless {
   bool get isChangeNav => true;
 
   @override
+  bool get keepBodyPositionOnOverscroll => true;
+
+  @override
   Color? get background => const Color(0xFFF7F7F7);
 
   @override
@@ -40,6 +43,9 @@ class HomePage extends BaseStateless {
 
   @override
   double? get lefItemWidth => 58.w;
+
+  @override
+  bool get centerTitle => false;
 
   @override
   AppBarController? get appBarController => state.appBarController;
@@ -168,7 +174,7 @@ class _HomeSearchBar extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: () => Get.toNamed(Routes.search),
         child: Container(
-          width: 174.w,
+          width: 194.w,
           height: 34.w,
           padding: EdgeInsets.symmetric(horizontal: 10.w),
           decoration: BoxDecoration(
