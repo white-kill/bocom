@@ -5,7 +5,7 @@ import 'index_logic.dart';
 import 'index_state.dart';
 
 class IndexPage extends StatelessWidget {
-  IndexPage({Key? key}) : super(key: key);
+  IndexPage({super.key});
 
   final IndexLogic logic = Get.put(IndexLogic());
   final IndexState state = Get.find<IndexLogic>().state;

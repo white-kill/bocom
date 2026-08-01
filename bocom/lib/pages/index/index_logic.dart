@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:wb_base_widget/extension/widget_extension.dart';
 
 import '../../../utils/local_notifications.dart';
 import '../../config/app_config.dart';
@@ -29,19 +28,16 @@ class IndexLogic extends GetxController {
     state.item = state.appBarList.map((data) {
       return BottomNavigationBarItem(
         icon: Obx(() => Image(
-              image: '${data["icon"]}${imagePath(data)}'.png3x,
+              image: AssetImage(
+                'assets/images/tabbar-${data["index"] + 1}'
+                '${taBarIdx.value == data["index"] ? '-hover' : ''}.png',
+              ),
               width: 28.w,
               height: 28.w,
             )),
         label: data["title"],
       );
     }).toList();
-  }
-
-  String imagePath(data) {
-    return taBarIdx.value == data["index"]
-        ? '_select${taBarIdx.value}'
-        : '_normal${data["index"]}';
   }
 
   /// navigationBar设置
@@ -66,6 +62,12 @@ class IndexLogic extends GetxController {
   void selectIndex(int index) {
     if (taBarIdx.value == index) return;
     taBarIdx.value = index;
+    update(['updateTabBar']);
+  }
+
+  void setTabBarVisible(bool visible) {
+    if (showTabBar == visible) return;
+    showTabBar = visible;
     update(['updateTabBar']);
   }
 }
