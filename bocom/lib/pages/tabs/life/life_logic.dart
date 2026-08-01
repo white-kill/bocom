@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'life_state.dart';
@@ -6,5 +5,9 @@ import 'life_state.dart';
 class LifeLogic extends GetxController {
   final LifeState state = LifeState();
 
-  var navActionColor = Colors.white.obs;
+  final isNavDark = false.obs;
+
+  void setNavDark(bool value) {
+    isNavDark.value = value;
+  }
 }
