@@ -38,11 +38,11 @@ class IndexState {
 
 
     appBarList = const [
-      {"title":"首页", "icon":"tabbar",'index':0,'selectColor':0xFFCF0000},
-      {"title":"金融", "icon":"tabbar",'index':1,'selectColor':0xFFCF0000},
-      {"title":"生活", "icon":"tabbar",'index':2,'selectColor':0xFFCF0000},
-      {"title":"社区", "icon":"tabbar",'index':3,'selectColor':0xFFCF0000},
-      {"title":"我的", "icon":"tabbar",'index':4,'selectColor':0xFFCF0000},
+      {"title":"首页", "icon":"tabbar",'index':0,'selectColor':0xFF1860F0},
+      {"title":"金融", "icon":"tabbar",'index':1,'selectColor':0xFF1860F0},
+      {"title":"生活", "icon":"tabbar",'index':2,'selectColor':0xFF1860F0},
+      {"title":"社区", "icon":"tabbar",'index':3,'selectColor':0xFF1860F0},
+      {"title":"我的", "icon":"tabbar",'index':4,'selectColor':0xFF1860F0},
     ];
 
 

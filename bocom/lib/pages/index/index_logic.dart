@@ -30,8 +30,8 @@ class IndexLogic extends GetxController {
       return BottomNavigationBarItem(
         icon: Obx(() => Image(
               image: '${data["icon"]}${imagePath(data)}'.png3x,
-              width: 28.w,
-              height: 28.w,
+              width: 22.w,
+              height: 22.w,
             )),
         label: data["title"],
       );

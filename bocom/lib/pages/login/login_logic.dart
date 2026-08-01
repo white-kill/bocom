@@ -85,6 +85,7 @@ class LoginLogic extends GetxController {
       '请先阅读并同意相关协议'.showToast;
       return;
     }
+
     Http.post(Apis.login, data: {
       "username": state.phoneTextController.text.trim(),
       "password": state.psdTextController.text
