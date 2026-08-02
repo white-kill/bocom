@@ -15,6 +15,20 @@ class MinePage extends BaseStateless {
 
   final MineLogic logic = Get.put(MineLogic());
   final MineState state = Get.find<MineLogic>().state;
+  final List<_MineFuncItem> _funcItems = const [
+    _MineFuncItem(title: '个人主页', icon: 'mine_func_1'),
+    _MineFuncItem(title: '待办', icon: 'mine_func_2'),
+    _MineFuncItem(title: '个人信息', icon: 'mine_func_3'),
+    _MineFuncItem(title: '账户管理', icon: 'mine_func_4'),
+    _MineFuncItem(title: '活动中心', icon: 'mine_func_5'),
+    _MineFuncItem(title: '我的足迹', icon: 'mine_func_6'),
+    _MineFuncItem(title: '我的收藏', icon: 'mine_func_7'),
+    _MineFuncItem(title: '财富规划', icon: 'mine_func_8'),
+    _MineFuncItem(title: '代扣管理', icon: 'mine_func_9'),
+    _MineFuncItem(title: '我的支付', icon: 'mine_func_10'),
+    _MineFuncItem(title: '资信证明', icon: 'mine_func_11'),
+    _MineFuncItem(title: '隐私管理', icon: 'mine_func_12'),
+  ];
 
   @override
   bool get isChangeNav => true;
@@ -27,11 +41,11 @@ class MinePage extends BaseStateless {
           ),
           const BaseText(
             text: '退出',
-            fontSize: 16,
             style: TextStyle(
               fontWeight: FontWeight.w400,
+              fontSize: 16,
+              color: Color(0xFF181818),
             ),
-            color: Color(0xFF181818),
           ).withOnTap(onTap: () {
             //退出登录
           })
@@ -80,6 +94,7 @@ class MinePage extends BaseStateless {
         StackPosition(designWidth: 1080, designHeight: 650, deviceWidth: 1.sw);
     return ListView(
       padding: EdgeInsets.zero,
+      physics: const ClampingScrollPhysics(),
       children: [
         Stack(
           children: [
@@ -102,11 +117,11 @@ class MinePage extends BaseStateless {
                 top: position1.getY(240),
                 child: BaseText(
                   text: AppConfig.config.abcLogic.realName(),
-                  fontSize: 20,
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
+                    fontSize: 20,
+                    color: Color(0xFF181818),
                   ),
-                  color: const Color(0xFF181818),
                 )
             ),
             Positioned(
@@ -130,11 +145,11 @@ class MinePage extends BaseStateless {
                     children: [
                       BaseText(
                         text: '0',
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w500,
                         height: 1.0,
                         strutStyle: StrutStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           height: 1
                         ),
                         color: Color(0xFF181818),
@@ -154,11 +169,11 @@ class MinePage extends BaseStateless {
                     children: [
                       BaseText(
                         text: '0',
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w500,
                         height: 1.0,
                         strutStyle: StrutStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           height: 1
                         ),
                         color: Color(0xFF181818),
@@ -178,11 +193,11 @@ class MinePage extends BaseStateless {
                     children: [
                       BaseText(
                         text: '0',
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w500,
                         height: 1.0,
                         strutStyle: StrutStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           height: 1
                         ),
                         color: Color(0xFF181818),
@@ -196,7 +211,7 @@ class MinePage extends BaseStateless {
                         fontWeight: FontWeight.w500,
                         height: 1.0,
                         strutStyle: StrutStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           height: 1
                         ),
                         color: Color(0xFF181818),
@@ -206,10 +221,143 @@ class MinePage extends BaseStateless {
                 )
             ),
           ],
+        ),
+        Stack(
+          children: [
+            Image(image: 'bg_mine_2'.png3x, width: 1.sw, fit: BoxFit.fitWidth,),
+            Positioned.fill(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 13.w),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.w),
+                      child: SizedBox(
+                        height: 76.w,
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (notification) {
+                            logic.updateFuncScrollProgress(notification.metrics);
+                            return false;
+                          },
+                          child: PageView.builder(
+                            controller: logic.funcPageController,
+                            padEnds: false,
+                            physics: const PageScrollPhysics(
+                              parent: ClampingScrollPhysics(),
+                            ),
+                            itemCount: _funcItems.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: EdgeInsets.only(top: 17.w),
+                                child: _MineFuncButton(
+                                  item: _funcItems[index],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Obx(
+                    () => _MineFuncIndicator(
+                      progress: logic.funcScrollProgress.value,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         )
         // Image(image: 'bg_mine_2'.png3x, width: 1.sw, fit: BoxFit.fitWidth,),
         // Image(image: 'bg_mine_3'.png3x, width: 1.sw, fit: BoxFit.fitWidth,),
       ],
+    );
+  }
+}
+
+class _MineFuncItem {
+  const _MineFuncItem({
+    required this.title,
+    required this.icon,
+  });
+
+  final String title;
+  final String icon;
+}
+
+class _MineFuncButton extends StatelessWidget {
+  const _MineFuncButton({
+    required this.item,
+  });
+
+  final _MineFuncItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 22.w,
+          child: Center(
+            child: Image(
+              image: item.icon.png,
+              width: 22.w,
+              height: 22.w,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+        SizedBox(height: 8.w),
+        BaseText(
+          text: item.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          fontSize: 13,
+          color: const Color(0xFF181818),
+        ),
+      ],
+    );
+  }
+}
+
+class _MineFuncIndicator extends StatelessWidget {
+  const _MineFuncIndicator({
+    required this.progress,
+  });
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    const trackWidth = 22.0;
+    const thumbWidth = 8.0;
+
+    return Container(
+      width: trackWidth.w,
+      height: 3.w,
+      margin: EdgeInsets.only(top: 3.w),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE7EAF0),
+        borderRadius: BorderRadius.circular(2.w),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            left: (trackWidth - thumbWidth).w * progress,
+            top: 0,
+            child: Container(
+              width: thumbWidth.w,
+              height: 3.w,
+              decoration: BoxDecoration(
+                color: const Color(0xFFBFC5CF),
+                borderRadius: BorderRadius.circular(2.w),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
