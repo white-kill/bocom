@@ -6,16 +6,16 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:wb_base_widget/extension/widget_extension.dart';
 
 import '../component/wb_custom_loading_widget.dart';
-import '../component/wb_loading_widget.dart';
 import '../text_widget/bank_text.dart';
 
 extension ToastExtension on String {
   void get showLoading {
     SmartDialog.showLoading(
       maskColor: Colors.black12.withOpacity(0.2),
-        builder: (_) => WbCustomLoadingWidget(
-          image: 'ld1'.png3x,
-        ));
+      builder: (_) => const WbCustomLoadingWidget(
+        image: AssetImage('assets/images/global_loading.gif'),
+      ),
+    );
   }
 
   void get showLoading2 {

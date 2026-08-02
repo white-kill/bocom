@@ -37,6 +37,7 @@ abstract class BaseStateless extends StatelessWidget  with StateWidgetConfig {
       showBackgroundColor: showBackgroundColor,
       centerTitle: centerTitle,
       resizeToAvoidBottomInset: bottomInset,
+      keepBodyPositionOnOverscroll: keepBodyPositionOnOverscroll,
     ):Scaffold(
       resizeToAvoidBottomInset: bottomInset,
       backgroundColor: Colors.white,

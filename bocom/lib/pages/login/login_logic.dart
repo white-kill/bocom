@@ -1,10 +1,6 @@
-import 'package:bocom/utils/sp_util.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/extension/string_extension.dart';
 
-import '../../config/app_config.dart';
-import '../../config/dio/network.dart';
-import '../../config/net_config/apis.dart';
 import '../../routes/app_pages.dart';
 import 'login_state.dart';
 
@@ -16,8 +12,7 @@ class LoginLogic extends GetxController {
   final isFormFilled = false.obs;
 
   /// 账号、密码均已填写且已勾选协议时，登录按钮显示可点击态
-  bool get canLoginActive =>
-      agreedToTerms.value && isFormFilled.value;
+  bool get canLoginActive => agreedToTerms.value && isFormFilled.value;
 
   @override
   void onInit() {
@@ -71,32 +66,6 @@ class LoginLogic extends GetxController {
   }
 
   void goLogin() {
-    if (state.phoneTextController.text.trim().isEmpty) {
-      '请输入账号'.showToast;
-      return;
-    }
-
-    if (state.psdTextController.text.isEmpty) {
-      '请输入密码'.showToast;
-      return;
-    }
-
-    if (!agreedToTerms.value) {
-      '请先阅读并同意相关协议'.showToast;
-      return;
-    }
-
-    Http.post(Apis.login, data: {
-      "username": state.phoneTextController.text.trim(),
-      "password": state.psdTextController.text
-    }).then((value) {
-      if (value != null && value['access_token'] != '') {
-        'Bearer ${value['access_token']}'.saveToken;
-        Http.setHeaders({'Authorization': token});
-        AppConfig.config.abcLogic
-            .memberInfoData()
-            .then((v) => Get.offAllNamed(Routes.tabs));
-      }
-    });
+    Get.offAllNamed(Routes.tabs);
   }
 }

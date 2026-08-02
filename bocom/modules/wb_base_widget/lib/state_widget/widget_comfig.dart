@@ -46,6 +46,8 @@ mixin StateWidgetConfig {
 
   bool get showBackgroundColor => true;
 
+  bool get keepBodyPositionOnOverscroll => false;
+
   Function(bool change)? get onNotificationNavChange => null;
 
   dynamic get refreshController => null;

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:math';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:wb_base_widget/component/bottom_sheet_widget.dart';
-import 'package:wb_base_widget/component/nav_action_widget.dart';
-import 'package:wb_base_widget/extension/widget_extension.dart';
 
 import '../text_widget/bank_text.dart';
 
@@ -27,6 +25,7 @@ class AppBarWidget extends StatefulWidget {
   final Function(bool change)? onNotificationNavChange;
   final bool centerTitle;
   final bool resizeToAvoidBottomInset;
+  final bool keepBodyPositionOnOverscroll;
 
   const AppBarWidget({
     super.key,
@@ -48,6 +47,7 @@ class AppBarWidget extends StatefulWidget {
     this.showBackgroundColor,
     this.centerTitle = true,
     this.resizeToAvoidBottomInset = true,
+    this.keepBodyPositionOnOverscroll = false,
   });
 
   @override
@@ -101,7 +101,9 @@ class _AppBarWidgetState extends State<AppBarWidget> {
         children: [
           Positioned(
             left: 0,
-            top: _scrollDistance < 0 ? min(_scrollDistance, 0) : 0,
+            top: widget.keepBodyPositionOnOverscroll
+                ? 0
+                : (_scrollDistance < 0 ? min(_scrollDistance, 0) : 0),
             bottom: 0,
             right: 0,
             child: Scaffold(
@@ -172,6 +174,12 @@ class _AppBarWidgetState extends State<AppBarWidget> {
                           ? _popThis(context)
                           : widget.backCallBack?.call())),
               actions: widget.rightAction,
+              systemOverlayStyle: widget.showBackgroundColor == true &&
+                  widget.noBackGround == true
+                  ? (_scrollDistance > 20
+                  ? SystemUiOverlayStyle.dark
+                  : SystemUiOverlayStyle.light)
+                  : null,
               backgroundColor:widget.showBackgroundColor ==true? (widget.noBackGround == true
                   ? widget.navColor?.withAlpha(
                   (percent(navHeight) * 255).toInt()) ??
