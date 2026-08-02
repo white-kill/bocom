@@ -12,6 +12,11 @@ class MineLogic extends GetxController {
     viewportFraction: 1 / 5,
   );
   final RxDouble funcScrollProgress = 0.0.obs;
+  final RxBool amountVisible = true.obs;
+
+  void toggleAmountVisible() {
+    amountVisible.value = !amountVisible.value;
+  }
 
   void updateFuncScrollProgress(ScrollMetrics metrics) {
     final maxScrollExtent = metrics.maxScrollExtent;
