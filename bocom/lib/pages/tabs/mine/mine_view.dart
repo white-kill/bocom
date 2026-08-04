@@ -7,6 +7,7 @@ import 'package:wb_base_widget/wb_base_widget.dart';
 import 'package:bocom/utils/stack_position.dart';
 import '../../../routes/app_pages.dart';
 import '../../../utils/sp_util.dart';
+import './children/asset/asset_view.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
 
@@ -121,26 +122,26 @@ class MinePage extends BaseStateless {
               fit: BoxFit.fitWidth,
             ),
             Positioned(
-                left: position1.getX(80),
-                top: position1.getY(245),
+                left: position1.getX(70),
+                top: position1.getY(255),
                 child: Image(
                   image: 'mine_user_icon'.png,
-                  width: position1.getWidth(150),
+                  width: position1.getWidth(130),
                   fit: BoxFit.fitWidth,
                 )),
             Positioned(
-                left: position1.getX(270),
+                left: position1.getX(250),
                 top: position1.getY(240),
                 child: BaseText(
                   text: AppConfig.config.abcLogic.realName(),
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
-                    fontSize: 20,
+                    fontSize: 19,
                     color: Color(0xFF181818),
                   ),
                 )),
             Positioned(
-                left: position1.getX(270),
+                left: position1.getX(250),
                 top: position1.getY(330),
                 child: const BaseText(
                   text: '开启财富管理之旅',
@@ -255,6 +256,10 @@ class MinePage extends BaseStateless {
                                 padding: EdgeInsets.only(top: 17.w),
                                 child: _MineFuncButton(
                                   item: _funcItems[index],
+                                  onTap: () => logic.onFuncTap(
+                                    index: index,
+                                    title: _funcItems[index].title,
+                                  ),
                                 ),
                               );
                             },
@@ -347,7 +352,7 @@ class MinePage extends BaseStateless {
                   children: [
                     Obx(
                       () => BaseText(
-                        text: logic.amountVisible.value ? '0.00' : '****',
+                        text: logic.amountVisible.value ? '--' : '****',
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 20,
@@ -394,6 +399,16 @@ class MinePage extends BaseStateless {
                   ),
                 ),
               ),
+            ),
+            Positioned(
+              left: position3.getX(30),
+              top: position3.getY(30),
+              child: SizedBox(
+                width: position3.getWidth(510),
+                height: position3.getHeight(350),
+              ).withOnTap(onTap: (){
+                Get.to(() => AssetPage());
+              }),
             ),
           ],
         ),
@@ -608,35 +623,41 @@ class _MineLogoutButton extends StatelessWidget {
 class _MineFuncButton extends StatelessWidget {
   const _MineFuncButton({
     required this.item,
+    required this.onTap,
   });
 
   final _MineFuncItem item;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          height: 22.w,
-          child: Center(
-            child: Image(
-              image: item.icon.png,
-              width: 22.w,
-              height: 22.w,
-              fit: BoxFit.contain,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 22.w,
+            child: Center(
+              child: Image(
+                image: item.icon.png,
+                width: 22.w,
+                height: 22.w,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
-        ),
-        SizedBox(height: 8.w),
-        BaseText(
-          text: item.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          fontSize: 13,
-          color: const Color(0xFF181818),
-        ),
-      ],
+          SizedBox(height: 8.w),
+          BaseText(
+            text: item.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            fontSize: 13,
+            color: const Color(0xFF181818),
+          ),
+        ],
+      ),
     );
   }
 }

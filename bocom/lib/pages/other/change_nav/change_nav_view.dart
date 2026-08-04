@@ -23,10 +23,15 @@ class ChangeNavPage extends BaseStateless {
 
   bool get noBackGround1 =>Get.arguments?['noBackGround1']??true;
 
+  @override
+  Color? get navColor {
+    final Color color = Get.arguments?['navColor'] as Color? ?? Colors.white;
+    return color == Colors.transparent ? Colors.white : color;
+  }
 
   @override
-  Color? get navColor => Get.arguments?['navColor'] ??Colors.white;
-
+  bool get showBackgroundColor =>
+      Get.arguments?['showBackgroundColor'] as bool? ?? true;
 
   @override
   List<Widget>? get rightAction => Get.arguments?['rightWidget'] ?? [];
