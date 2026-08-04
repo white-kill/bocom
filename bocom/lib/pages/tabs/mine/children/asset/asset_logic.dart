@@ -10,10 +10,16 @@ class AssetLogic extends GetxController {
   var navActionColor = Colors.white.obs;
   var navActionFlag = false.obs;
   final RxBool amountVisible = true.obs;
+  final RxInt bottomItemIndex = 1.obs;
   var nowDate = "".obs;
 
   void toggleAmountVisible() {
     amountVisible.value = !amountVisible.value;
+  }
+
+  void onBottomItemClick(int type) {
+    if (type != 0 && type != 1) return;
+    bottomItemIndex.value = type;
   }
 
   @override
