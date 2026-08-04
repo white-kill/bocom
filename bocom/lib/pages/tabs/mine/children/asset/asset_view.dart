@@ -22,7 +22,7 @@ class AssetPage extends BaseStateless {
   @override
   Widget? get titleWidget => Obx(() => BaseText(
         text: '我的资产',
-        fontSize: 18.sp,
+        fontSize: 18,
         color: logic.navActionColor.value,
       ));
 
@@ -120,11 +120,9 @@ class AssetPage extends BaseStateless {
                             ? AppConfig.config.abcLogic.memberInfo
                                 .accountBalance.bankBalance
                             : '****',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 19,
+                        color: Colors.white,
                       ),
                     )),
                 Positioned(
@@ -133,11 +131,9 @@ class AssetPage extends BaseStateless {
                   child: Obx(
                     () => BaseText(
                       text: logic.amountVisible.value ? '0.00' : '****',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 19,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -147,11 +143,9 @@ class AssetPage extends BaseStateless {
                   child: BaseText(
                     text:
                         '${AppConfig.config.abcLogic.memberInfo.realName}交行资产更新至${logic.nowDate.value}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14,
-                      color: Color(0xFFADCBFF),
-                    ),
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14,
+                    color: const Color(0xFFADCBFF),
                   ),
                 ),
                 Positioned(
@@ -180,21 +174,17 @@ class AssetPage extends BaseStateless {
                         children: [
                           BaseText(
                             text: logic.amountVisible.value ? '100%' : '****',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF4c4c4c),
-                            ),
+                            fontSize: 14,
+                            color: const Color(0xFF666666),
                           ),
                           BaseText(
                             text: logic.amountVisible.value
                                 ? AppConfig.config.abcLogic.memberInfo
                                     .accountBalance.bankBalance
                                 : '****',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            fontSize: 15,
+                            color: const Color(0xFF111111),
+                            fontWeight: FontWeight.w600,
                           )
                         ],
                       ).withSizedBox(width: position1.getWidth(460)),
@@ -203,53 +193,40 @@ class AssetPage extends BaseStateless {
                     right: position1.getX(70),
                     top: position1.getY(853),
                     child: Obx(
-                          () => Row(
+                      () => Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           BaseText(
                             text: logic.amountVisible.value ? '0%' : '****',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF4c4c4c),
-                            ),
+                            fontSize: 14,
+                            color: const Color(0xFF666666),
                           ),
                           BaseText(
-                            text: logic.amountVisible.value
-                                ? '0.00'
-                                : '****',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            text: logic.amountVisible.value ? '0.00' : '****',
+                            fontSize: 15,
+                            color: const Color(0xFF111111),
+                            fontWeight: FontWeight.w600,
                           )
                         ],
                       ).withSizedBox(width: position1.getWidth(460)),
                     )),
-
                 Positioned(
                     right: position1.getX(70),
                     top: position1.getY(958),
                     child: Obx(
-                          () => Row(
+                      () => Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           BaseText(
                             text: logic.amountVisible.value ? '0%' : '****',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF4c4c4c),
-                            ),
+                            fontSize: 14,
+                            color: const Color(0xFF666666),
                           ),
                           BaseText(
-                            text: logic.amountVisible.value
-                                ? '0.00'
-                                : '****',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            text: logic.amountVisible.value ? '0.00' : '****',
+                            fontSize: 15,
+                            color: const Color(0xFF111111),
+                            fontWeight: FontWeight.w600,
                           )
                         ],
                       ).withSizedBox(width: position1.getWidth(460)),
@@ -258,12 +235,10 @@ class AssetPage extends BaseStateless {
                   left: position1.getX(235),
                   top: position1.getY(1170),
                   child: Obx(
-                        () => BaseText(
+                    () => BaseText(
                       text: logic.amountVisible.value ? '--' : '****',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.black,
-                      ),
+                      fontSize: 14,
+                      color: const Color(0xFF333333),
                     ),
                   ),
                 ),
@@ -285,11 +260,9 @@ class AssetPage extends BaseStateless {
                             ? AppConfig.config.abcLogic.memberInfo
                                 .accountBalance.bankBalance
                             : '****',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 17,
-                          color: Colors.black,
-                        ),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 17,
+                        color: const Color(0xFF111111),
                       ),
                     )),
               ],
