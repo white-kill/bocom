@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'asset_state.dart';
+import 'account_asset_state.dart';
 
-class AssetLogic extends GetxController {
-  final AssetState state = AssetState();
+class AccountAssetLogic extends GetxController {
+  final AccountAssetState state = AccountAssetState();
 
   var navActionColor = Colors.white.obs;
   var navActionFlag = false.obs;
