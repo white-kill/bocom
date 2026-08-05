@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
+import 'package:bocom/pages/component/password_keyboard_sheet.dart';
 
 import 'asset_logic.dart';
 import 'asset_state.dart';
+import 'bank_detail_dialog.dart';
 
 class AssetPage extends BaseStateless {
   AssetPage({super.key}) : super(title: '');
@@ -23,7 +25,9 @@ class AssetPage extends BaseStateless {
   Widget? get titleWidget => Obx(() => BaseText(
         text: logic.bottomItemIndex.value == 0 ? '我的账户' : '我的资产',
         fontSize: 18,
-        color: logic.bottomItemIndex.value == 0 ? Colors.black : logic.navActionColor.value,
+        color: logic.bottomItemIndex.value == 0
+            ? Colors.black
+            : logic.navActionColor.value,
       ));
 
   @override
@@ -152,7 +156,7 @@ class _AccountContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final topPlaceholderHeight = MediaQuery.of(context).padding.top + 44.w;
     StackPosition position1 =
-    StackPosition(designWidth: 1080, designHeight: 1098, deviceWidth: 1.sw);
+        StackPosition(designWidth: 1080, designHeight: 1098, deviceWidth: 1.sw);
     return ListView(
       padding: EdgeInsets.zero,
       physics: const ClampingScrollPhysics(),
@@ -181,41 +185,58 @@ class _AccountContent extends StatelessWidget {
               right: position1.getX(40),
               top: position1.getY(30),
               child: Obx(
-                    () => Row(
-    children: [
-      BaseText(
-        text: logic.amountVisible.value ? '隐藏余额' : '显示余额',
-        fontSize: 13,
-        color: const Color(0xFF333333),
-      ),
-      SizedBox(width: 4.w,),
-      Image(
-        image: (!logic.amountVisible.value
-            ? 'my_asset_eye_open'
-            : 'my_asset_eye_close')
-            .png,
-        width: position1.getWidth(38),
-        fit: BoxFit.fitWidth,
-        color: const Color(0xFF333333),
-      ),
-    ],
-    ).withOnTap(onTap: logic.toggleAmountVisible),
+                () => Row(
+                  children: [
+                    BaseText(
+                      text: logic.amountVisible.value ? '隐藏余额' : '显示余额',
+                      fontSize: 13,
+                      color: const Color(0xFF333333),
+                    ),
+                    SizedBox(
+                      width: 4.w,
+                    ),
+                    Image(
+                      image: (!logic.amountVisible.value
+                              ? 'my_asset_eye_open'
+                              : 'my_asset_eye_close')
+                          .png,
+                      width: position1.getWidth(38),
+                      fit: BoxFit.fitWidth,
+                      color: const Color(0xFF333333),
+                    ),
+                  ],
+                ).withOnTap(onTap: logic.toggleAmountVisible),
               ),
             ),
             Positioned(
                 right: position1.getX(140),
                 top: position1.getY(445),
                 child: Obx(
-                      () => BaseText(
+                  () => BaseText(
                     text: logic.amountVisible.value
                         ? AppConfig.config.abcLogic.memberInfo.accountBalance
-                        .bankBalance
+                            .bankBalance
                         : '****',
                     fontWeight: FontWeight.w500,
                     fontSize: 18,
                     color: Colors.black,
                   ),
                 )),
+            Positioned(
+              right: position1.getX(310),
+              top: position1.getY(165),
+              child: SizedBox(
+                height: position1.getHeight(100),
+                width: position1.getWidth(320),
+              ).withOnTap(
+                onTap: () => PasswordKeyboardSheet.show(
+                  context,
+                  onCompleted: () async {
+                    await BankDetailDialog.show(context);
+                  },
+                ),
+              ),
+            ),
           ],
         ),
         Image(
