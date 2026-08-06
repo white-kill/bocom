@@ -7,6 +7,7 @@ import 'package:wb_base_widget/state_widget/app_bar_widget.dart';
 import 'package:wb_base_widget/state_widget/state_less_widget.dart';
 
 import '../../index/index_logic.dart';
+import '../mine/children/asset/asset_view.dart';
 import 'home_logic.dart';
 import 'home_state.dart';
 
@@ -144,14 +145,67 @@ class HomePage extends BaseStateless {
         child: ListView.builder(
           padding: EdgeInsets.zero,
           itemCount: _sectionAssets.length,
-          itemBuilder: (_, index) => Image.asset(
-            _sectionAssets[index],
-            width: 1.sw,
-            fit: BoxFit.fitWidth,
-            gaplessPlayback: true,
-          ),
+          itemBuilder: (_, index) => index == 0
+              ? _HomeAccountAssetSection(
+                  assetPath: _sectionAssets[index],
+                )
+              : Image.asset(
+                  _sectionAssets[index],
+                  width: 1.sw,
+                  fit: BoxFit.fitWidth,
+                  gaplessPlayback: true,
+                ),
         ),
       ),
+    );
+  }
+}
+
+class _HomeAccountAssetSection extends StatelessWidget {
+  const _HomeAccountAssetSection({required this.assetPath});
+
+  final String assetPath;
+
+  static const double _sourceWidth = 1080;
+  static const double _sourceHeight = 915;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (_, constraints) {
+        final scale = constraints.maxWidth / _sourceWidth;
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: _sourceHeight * scale,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  assetPath,
+                  fit: BoxFit.fill,
+                  gaplessPlayback: true,
+                ),
+              ),
+              Positioned(
+                left: 0,
+                top: 250 * scale,
+                width: 270 * scale,
+                height: 230 * scale,
+                child: Semantics(
+                  button: true,
+                  label: '账户资产，进入我的账户',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Get.to(
+                      () => AssetPage(initialIndex: 0),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:bocom/config/app_config.dart';
+import 'package:bocom/routes/app_pages.dart';
 import 'package:bocom/utils/stack_position.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -12,14 +13,23 @@ import 'asset_logic.dart';
 import 'asset_state.dart';
 import 'bank_detail_dialog.dart';
 
+// 我的账户/我的资产页
+// 说明：当前页面使用不含导航栏的账户与资产内容切图，动态余额、导航和功能热区由 Flutter 单独绘制。
 class AssetPage extends BaseStateless {
-  AssetPage({super.key}) : super(title: '');
+  AssetPage({super.key, this.initialIndex = 1}) : super(title: '') {
+    logic.onBottomItemClick(initialIndex);
+  }
+
+  final int initialIndex;
 
   final AssetLogic logic = Get.put(AssetLogic());
   final AssetState state = Get.find<AssetLogic>().state;
 
   @override
   bool get isChangeNav => true;
+
+  @override
+  double? get lefItemWidth => 56.w;
 
   @override
   Widget? get titleWidget => Obx(() => BaseText(
@@ -234,6 +244,20 @@ class _AccountContent extends StatelessWidget {
                   onCompleted: () async {
                     await BankDetailDialog.show(context);
                   },
+                ),
+              ),
+            ),
+            Positioned(
+              left: position1.getX(40),
+              top: position1.getY(560),
+              width: position1.getWidth(250),
+              height: position1.getHeight(125),
+              child: Semantics(
+                button: true,
+                label: '交易明细',
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => Get.toNamed(Routes.transactionDetail),
                 ),
               ),
             ),

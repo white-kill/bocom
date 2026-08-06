@@ -80,6 +80,7 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/transaction_detail/
     - assets/dist/
     - assets/dist/static/
     - assets/dist/static/img/
