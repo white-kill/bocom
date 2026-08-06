@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
 
+import 'filter/transaction_advanced_filter_model.dart';
+import 'filter/transaction_advanced_filter_panel.dart';
 import 'filter/transaction_filter_model.dart';
 import 'filter/transaction_filter_sheet.dart';
 import 'filter/transaction_future_date_dialog.dart';
@@ -40,8 +42,11 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   int _visibleMonthIndex = 0;
   bool _showScrollToTop = false;
   bool _showQuickFilter = false;
+  bool _showAdvancedFilter = false;
   TransactionFilterResult? _filterResult;
   TransactionFilterSelection? _lastDateSelection;
+  TransactionAdvancedFilterValue _advancedFilter =
+      const TransactionAdvancedFilterValue();
 
   TransactionMonthSection get _visibleSection =>
       transactionDetailMockSections[_visibleMonthIndex];
@@ -91,7 +96,20 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
 
   void _toggleQuickFilter() {
     widget.onMonthTap?.call(_visibleSection.monthKey);
-    setState(() => _showQuickFilter = !_showQuickFilter);
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _showAdvancedFilter = false;
+      _showQuickFilter = !_showQuickFilter;
+    });
+  }
+
+  void _toggleAdvancedFilter() {
+    widget.onFilterTap?.call();
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _showQuickFilter = false;
+      _showAdvancedFilter = !_showAdvancedFilter;
+    });
   }
 
   Future<void> _handleQuickRange(TransactionQuickRange range) async {
@@ -259,6 +277,66 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     );
   }
 
+  void _completeAdvancedFilter(TransactionAdvancedFilterValue value) {
+    final records = _recordsForAdvancedFilter(value);
+    final income = records
+        .where((record) => record.isIncome)
+        .fold<double>(0, (sum, record) => sum + record.amount);
+    final expense = records
+        .where((record) => !record.isIncome)
+        .fold<double>(0, (sum, record) => sum + record.amount.abs());
+
+    setState(() {
+      _advancedFilter = value;
+      _showAdvancedFilter = false;
+      if (value.isEmpty) {
+        _filterResult = null;
+      } else {
+        _filterResult = TransactionFilterResult(
+          toolbarLabel:
+              _visibleMonthIndex == 0 ? '本月' : _visibleSection.monthKey,
+          count: records.length,
+          income: income,
+          expense: expense,
+          records: records,
+        );
+      }
+    });
+  }
+
+  List<TransactionRecord> _recordsForAdvancedFilter(
+    TransactionAdvancedFilterValue value,
+  ) {
+    return _allRecords.where((record) {
+      if (value.direction == '全部收入' && !record.isIncome) return false;
+      if (value.direction == '全部支出' && record.isIncome) return false;
+
+      final amount = record.amount.abs();
+      final matchesAmount = switch (value.amountRange) {
+        '1百以下' => amount < 100,
+        '1百-1千' => amount >= 100 && amount < 1000,
+        '1千-5千' => amount >= 1000 && amount < 5000,
+        '5千-1万' => amount >= 5000 && amount < 10000,
+        '1万-5万' => amount >= 10000 && amount < 50000,
+        '5万以上' => amount >= 50000,
+        _ => true,
+      };
+      if (!matchesAmount) return false;
+
+      final accountName = value.accountName.trim();
+      if (accountName.isNotEmpty && !record.title.contains(accountName)) {
+        return false;
+      }
+      final summary = value.summary.trim();
+      if (summary.isNotEmpty &&
+          !record.title.contains(summary) &&
+          !record.channel.contains(summary)) {
+        return false;
+      }
+      return true;
+    }).toList(growable: false);
+  }
+
   @override
   void dispose() {
     _scrollController
@@ -271,7 +349,15 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   Widget build(BuildContext context) {
     final monthText = _filterResult?.toolbarLabel ??
         (_visibleMonthIndex == 0 ? '本月' : _visibleSection.monthKey);
-    final quickFilterTop = MediaQuery.paddingOf(context).top + 134.w;
+    final mediaQuery = MediaQuery.of(context);
+    final filterOverlayTop = mediaQuery.padding.top + 134.w;
+    final advancedAvailableHeight = mediaQuery.size.height -
+        filterOverlayTop -
+        mediaQuery.viewInsets.bottom -
+        mediaQuery.padding.bottom;
+    final advancedFilterHeight = advancedAvailableHeight < 527.w
+        ? advancedAvailableHeight.clamp(80.w, 527.w).toDouble()
+        : 527.w;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
@@ -279,6 +365,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
         children: [
           Scaffold(
             backgroundColor: Colors.white,
+            resizeToAvoidBottomInset: false,
             body: SafeArea(
               bottom: false,
               child: Column(
@@ -291,9 +378,12 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                   _FilterBar(
                     monthText: monthText,
                     expanded: _showQuickFilter,
-                    highlighted: _filterResult != null,
+                    highlighted: _filterResult?.selection != null ||
+                        _filterResult?.quickRange != null,
+                    filterActive:
+                        _showAdvancedFilter || !_advancedFilter.isEmpty,
                     onMonthTap: _toggleQuickFilter,
-                    onFilterTap: widget.onFilterTap,
+                    onFilterTap: _toggleAdvancedFilter,
                   ),
                   Expanded(
                     child: Stack(
@@ -337,7 +427,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
             Positioned(
               left: 0,
               right: 0,
-              top: quickFilterTop,
+              top: filterOverlayTop,
               bottom: 0,
               child: GestureDetector(
                 key: const ValueKey('transaction_quick_filter_scrim'),
@@ -351,10 +441,36 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
             Positioned(
               left: 0,
               right: 0,
-              top: quickFilterTop,
+              top: filterOverlayTop,
               height: 139.w,
               child: TransactionQuickFilterPanel(
                 onSelected: _handleQuickRange,
+              ),
+            ),
+          ],
+          if (_showAdvancedFilter) ...[
+            Positioned(
+              left: 0,
+              right: 0,
+              top: filterOverlayTop,
+              bottom: mediaQuery.viewInsets.bottom,
+              child: GestureDetector(
+                key: const ValueKey('transaction_advanced_filter_scrim'),
+                behavior: HitTestBehavior.opaque,
+                onTap: _toggleAdvancedFilter,
+                child: ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.36),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: filterOverlayTop,
+              height: advancedFilterHeight,
+              child: TransactionAdvancedFilterPanel(
+                initialValue: _advancedFilter,
+                onComplete: _completeAdvancedFilter,
               ),
             ),
           ],
@@ -501,6 +617,7 @@ class _FilterBar extends StatelessWidget {
     required this.monthText,
     required this.expanded,
     required this.highlighted,
+    required this.filterActive,
     this.onMonthTap,
     this.onFilterTap,
   });
@@ -508,6 +625,7 @@ class _FilterBar extends StatelessWidget {
   final String monthText;
   final bool expanded;
   final bool highlighted;
+  final bool filterActive;
   final VoidCallback? onMonthTap;
   final VoidCallback? onFilterTap;
 
@@ -573,13 +691,17 @@ class _FilterBar extends StatelessWidget {
                     Text(
                       '筛选',
                       style: TextStyle(
-                        color: const Color(0xFF303030),
+                        color: filterActive
+                            ? const Color(0xFF0077DF)
+                            : const Color(0xFF303030),
                         fontSize: 14.sp,
                       ),
                     ),
                     SizedBox(width: 8.w),
                     Image.asset(
-                      'assets/images/transaction_detail/filter_icon.png',
+                      filterActive
+                          ? 'assets/images/transaction_detail/filter_icon_active.png'
+                          : 'assets/images/transaction_detail/filter_icon.png',
                       key: const ValueKey('transaction_filter_icon'),
                       width: 24.w,
                       height: 28.w,
