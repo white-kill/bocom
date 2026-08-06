@@ -136,4 +136,30 @@ void main() {
     final selected = tester.widget<Text>(find.text('1百以下'));
     expect(selected.style?.color, const Color(0xFF0077DF));
   });
+
+  testWidgets('没有匹配交易时显示参考图空页面且隐藏汇总栏', (tester) async {
+    await pumpPage(tester);
+
+    await tester.tap(find.text('全部收入'));
+    await tester.tap(
+      find.byKey(const ValueKey('advanced_filter_choice_5万以上')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('完成'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('共0笔'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('transaction_empty_result_image')),
+      findsOneWidget,
+    );
+    expect(find.text('无交易明细记录'), findsOneWidget);
+    expect(find.text('导出交易明细'), findsNothing);
+
+    final icon = tester.widget<Image>(
+      find.byKey(const ValueKey('transaction_filter_icon')),
+    );
+    expect(icon.width, 9);
+    expect(icon.height, 10.5);
+  });
 }

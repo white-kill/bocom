@@ -299,6 +299,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
           income: income,
           expense: expense,
           records: records,
+          showSummary: records.isNotEmpty,
         );
       }
     });
@@ -421,7 +422,9 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                 ],
               ),
             ),
-            bottomNavigationBar: _ExportBar(onTap: widget.onExportTap),
+            bottomNavigationBar: _filterResult?.records.isEmpty == true
+                ? null
+                : _ExportBar(onTap: widget.onExportTap),
           ),
           if (_showQuickFilter) ...[
             Positioned(
@@ -698,14 +701,17 @@ class _FilterBar extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 8.w),
-                    Image.asset(
-                      filterActive
-                          ? 'assets/images/transaction_detail/filter_icon_active.png'
-                          : 'assets/images/transaction_detail/filter_icon.png',
-                      key: const ValueKey('transaction_filter_icon'),
-                      width: 24.w,
-                      height: 28.w,
-                      fit: BoxFit.fill,
+                    Transform.translate(
+                      offset: Offset(0, 1.w),
+                      child: Image.asset(
+                        filterActive
+                            ? 'assets/images/transaction_detail/filter_icon_active.png'
+                            : 'assets/images/transaction_detail/filter_icon.png',
+                        key: const ValueKey('transaction_filter_icon'),
+                        width: 9.w,
+                        height: 10.5.w,
+                        fit: BoxFit.fill,
+                      ),
                     ),
                   ],
                 ),
@@ -807,14 +813,28 @@ class _EmptyFilterResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Opacity(
-        opacity: 0.32,
-        child: Icon(
-          CupertinoIcons.doc_text,
-          color: const Color(0xFF82A6CF),
-          size: 58.w,
-        ),
+    return Align(
+      alignment: const Alignment(0, -0.18),
+      child: Column(
+        key: const ValueKey('transaction_empty_result'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            'assets/images/transaction_detail/empty_records.png',
+            key: const ValueKey('transaction_empty_result_image'),
+            width: 111.w,
+            height: 87.w,
+            fit: BoxFit.fill,
+          ),
+          SizedBox(height: 14.w),
+          Text(
+            '无交易明细记录',
+            style: TextStyle(
+              color: const Color(0xFF303030),
+              fontSize: 16.sp,
+            ),
+          ),
+        ],
       ),
     );
   }
