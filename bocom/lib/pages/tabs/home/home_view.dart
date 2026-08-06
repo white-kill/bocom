@@ -7,7 +7,7 @@ import 'package:wb_base_widget/state_widget/app_bar_widget.dart';
 import 'package:wb_base_widget/state_widget/state_less_widget.dart';
 
 import '../../index/index_logic.dart';
-import '../mine/children/asset/asset_view.dart';
+import '../mine/children/account_asset/account_asset_view.dart';
 import 'home_logic.dart';
 import 'home_state.dart';
 
@@ -197,7 +197,7 @@ class _HomeAccountAssetSection extends StatelessWidget {
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Get.to(
-                      () => AssetPage(initialIndex: 0),
+                      () => AccountAssetPage(initialTabIndex: 0),
                     ),
                   ),
                 ),

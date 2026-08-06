@@ -9,21 +9,26 @@ import 'package:get/get.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
 import 'package:bocom/pages/component/password_keyboard_sheet.dart';
 
-import 'asset_logic.dart';
-import 'asset_state.dart';
+import 'account_asset_logic.dart';
+import 'account_asset_state.dart';
 import 'bank_detail_dialog.dart';
 
 // 我的账户/我的资产页
 // 说明：当前页面使用不含导航栏的账户与资产内容切图，动态余额、导航和功能热区由 Flutter 单独绘制。
-class AssetPage extends BaseStateless {
-  AssetPage({super.key, this.initialIndex = 1}) : super(title: '') {
-    logic.onBottomItemClick(initialIndex);
+class AccountAssetPage extends BaseStateless {
+  AccountAssetPage({
+    super.key,
+    this.initialTabIndex = 1,
+  })  : assert(initialTabIndex == 0 || initialTabIndex == 1),
+        logic = Get.put(AccountAssetLogic()),
+        super(title: '') {
+    logic.onBottomItemClick(initialTabIndex);
   }
 
-  final int initialIndex;
-
-  final AssetLogic logic = Get.put(AssetLogic());
-  final AssetState state = Get.find<AssetLogic>().state;
+  /// 0：我的账户；1：我的资产。
+  final int initialTabIndex;
+  final AccountAssetLogic logic;
+  AccountAssetState get state => logic.state;
 
   @override
   bool get isChangeNav => true;
@@ -160,7 +165,7 @@ class AssetPage extends BaseStateless {
 class _AccountContent extends StatelessWidget {
   const _AccountContent({required this.logic});
 
-  final AssetLogic logic;
+  final AccountAssetLogic logic;
 
   @override
   Widget build(BuildContext context) {
@@ -276,7 +281,7 @@ class _AccountContent extends StatelessWidget {
 class _AssetContent extends StatelessWidget {
   const _AssetContent({required this.logic});
 
-  final AssetLogic logic;
+  final AccountAssetLogic logic;
 
   @override
   Widget build(BuildContext context) {

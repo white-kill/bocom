@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
+import 'package:bocom/utils/stack_position.dart';
+import 'package:bocom/config/app_config.dart';
+import 'package:flutter/services.dart';
+
 
 class BankDetailDialog extends StatelessWidget {
   const BankDetailDialog({super.key});
@@ -37,6 +41,7 @@ class BankDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    StackPosition stackPosition = StackPosition(designWidth: 1000, designHeight: 716, deviceWidth: 1.sw);
     return Material(
       type: MaterialType.transparency,
       child: SizedBox(
@@ -50,6 +55,44 @@ class BankDetailDialog extends StatelessWidget {
                   image: 'bank_detail_dialog'.png3x,
                   fit: BoxFit.fill,
                 ),
+              ),
+              Positioned(
+                right: stackPosition.getX(50),
+                top: stackPosition.getY(155),
+                child: BaseText(
+                  text: AppConfig.config.abcLogic.card1(),
+                  fontSize: 16,
+                  color: const Color(0xFF757575),
+                ),
+              ),
+              Positioned(
+                right: stackPosition.getX(50),
+                top: stackPosition.getY(247),
+                child: BaseText(
+                  text: AppConfig.config.abcLogic.memberInfo.realName,
+                  fontSize: 15,
+                  color: const Color(0xFF757575),
+                ),
+              ),
+              Positioned(
+                right: stackPosition.getX(50),
+                top: stackPosition.getY(330),
+                child: BaseText(
+                  text: AppConfig.config.abcLogic.openOutlets(),
+                  fontSize: 15,
+                  color: const Color(0xFF757575),
+                ),
+              ),
+              Positioned(
+                right: stackPosition.getX(50),
+                bottom: stackPosition.getY(50),
+                width: 0.4.sw,
+                height: stackPosition.getY(100),
+                child: Container().withOnTap(onTap: (){
+                  Navigator.of(context, rootNavigator: true).pop();
+                  Clipboard.setData(ClipboardData(text: AppConfig.config.abcLogic.card1()));
+                  '复制成功，去粘贴'.showToast;
+                }),
               ),
               Align(
                 alignment: Alignment.topLeft,
