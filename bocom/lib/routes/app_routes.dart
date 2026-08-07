@@ -11,6 +11,14 @@ class Routes {
 
   static const search = '/search';
 
+  static const transactionDetail = '/transactionDetail';
+
+  static const homeCreditCard = '/homeCreditCard';
+
+  static const homeSecurity = '/homeSecurity';
+
+  static const homePaymentCode = '/homePaymentCode';
+
   static const searchHistoryPage = '/searchHistoryPage';
   static const searchListPage = '/searchListPage';
   static const confirmInfoPage = '/confirmInfoPage';

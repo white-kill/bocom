@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
-import 'package:bocom/utils/stack_position.dart';
 import 'package:bocom/pages/other/change_nav/change_nav_view.dart';
 import '../../../routes/app_pages.dart';
 import '../../../utils/sp_util.dart';
@@ -111,7 +110,7 @@ class MinePage extends BaseStateless {
     StackPosition position3 =
         StackPosition(designWidth: 1080, designHeight: 710, deviceWidth: 1.sw);
     StackPosition position4 =
-    StackPosition(designWidth: 1080, designHeight: 532, deviceWidth: 1.sw);
+        StackPosition(designWidth: 1080, designHeight: 532, deviceWidth: 1.sw);
     return ListView(
       padding: EdgeInsets.zero,
       physics: const ClampingScrollPhysics(),
@@ -408,7 +407,7 @@ class MinePage extends BaseStateless {
               child: SizedBox(
                 width: position3.getWidth(510),
                 height: position3.getHeight(350),
-              ).withOnTap(onTap: (){
+              ).withOnTap(onTap: () {
                 // 跳转到我的资产tab
                 Get.to(() => AccountAssetPage(initialTabIndex: 1));
               }),
@@ -419,7 +418,7 @@ class MinePage extends BaseStateless {
               child: SizedBox(
                 width: position3.getWidth(510),
                 height: position3.getHeight(170),
-              ).withOnTap(onTap: (){
+              ).withOnTap(onTap: () {
                 // 跳转到我的账户tab
                 Get.to(() => AccountAssetPage(initialTabIndex: 0));
               }),
@@ -430,7 +429,7 @@ class MinePage extends BaseStateless {
               child: SizedBox(
                 width: position3.getWidth(510),
                 height: position3.getHeight(170),
-              ).withOnTap(onTap: (){
+              ).withOnTap(onTap: () {
                 // 跳转信用卡页面
                 Get.to(() => ChangeNavPage(), arguments: {
                   'image': 'bg_mine_xyk',
@@ -459,8 +458,11 @@ class MinePage extends BaseStateless {
               left: position4.getX(80),
               top: position4.getY(370),
               child: Obx(
-                    () => BaseText(
-                  text: logic.amountVisible.value ? AppConfig.config.abcLogic.memberInfo.incomeTotal.bankBalance : '****',
+                () => BaseText(
+                  text: logic.amountVisible.value
+                      ? AppConfig
+                          .config.abcLogic.memberInfo.incomeTotal.bankBalance
+                      : '****',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 20,
@@ -473,8 +475,11 @@ class MinePage extends BaseStateless {
               right: position4.getX(80),
               top: position4.getY(370),
               child: Obx(
-                    () => BaseText(
-                  text: logic.amountVisible.value ? AppConfig.config.abcLogic.memberInfo.expensesTotal.bankBalance : '****',
+                () => BaseText(
+                  text: logic.amountVisible.value
+                      ? AppConfig
+                          .config.abcLogic.memberInfo.expensesTotal.bankBalance
+                      : '****',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 20,
