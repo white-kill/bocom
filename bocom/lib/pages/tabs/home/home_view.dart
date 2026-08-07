@@ -169,6 +169,25 @@ class _HomeAccountAssetSection extends StatelessWidget {
   static const double _sourceWidth = 1080;
   static const double _sourceHeight = 915;
 
+  static final List<_HomeFeatureDestination> _destinations = [
+    _HomeFeatureDestination(
+      semanticsLabel: '账户资产，进入我的账户',
+      open: () => Get.to(() => AccountAssetPage(initialTabIndex: 0)),
+    ),
+    _HomeFeatureDestination(
+      semanticsLabel: '信用卡，进入爱宠信用卡',
+      open: () => Get.toNamed(Routes.homeCreditCard),
+    ),
+    _HomeFeatureDestination(
+      semanticsLabel: '安全，进入我的安全',
+      open: () => Get.toNamed(Routes.homeSecurity),
+    ),
+    _HomeFeatureDestination(
+      semanticsLabel: '付款码，进入付款码开通页面',
+      open: () => Get.toNamed(Routes.homePaymentCode),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -186,28 +205,37 @@ class _HomeAccountAssetSection extends StatelessWidget {
                   gaplessPlayback: true,
                 ),
               ),
-              Positioned(
-                left: 0,
-                top: 250 * scale,
-                width: 270 * scale,
-                height: 230 * scale,
-                child: Semantics(
-                  button: true,
-                  label: '账户资产，进入我的账户',
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => Get.to(
-                      () => AccountAssetPage(initialTabIndex: 0),
+              for (var index = 0; index < _destinations.length; index++)
+                Positioned(
+                  left: index * 270 * scale,
+                  top: 250 * scale,
+                  width: 270 * scale,
+                  height: 230 * scale,
+                  child: Semantics(
+                    button: true,
+                    label: _destinations[index].semanticsLabel,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _destinations[index].open,
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         );
       },
     );
   }
+}
+
+class _HomeFeatureDestination {
+  const _HomeFeatureDestination({
+    required this.semanticsLabel,
+    required this.open,
+  });
+
+  final String semanticsLabel;
+  final VoidCallback open;
 }
 
 class _HomeSearchBar extends StatelessWidget {
