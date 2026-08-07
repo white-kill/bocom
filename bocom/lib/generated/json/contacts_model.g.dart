@@ -23,6 +23,12 @@ ContactsModel $ContactsModelFromJson(Map<String, dynamic> json) {
   if (icon != null) {
     contactsModel.icon = icon;
   }
+  final String? phone = jsonConvert.convert<String>(
+    json['phone'] ?? json['mobile'] ?? json['mobilePhone'],
+  );
+  if (phone != null) {
+    contactsModel.phone = phone;
+  }
   return contactsModel;
 }
 
@@ -33,6 +39,7 @@ Map<String, dynamic> $ContactsModelToJson(ContactsModel entity) {
   data['bankId'] = entity.bankId;
   data['bankCard'] = entity.bankCard;
   data['icon'] = entity.icon;
+  data['phone'] = entity.phone;
   return data;
 }
 
@@ -43,12 +50,14 @@ extension ContactsModelExtension on ContactsModel {
     String? bankId,
     String? bankCard,
     String? icon,
+    String? phone,
   }) {
     return ContactsModel()
       ..name = name ?? this.name
       ..bankName = bankName ?? this.bankName
       ..bankId = bankId ?? this.bankId
       ..bankCard = bankCard ?? this.bankCard
-      ..icon = icon ?? this.icon;
+      ..icon = icon ?? this.icon
+      ..phone = phone ?? this.phone;
   }
 }
