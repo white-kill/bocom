@@ -33,6 +33,7 @@ dependencies:
   flutter_local_notifications: 19.0.0
   flutter_inappwebview: 6.1.5
   visibility_detector: 0.4.0+2
+  fl_chart: ^0.69.0
   pinput: 4.0.0
   scrollview_observer: ^1.26.2
 #  device_info_plus: ^9.0.0

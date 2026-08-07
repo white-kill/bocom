@@ -115,6 +115,14 @@ BillItemList $BillItemListFromJson(Map<String, dynamic> json) {
   if (year != null) {
     billItemList.year = year;
   }
+  final String? incomeTotal = jsonConvert.convert<String>(json['incomeTotal']);
+  if (incomeTotal != null) {
+    billItemList.incomeTotal = incomeTotal;
+  }
+  final String? expensesTotal = jsonConvert.convert<String>(json['expensesTotal']);
+  if (expensesTotal != null) {
+    billItemList.expensesTotal = expensesTotal;
+  }
   final BillItemListBillDetail? billDetail = jsonConvert.convert<
       BillItemListBillDetail>(json['billDetail']);
   if (billDetail != null) {
@@ -137,6 +145,8 @@ Map<String, dynamic> $BillItemListToJson(BillItemList entity) {
   data['oppositeName'] = entity.oppositeName;
   data['month'] = entity.month;
   data['year'] = entity.year;
+  data['incomeTotal'] = entity.incomeTotal;
+  data['expensesTotal'] = entity.expensesTotal;
   data['billDetail'] = entity.billDetail?.toJson();
   return data;
 }
@@ -155,6 +165,8 @@ extension BillItemListExtension on BillItemList {
     String? oppositeName,
     String? month,
     String? year,
+    String? incomeTotal,
+    String? expensesTotal,
     BillItemListBillDetail? billDetail,
   }) {
     return BillItemList()
@@ -170,6 +182,8 @@ extension BillItemListExtension on BillItemList {
       ..oppositeName = oppositeName ?? this.oppositeName
       ..month = month ?? this.month
       ..year = year ?? this.year
+      ..incomeTotal = incomeTotal ?? this.incomeTotal
+      ..expensesTotal = expensesTotal ?? this.expensesTotal
       ..billDetail = billDetail ?? this.billDetail;
   }
 }

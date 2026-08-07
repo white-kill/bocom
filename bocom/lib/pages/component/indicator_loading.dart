@@ -30,20 +30,30 @@ class _ArcLoadingOverlay extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         ModalBarrier(dismissible: false, color: Colors.transparent),
-        Center(child: _ArcLoadingIndicator()),
+        Center(child: BocomArcLoadingIndicator()),
       ],
     );
   }
 }
 
-class _ArcLoadingIndicator extends StatefulWidget {
-  const _ArcLoadingIndicator();
+class BocomArcLoadingIndicator extends StatefulWidget {
+  const BocomArcLoadingIndicator({
+    super.key,
+    this.dimension = 22,
+    this.color = const Color(0xFF606060),
+    this.strokeWidth = 2.8,
+  });
+
+  final double dimension;
+  final Color color;
+  final double strokeWidth;
 
   @override
-  State<_ArcLoadingIndicator> createState() => _ArcLoadingIndicatorState();
+  State<BocomArcLoadingIndicator> createState() =>
+      _BocomArcLoadingIndicatorState();
 }
 
-class _ArcLoadingIndicatorState extends State<_ArcLoadingIndicator>
+class _BocomArcLoadingIndicatorState extends State<BocomArcLoadingIndicator>
     with TickerProviderStateMixin {
   late final AnimationController _rotationController;
   late final AnimationController _sweepController;
@@ -83,7 +93,7 @@ class _ArcLoadingIndicatorState extends State<_ArcLoadingIndicator>
     return Semantics(
       label: '加载中',
       child: SizedBox.square(
-        dimension: 22,
+        dimension: widget.dimension,
         child: AnimatedBuilder(
           animation: Listenable.merge([
             _rotationController,
@@ -94,8 +104,8 @@ class _ArcLoadingIndicatorState extends State<_ArcLoadingIndicator>
               painter: _ArcLoadingPainter(
                 rotation: _rotationController.value,
                 sweepAngle: _sweepAnimation.value,
-                color: const Color(0xFF606060),
-                strokeWidth: 2.8,
+                color: widget.color,
+                strokeWidth: widget.strokeWidth,
               ),
             );
           },

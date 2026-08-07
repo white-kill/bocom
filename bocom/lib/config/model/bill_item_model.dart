@@ -38,6 +38,8 @@ class BillItemList {
 	String oppositeName = '';
 	String month = '';
 	String year = '';
+	String incomeTotal = '';
+	String expensesTotal = '';
 	BillItemListBillDetail? billDetail;
 
 	BillItemList();

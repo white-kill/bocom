@@ -119,7 +119,10 @@ class LoginPage extends BaseStateless {
                                 .png,
                             width: stackPosition.getWidth(60),
                             fit: BoxFit.fitWidth,
-                          ).withOnTap(onTap: () => logic.toggleAgreement())),
+                          ).withOnTap(onTap: () {
+                            FocusScope.of(context).unfocus();
+                            logic.toggleAgreement();
+                          })),
                         )
                       ]
                     )
