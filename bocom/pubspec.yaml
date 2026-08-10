@@ -25,7 +25,7 @@ dependencies:
   lpinyin: 2.0.3
   azlistview: 2.0.0
   cached_network_image: ^3.2.1
-  permission_handler: any
+  permission_handler: 11.4.0
   path_provider: ^2.1.5  # 用于获取本地文件路径（可选）
   flutter_smart_dialog: ^4.9.8+7
   common_utils: 2.1.0
@@ -81,6 +81,8 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/account_transfer/icons/
+    - assets/images/account_transfer/limit_sheet/
     - assets/images/transaction_detail/
     - assets/dist/
     - assets/dist/static/

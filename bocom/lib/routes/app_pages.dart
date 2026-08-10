@@ -6,6 +6,9 @@ import '../pages/other/search/search_view.dart';
 import '../pages/splash/splash_view.dart';
 import '../pages/tabs/home/transaction_detail/transaction_detail_view.dart';
 import '../pages/tabs/home/feature_pages/home_feature_pages.dart';
+import '../pages/tabs/home/transfer/home_transfer_view.dart';
+import '../pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
+import '../config/model/contacts_model.dart';
 
 part 'app_routes.dart';
 
@@ -44,6 +47,17 @@ class AppPages {
     GetPage(
       name: Routes.homePaymentCode,
       page: () => const HomePaymentCodePage(),
+    ),
+    GetPage(
+      name: Routes.homeTransfer,
+      page: () => const HomeTransferPage(),
+    ),
+    GetPage(
+      name: Routes.homeAccountTransfer,
+      page: () => HomeAccountTransferPage(
+        initialRecipient:
+            Get.arguments is ContactsModel ? Get.arguments as ContactsModel : null,
+      ),
     ),
   ];
 }

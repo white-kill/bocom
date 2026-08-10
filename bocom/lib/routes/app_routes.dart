@@ -19,6 +19,10 @@ class Routes {
 
   static const homePaymentCode = '/homePaymentCode';
 
+  static const homeTransfer = '/homeTransfer';
+
+  static const homeAccountTransfer = '/homeAccountTransfer';
+
   static const searchHistoryPage = '/searchHistoryPage';
   static const searchListPage = '/searchListPage';
   static const confirmInfoPage = '/confirmInfoPage';
