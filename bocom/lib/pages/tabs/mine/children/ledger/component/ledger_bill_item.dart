@@ -9,11 +9,13 @@ class LedgerBillItem extends StatelessWidget {
     required this.item,
     required this.isFirst,
     required this.isLast,
+    this.topCornerBackgroundGradient,
   });
 
   final BillItemList item;
   final bool isFirst;
   final bool isLast;
+  final Gradient? topCornerBackgroundGradient;
 
   String _total(String value) => value.isEmpty ? '0.00' : value;
 
@@ -46,8 +48,8 @@ class LedgerBillItem extends StatelessWidget {
     final amount = item.amount.replaceFirst(RegExp(r'^[+-]'), '');
     final billType = detail?.billType ?? '';
 
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 10.w),
+    final content = Container(
+      // margin: EdgeInsets.symmetric(horizontal: 10.w),
       padding: EdgeInsets.all(15.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -139,6 +141,15 @@ class LedgerBillItem extends StatelessWidget {
         ],
       ),
     );
+
+    if (isFirst && topCornerBackgroundGradient != null) {
+      return DecoratedBox(
+        decoration: BoxDecoration(gradient: topCornerBackgroundGradient),
+        child: content,
+      );
+    }
+
+    return content;
   }
 
   Widget _totals({required Color color}) => Row(

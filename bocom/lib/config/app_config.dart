@@ -28,14 +28,14 @@ class Config {
   ///其他配置
 
   /// 手机交易码本地通知标题
-  String authSmNotificationTitle = '中国银行';
+  String authSmNotificationTitle = '中国交通银行';
 
   /// 手机交易码本地通知正文模板。占位符：`{code}` 验证码、`{name}` 客户称呼、`{smsId}` 短信编号（4 位）。
   String authSmNotificationBodyTemplate =
       '验证码:{code}。尊敬的{name}，'
       '您正在通过手机银行查看账户信息。'
       '为保护信息安全，'
-      '请不要将验证码告诉他人(短信编号:{smsId})【中国银行】';
+      '请不要将验证码告诉他人(短信编号:{smsId})【中国交通银行】';
 
   /// 将 [authSmNotificationBodyTemplate] 中的占位符替换为实际值。
   String buildAuthSmNotificationBody({

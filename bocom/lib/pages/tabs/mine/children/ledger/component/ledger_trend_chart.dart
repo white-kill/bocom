@@ -8,10 +8,12 @@ class LedgerTrendChart extends StatefulWidget {
     super.key,
     this.incomeValues = const [],
     this.expenseValues = const [],
+    this.title = '近一月收支',
   });
 
   final List<double> incomeValues;
   final List<double> expenseValues;
+  final String title;
 
   @override
   State<LedgerTrendChart> createState() => _LedgerTrendChartState();
@@ -46,7 +48,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         children: [
           Row(
             children: [
-              const BaseText(text: '近一月收支', fontSize: 13, color: Color(0xFF333333)),
+              BaseText(text: widget.title, fontSize: 13, color: const Color(0xFF333333)),
               const Spacer(),
               _buildSwitch(),
             ],

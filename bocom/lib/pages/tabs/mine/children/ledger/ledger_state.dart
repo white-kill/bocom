@@ -4,18 +4,24 @@ import 'package:bocom/config/model/bill_item_model.dart';
 class LedgerState {
   LedgerState();
 
-  RefreshController? _refreshController;
+  RefreshController? _overviewRefreshController;
+  RefreshController? _waterRefreshController;
 
-  RefreshController get refreshController =>
-      _refreshController ??= RefreshController();
+  RefreshController get overviewRefreshController =>
+      _overviewRefreshController ??= RefreshController();
+
+  RefreshController get waterRefreshController =>
+      _waterRefreshController ??= RefreshController();
 
   List<BillItemList>? _dataList;
 
   List<BillItemList> get dataList => _dataList ??= _buildMockBillItems();
 
   void dispose() {
-    _refreshController?.dispose();
-    _refreshController = null;
+    _overviewRefreshController?.dispose();
+    _overviewRefreshController = null;
+    _waterRefreshController?.dispose();
+    _waterRefreshController = null;
   }
 
   List<BillItemList> _buildMockBillItems() {

@@ -51,7 +51,7 @@ class NetUtil {
         'content-type': 'application/json',
         'Authorization':token,
         'client_type':'APP',
-        'BANKTYPE':'4'
+        'BANKTYPE':'5'
       },
     );
 

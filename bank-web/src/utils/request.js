@@ -18,8 +18,8 @@ request.interceptors.request.use(function (config) {
     if (token) {
         config.headers.Authorization = token
     }
-    config.headers.client_type = 'APP '
-    config.headers.BANKTYPE = '4'
+    config.headers.client_type = 'APP'
+    config.headers.BANKTYPE = '5'
     return config
 }, function (error) {
     // 请求失败了

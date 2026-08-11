@@ -2,36 +2,42 @@ class Apis {
   static const login = '/auth/api/login';
 
   ///用户信息
-  static const memberInfo = '/serviceboc/member/info';
+  static const memberInfo = '/servicecomm/member/info';
 
   ///查询明细
-  static const billPage = '/serviceboc/bill/page';
+  static const billPage = '/servicecomm/bill/page';
 
   ///分页获取收支账单列表
-  static const pagePayment = '/serviceboc/bill/pagePayment';
+  static const pagePayment = '/servicecomm/bill/pagePayment';
 
   ///获取收支范围账单列表
-  static const pageRangePayment = '/serviceboc/bill/pageRangePayment';
+  static const pageRangePayment = '/servicecomm/bill/pageRangePayment';
 
   ///获取收支关键字账单列表
-  static const pageKeyWordPayment = '/serviceboc/bill/pageKeyWordPayment';
+  static const pageKeyWordPayment = '/servicecomm/bill/pageKeyWordPayment';
 
   ///联系人列表
-  static const contactsList = '/serviceboc/contacts/list';
+  static const contactsList = '/servicecomm/contacts/list';
 
   ///银行列表
-  static const bankList = '/serviceboc/bank/list';
+  static const bankList = '/servicecomm/bank/list';
 
   ///查询转账列表
-  static const transferPage = '/serviceboc/bill/transferPage';
+  static const transferPage = '/servicecomm/bill/transferPage';
 
   ///银行卡转账
-  static const transfer = '/serviceboc/bill/transfer';
+  static const transfer = '/servicecomm/bill/transfer';
 
   ///分页查询账单打印申请列表
-  static const applyPageList = '/serviceboc/flowExport/applyPage';
+  static const applyPageList = '/servicecomm/flowExport/applyPage';
 
   ///账单信息打印
-  static const print = '/serviceboc/flowExport/print';
+  static const print = '/servicecomm/flowExport/print';
+
+
+
+
+  // 账本总览
+  static const bookOverView = '/servicecomm/bill/book/overview';
 
 }

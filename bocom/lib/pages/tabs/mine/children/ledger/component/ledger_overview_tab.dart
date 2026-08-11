@@ -32,13 +32,13 @@ class LedgerOverviewTab extends StatelessWidget {
     return ColoredBox(
       color: const Color(0xFFF7F7F7),
       child: SmartRefresher(
-        controller: state.refreshController,
+        controller: state.overviewRefreshController,
         enablePullDown: true,
         enablePullUp: true,
         header: _refreshHeader(),
         footer: _loadFooter(),
-        onRefresh: logic.refreshLedger,
-        onLoading: logic.loadMoreLedger,
+        onRefresh: () => logic.refreshLedger(state.overviewRefreshController),
+        onLoading: () => logic.loadMoreLedger(state.overviewRefreshController),
         child: ListView.separated(
           padding: EdgeInsets.zero,
           itemCount: state.dataList.length + 1,
@@ -49,7 +49,7 @@ class LedgerOverviewTab extends StatelessWidget {
               item: state.dataList[index - 1],
               isFirst: index == 1,
               isLast: index == state.dataList.length,
-            );
+            ).marginSymmetric(horizontal: _position.getX(30));
           },
         ),
       ),
@@ -59,9 +59,13 @@ class LedgerOverviewTab extends StatelessWidget {
   Widget _overviewHeader() => Column(
         children: [
           _statistics(),
-          LedgerTrendChart().marginSymmetric(
-            horizontal: _position.getX(30),
-            vertical: 10.w,
+          Obx(
+            () => LedgerTrendChart(
+              title: logic.periodMode.value == 1 ? '近一年收支' : '近一月收支',
+            ).marginSymmetric(
+              horizontal: _position.getX(30),
+              vertical: 10.w,
+            ),
           ),
           _ledgerEntry().marginSymmetric(horizontal: _position.getX(30)),
           SizedBox(height: 10.w),
@@ -78,20 +82,36 @@ class LedgerOverviewTab extends StatelessWidget {
                 Positioned.fill(
                   child: Image(image: 'bg_ledger_statistics'.png, fit: BoxFit.fill),
                 ),
-                Positioned(
-                  left: _position.getX(80),
-                  top: _position.getX(70),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const BaseText(text: '8', fontSize: 25, color: Color(0xFF111111)),
-                      const BaseText(text: '月', fontSize: 13, color: Color(0xFF333333))
-                          .marginOnly(left: 2.w, bottom: 3.w),
-                      const BaseText(text: '共0笔', fontSize: 11, color: Color(0xFF999999))
-                          .marginOnly(left: 13.w, bottom: 3.w),
-                    ],
-                  ),
-                ),
+                Obx(() {
+                  final selectedPeriod = logic.selectedPeriod.value;
+                  final isYearMode = logic.periodMode.value == 1;
+                  return Positioned(
+                    left: _position.getX(80),
+                    top: _position.getX(70),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        BaseText(
+                          text: isYearMode
+                              ? '${selectedPeriod.year}'
+                              : '${selectedPeriod.month}',
+                          fontSize: 25,
+                          color: const Color(0xFF111111),
+                        ),
+                        BaseText(
+                          text: isYearMode ? '年' : '月',
+                          fontSize: 13,
+                          color: const Color(0xFF333333),
+                        ).marginOnly(left: 2.w, bottom: 3.w),
+                        const BaseText(
+                          text: '共0笔',
+                          fontSize: 11,
+                          color: Color(0xFF999999),
+                        ).marginOnly(left: 13.w, bottom: 3.w),
+                      ],
+                    ),
+                  );
+                }),
                 _amount(left: 80, top: 250, text: '0.00', fontSize: 20),
                 _amount(left: 540, top: 250, text: '0.00', fontSize: 20),
                 _amount(left: 175, top: 340, text: '0.00', fontSize: 14),
