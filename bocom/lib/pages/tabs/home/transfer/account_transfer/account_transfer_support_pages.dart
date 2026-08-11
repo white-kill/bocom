@@ -839,12 +839,93 @@ class RecipientBank {
   const RecipientBank({
     required this.name,
     this.icon = '',
+    this.asset = '',
+    this.initial = '',
   });
 
   final String name;
   final String icon;
+  final String asset;
+  final String initial;
 }
 
+// Logo 切图均来自 1080×2340 真实页面，裁剪框为 x=31、w=84、h=84，
+// 首个 y=480，后续按 132 像素行高递增。
+const _mockRecipientBanks = <RecipientBank>[
+  RecipientBank(
+    name: '交通银行',
+    asset: 'assets/images/account_transfer/banks/bank_communications.jpg',
+    initial: 'J',
+  ),
+  RecipientBank(
+    name: '中国工商银行',
+    asset: 'assets/images/account_transfer/banks/bank_icbc.jpg',
+    initial: 'G',
+  ),
+  RecipientBank(
+    name: '中国农业银行',
+    asset: 'assets/images/account_transfer/banks/bank_agricultural.jpg',
+    initial: 'N',
+  ),
+  RecipientBank(
+    name: '中国银行',
+    asset: 'assets/images/account_transfer/banks/bank_china.jpg',
+    initial: 'Z',
+  ),
+  RecipientBank(
+    name: '中国建设银行',
+    asset: 'assets/images/account_transfer/banks/bank_construction.jpg',
+    initial: 'J',
+  ),
+  RecipientBank(
+    name: '中国邮政储蓄银行',
+    asset: 'assets/images/account_transfer/banks/bank_postal.jpg',
+    initial: 'Y',
+  ),
+  RecipientBank(
+    name: '招商银行',
+    asset: 'assets/images/account_transfer/banks/bank_merchants.jpg',
+    initial: 'Z',
+  ),
+  RecipientBank(
+    name: '中信银行',
+    asset: 'assets/images/account_transfer/banks/bank_citic.jpg',
+    initial: 'Z',
+  ),
+  RecipientBank(
+    name: '中国民生银行',
+    asset: 'assets/images/account_transfer/banks/bank_minsheng.jpg',
+    initial: 'M',
+  ),
+  RecipientBank(
+    name: '兴业银行',
+    asset: 'assets/images/account_transfer/banks/bank_industrial.jpg',
+    initial: 'X',
+  ),
+  RecipientBank(
+    name: '浦发银行',
+    asset: 'assets/images/account_transfer/banks/bank_spdb.jpg',
+    initial: 'P',
+  ),
+  RecipientBank(
+    name: '中国光大银行',
+    asset: 'assets/images/account_transfer/banks/bank_everbright.jpg',
+    initial: 'G',
+  ),
+  RecipientBank(
+    name: '平安银行',
+    asset: 'assets/images/account_transfer/banks/bank_pingan.jpg',
+    initial: 'P',
+  ),
+  RecipientBank(
+    name: '华夏银行',
+    asset: 'assets/images/account_transfer/banks/bank_huaxia.jpg',
+    initial: 'H',
+  ),
+];
+
+// 收款银行页
+// 说明：页面使用原生 Flutter 绘制，银行 Logo 从真实页面截图裁切，导航由页面固定绘制。
 class RecipientBankPage extends StatefulWidget {
   const RecipientBankPage({
     super.key,
@@ -858,6 +939,33 @@ class RecipientBankPage extends StatefulWidget {
 }
 
 class _RecipientBankPageState extends State<RecipientBankPage> {
+  static const _referenceWidth = 1080.0;
+  static const _alphabet = [
+    '热',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'W',
+    'X',
+    'Y',
+    'Z',
+  ];
+
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   List<RecipientBank> _banks = const [];
@@ -870,7 +978,13 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
     super.initState();
     _searchController.addListener(_refresh);
     _scrollController.addListener(_updateActiveSection);
-    _loadBanks();
+    if (widget.bankLoader == null) {
+      _banks = _mockRecipientBanks;
+      _requestState = _RequestState.loaded;
+      _activeSection = '热';
+    } else {
+      _loadBanks();
+    }
   }
 
   @override
@@ -880,10 +994,18 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
   }
 
   Future<void> _loadBanks() async {
+    if (widget.bankLoader == null) {
+      setState(() {
+        _banks = _mockRecipientBanks;
+        _requestState = _RequestState.loaded;
+        _activeSection = '热';
+      });
+      return;
+    }
     setState(() => _requestState = _RequestState.loading);
     try {
       final banks = List<RecipientBank>.of(
-        await (widget.bankLoader?.call() ?? _fetchBanks()),
+        await widget.bankLoader!.call(),
       );
       banks.sort((a, b) => _sortKey(a.name).compareTo(_sortKey(b.name)));
       if (!mounted) return;
@@ -896,49 +1018,39 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
     }
   }
 
-  Future<List<RecipientBank>> _fetchBanks() async {
-    final response = await Http.get(Apis.bankList, isLoading: false);
-    return _extractList(response)
-        .whereType<Map>()
-        .map((item) {
-          final map = Map<String, dynamic>.from(item);
-          final name = _firstString(map, const [
-            'bankName',
-            'name',
-            'bankFullName',
-            'label',
-          ]);
-          final icon = _firstString(map, const [
-            'icon',
-            'bankIcon',
-            'logo',
-            'iconUrl',
-          ]);
-          return RecipientBank(name: name, icon: icon);
-        })
-        .where((bank) => bank.name.isNotEmpty)
-        .toList(growable: true);
-  }
-
   void _refresh() {
     if (_scrollController.hasClients) _scrollController.jumpTo(0);
     setState(() => _activeSection = null);
   }
 
   List<RecipientBank> get _visibleBanks {
-    final query = _searchController.text.trim();
+    final query = _searchController.text.trim().toLowerCase();
     if (query.isEmpty) return _banks;
     return _banks
-        .where((bank) => bank.name.contains(query))
+        .where(
+          (bank) =>
+              bank.name.toLowerCase().contains(query) ||
+              _sortKey(bank.name).toLowerCase().contains(query),
+        )
         .toList(growable: false);
   }
 
   Map<String, List<RecipientBank>> get _groupedBanks {
     final groups = <String, List<RecipientBank>>{};
     for (final bank in _visibleBanks) {
-      groups.putIfAbsent(_initialFor(bank.name), () => []).add(bank);
+      final initial = bank.initial.isEmpty
+          ? _initialFor(bank.name)
+          : bank.initial.toUpperCase();
+      groups.putIfAbsent(initial, () => []).add(bank);
     }
-    return groups;
+    final entries = groups.entries.toList(growable: false)
+      ..sort((a, b) {
+        final aIndex = _alphabet.indexOf(a.key);
+        final bIndex = _alphabet.indexOf(b.key);
+        return (aIndex < 0 ? _alphabet.length : aIndex)
+            .compareTo(bIndex < 0 ? _alphabet.length : bIndex);
+      });
+    return Map.fromEntries(entries);
   }
 
   String _sortKey(String value) => PinyinHelper.getPinyinE(value).toUpperCase();
@@ -963,7 +1075,14 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
   }
 
   void _scrollToSection(String section) {
-    final offset = _sectionOffsets[section];
+    var offset = _sectionOffsets[section];
+    if (offset == null) {
+      final start = _alphabet.indexOf(section);
+      for (var index = start + 1; index < _alphabet.length; index++) {
+        offset = _sectionOffsets[_alphabet[index]];
+        if (offset != null) break;
+      }
+    }
     if (offset == null || !_scrollController.hasClients) return;
     _scrollController.animateTo(
       offset.clamp(0, _scrollController.position.maxScrollExtent),
@@ -986,67 +1105,30 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
   Widget build(BuildContext context) {
     return _LightSystemUi(
       child: Scaffold(
+        key: const Key('recipient-bank-scaffold'),
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          centerTitle: true,
-          leading: IconButton(
-            tooltip: '返回',
-            onPressed: Get.back,
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          ),
-          title: const Text(
-            '收款银行',
-            style: TextStyle(
-              color: Color(0xFF111111),
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        body: Column(
-          children: [
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),
-              child: SizedBox(
-                height: 40,
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: '请输入银行名称',
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF9AA0A8),
-                      fontSize: 15,
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: Color(0xFF9AA0A8),
-                      size: 23,
-                    ),
-                    contentPadding: EdgeInsets.zero,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      borderSide: const BorderSide(color: Color(0xFFCCD1D8)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(22),
-                      borderSide: const BorderSide(color: _blue),
-                    ),
+        body: SafeArea(
+          bottom: false,
+          child: LayoutBuilder(
+            builder: (_, constraints) {
+              final scale = constraints.maxWidth / _referenceWidth;
+              return Column(
+                children: [
+                  _RecipientBankHeader(
+                    scale: scale,
+                    searchController: _searchController,
                   ),
-                ),
-              ),
-            ),
-            Expanded(child: _buildBanksBody()),
-          ],
+                  Expanded(child: _buildBanksBody(scale)),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildBanksBody() {
+  Widget _buildBanksBody(double scale) {
     switch (_requestState) {
       case _RequestState.loading:
         return const _LoadingState(label: '正在加载银行');
@@ -1068,39 +1150,45 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
         for (final entry in sections.entries) {
           offsets[entry.key] = offset;
           children.add(
-            _SectionHeader(label: entry.key == '热' ? '热门银行' : entry.key),
+            _BankSectionHeader(
+              label: entry.key == '热' ? '热门银行' : entry.key,
+              scale: scale,
+            ),
           );
-          offset += 38;
+          offset += 95 * scale;
           for (final bank in entry.value) {
             children.add(
               _LiveBankTile(
                 bank: bank,
+                scale: scale,
                 onTap: () => Get.back(result: bank.name),
               ),
             );
-            offset += 66;
+            offset += 132 * scale;
           }
         }
         _sectionOffsets = offsets;
-        _activeSection ??= sections.keys.first;
+        _activeSection ??= filtering ? sections.keys.first : '热';
         return Stack(
           children: [
             ListView(
               controller: _scrollController,
-              padding: const EdgeInsets.only(right: 28),
+              padding: EdgeInsets.zero,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               children: children,
             ),
-            Positioned(
-              top: 6,
-              right: 0,
-              bottom: 6,
-              width: 28,
-              child: _AlphabetRail(
-                sections: sections.keys.toList(growable: false),
-                activeSection: _activeSection,
-                onSelect: _scrollToSection,
+            if (!filtering)
+              Positioned(
+                top: 158 * scale,
+                right: 0,
+                width: 56 * scale,
+                child: _BankAlphabetRail(
+                  sections: _alphabet,
+                  activeSection: _activeSection,
+                  onSelect: _scrollToSection,
+                  scale: scale,
+                ),
               ),
-            ),
           ],
         );
     }
@@ -2037,10 +2125,161 @@ class _RecipientBankIcon extends StatelessWidget {
   }
 }
 
+class _RecipientBankHeader extends StatelessWidget {
+  const _RecipientBankHeader({
+    required this.scale,
+    required this.searchController,
+  });
+
+  final double scale;
+  final TextEditingController searchController;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: const Key('recipient-bank-header'),
+      height: 270 * scale,
+      child: ColoredBox(
+        color: Colors.white,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 24 * scale,
+              top: 0,
+              width: 120 * scale,
+              height: 126 * scale,
+              child: Semantics(
+                button: true,
+                label: '返回',
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: Get.back,
+                  child: Center(
+                    child: Image.asset(
+                      'assets/images/nav_back_white.png',
+                      width: 21 * scale,
+                      height: 38 * scale,
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 145 * scale,
+              right: 145 * scale,
+              top: 0,
+              height: 126 * scale,
+              child: IgnorePointer(
+                child: Center(
+                  child: Text(
+                    '收款银行',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: const Color(0xFF111111),
+                      fontSize: 53 * scale,
+                      fontWeight: FontWeight.w600,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 38 * scale,
+              right: 38 * scale,
+              top: 149 * scale,
+              height: 86 * scale,
+              child: TextField(
+                key: const Key('recipient-bank-search'),
+                controller: searchController,
+                cursorColor: _blue,
+                textInputAction: TextInputAction.search,
+                textAlignVertical: TextAlignVertical.center,
+                style: TextStyle(
+                  color: const Color(0xFF333333),
+                  fontSize: 43 * scale,
+                  height: 1,
+                ),
+                decoration: InputDecoration(
+                  hintText: '请输入银行名称',
+                  hintStyle: TextStyle(
+                    color: const Color(0xFF9299A6),
+                    fontSize: 43 * scale,
+                    fontWeight: FontWeight.w400,
+                    height: 1,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: const Color(0xFF9299A6),
+                    size: 47 * scale,
+                  ),
+                  prefixIconConstraints: BoxConstraints(
+                    minWidth: 91 * scale,
+                    minHeight: 86 * scale,
+                  ),
+                  contentPadding: EdgeInsets.only(
+                    right: 28 * scale,
+                    bottom: 2 * scale,
+                  ),
+                  isDense: true,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(44 * scale),
+                    borderSide: BorderSide(
+                      color: const Color(0xFFB7BBC3),
+                      width: 2 * scale,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(44 * scale),
+                    borderSide: BorderSide(color: _blue, width: 2 * scale),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BankSectionHeader extends StatelessWidget {
+  const _BankSectionHeader({required this.label, required this.scale});
+
+  final String label;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: Key('recipient-bank-section-$label'),
+      height: 95 * scale,
+      alignment: Alignment.centerLeft,
+      padding: EdgeInsets.only(left: 43 * scale),
+      color: Colors.white,
+      child: Text(
+        label,
+        style: TextStyle(
+          color: const Color(0xFF8C95A3),
+          fontSize: 42 * scale,
+          fontWeight: FontWeight.w400,
+          height: 1,
+        ),
+      ),
+    );
+  }
+}
+
 class _LiveBankTile extends StatelessWidget {
-  const _LiveBankTile({required this.bank, required this.onTap});
+  const _LiveBankTile({
+    required this.bank,
+    required this.scale,
+    required this.onTap,
+  });
 
   final RecipientBank bank;
+  final double scale;
   final VoidCallback onTap;
 
   @override
@@ -2051,41 +2290,135 @@ class _LiveBankTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          height: 66,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: const BoxDecoration(
+          key: Key('recipient-bank-row-${bank.name}'),
+          height: 132 * scale,
+          padding: EdgeInsets.only(left: 31 * scale, right: 40 * scale),
+          decoration: BoxDecoration(
             color: Colors.white,
-            border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
+            border: Border(
+              bottom: BorderSide(
+                color: const Color(0xFFE7E7E7),
+                width: 1 * scale,
+              ),
+            ),
           ),
           child: Row(
             children: [
-              ClipOval(
-                child: bank.icon.isEmpty
-                    ? const SizedBox(
-                        width: 38,
-                        height: 38,
-                        child: ColoredBox(
-                          color: Color(0xFF0B6DB9),
-                          child: Icon(Icons.account_balance,
-                              color: Colors.white, size: 22),
-                        ),
-                      )
-                    : CachedNetworkImage(
-                        imageUrl: bank.icon,
-                        width: 38,
-                        height: 38,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => const Icon(
-                          Icons.account_balance,
-                          color: Color(0xFF0B6DB9),
-                        ),
-                      ),
+              SizedBox(
+                width: 84 * scale,
+                height: 84 * scale,
+                child: bank.asset.isNotEmpty
+                    ? Image.asset(bank.asset, fit: BoxFit.fill)
+                    : bank.icon.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: bank.icon,
+                            fit: BoxFit.contain,
+                            errorWidget: (_, __, ___) => _BankLogoFallback(
+                              scale: scale,
+                            ),
+                          )
+                        : _BankLogoFallback(scale: scale),
               ),
-              const SizedBox(width: 14),
+              SizedBox(width: 19 * scale),
               Expanded(
-                  child: Text(bank.name, style: const TextStyle(fontSize: 17))),
+                child: Text(
+                  bank.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: const Color(0xFF333333),
+                    fontSize: 48 * scale,
+                    fontWeight: FontWeight.w400,
+                    height: 1,
+                  ),
+                ),
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BankLogoFallback extends StatelessWidget {
+  const _BankLogoFallback({required this.scale});
+
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      Icons.account_balance,
+      color: const Color(0xFF0B6DB9),
+      size: 58 * scale,
+    );
+  }
+}
+
+class _BankAlphabetRail extends StatelessWidget {
+  const _BankAlphabetRail({
+    required this.sections,
+    required this.activeSection,
+    required this.onSelect,
+    required this.scale,
+  });
+
+  final List<String> sections;
+  final String? activeSection;
+  final ValueChanged<String> onSelect;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    final itemExtent = 52 * scale;
+
+    void selectAt(double dy) {
+      final index = (dy / itemExtent).floor().clamp(0, sections.length - 1);
+      onSelect(sections[index]);
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (details) => selectAt(details.localPosition.dy),
+      onVerticalDragUpdate: (details) => selectAt(details.localPosition.dy),
+      child: SizedBox(
+        key: const Key('recipient-bank-alphabet-rail'),
+        height: itemExtent * sections.length,
+        child: Column(
+          children: sections
+              .map(
+                (section) => SizedBox(
+                  key: Key('recipient-bank-alphabet-$section'),
+                  width: itemExtent,
+                  height: itemExtent,
+                  child: Center(
+                    child: Container(
+                      width: 50 * scale,
+                      height: 50 * scale,
+                      alignment: Alignment.center,
+                      decoration: section == activeSection
+                          ? const BoxDecoration(
+                              color: _blue,
+                              shape: BoxShape.circle,
+                            )
+                          : null,
+                      child: Text(
+                        section,
+                        style: TextStyle(
+                          color: section == activeSection
+                              ? Colors.white
+                              : const Color(0xFF3E4652),
+                          fontSize: 33 * scale,
+                          fontWeight: FontWeight.w400,
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+              .toList(growable: false),
         ),
       ),
     );
@@ -2289,14 +2622,4 @@ List<dynamic> _extractList(dynamic response) {
     }
   }
   return const [];
-}
-
-String _firstString(Map<String, dynamic> map, List<String> keys) {
-  for (final key in keys) {
-    final value = map[key];
-    if (value != null && value.toString().trim().isNotEmpty) {
-      return value.toString().trim();
-    }
-  }
-  return '';
 }

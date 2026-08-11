@@ -184,6 +184,56 @@ void main() {
     expect(find.text('交通银行'), findsNothing);
   });
 
+  testWidgets('银行页默认使用真实页面假数据并保持参考图比例', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2340);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const GetMaterialApp(home: RecipientBankPage()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('收款银行'), findsOneWidget);
+    expect(find.text('热门银行'), findsOneWidget);
+    expect(find.text('交通银行'), findsWidgets);
+    expect(find.text('华夏银行'), findsWidgets);
+    expect(
+      tester.getSize(find.byKey(const Key('recipient-bank-header'))).height,
+      closeTo(270, 0.1),
+    );
+    expect(
+      tester
+          .getSize(find.byKey(const Key('recipient-bank-section-热门银行')))
+          .height,
+      closeTo(95, 0.1),
+    );
+    expect(
+      tester
+          .getSize(
+            find.byKey(const Key('recipient-bank-row-交通银行')).first,
+          )
+          .height,
+      closeTo(132, 0.1),
+    );
+    expect(
+      tester
+          .getSize(find.byKey(const Key('recipient-bank-alphabet-rail')))
+          .height,
+      closeTo(1196, 0.1),
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('recipient-bank-search')),
+      '民生',
+    );
+    await tester.pump();
+    expect(find.text('中国民生银行'), findsOneWidget);
+    expect(find.text('交通银行'), findsNothing);
+    expect(find.byKey(const Key('recipient-bank-alphabet-rail')), findsNothing);
+  });
+
   testWidgets('扫描银行卡页按设计比例绘制四角框并在拍摄后返回', (tester) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 1;

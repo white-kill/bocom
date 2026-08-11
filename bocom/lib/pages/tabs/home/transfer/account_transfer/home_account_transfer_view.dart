@@ -3,11 +3,13 @@ import 'package:bocom/config/model/contacts_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:wb_base_widget/extension/double_extension.dart';
 
 import 'account_transfer_support_pages.dart';
 
 const _accountTransferReferenceWidth = 588.0;
+const _accountTransferSupplementalReferenceWidth = 1206.0;
 const _contactIconAsset =
     'assets/images/account_transfer/icons/recipient_contact.png';
 const _cardScanIconAsset = 'assets/images/account_transfer/icons/card_scan.png';
@@ -20,6 +22,12 @@ const _bankOfChinaAsset =
 double _referencePixels(BuildContext context, double pixels) {
   return MediaQuery.sizeOf(context).width /
       _accountTransferReferenceWidth *
+      pixels;
+}
+
+double _supplementalReferencePixels(BuildContext context, double pixels) {
+  return MediaQuery.sizeOf(context).width /
+      _accountTransferSupplementalReferenceWidth *
       pixels;
 }
 
@@ -48,7 +56,29 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   final _bankController = TextEditingController();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _amountFocusNode = FocusNode();
+  final _descriptionFocusNode = FocusNode();
   String _arrivalTime = '预计实时到账';
+
+  double get _amountValue =>
+      double.tryParse(
+        _amountController.text.replaceAll(',', '').trim(),
+      ) ??
+      0;
+
+  double? get _availableBalance {
+    if (!Get.isRegistered<BocLogic>()) return null;
+    final banks = Get.find<BocLogic>().memberInfo.bankList;
+    if (banks.isEmpty) return null;
+    return banks.first.accountBalance;
+  }
+
+  bool get _hasInsufficientBalance {
+    final balance = _availableBalance;
+    return balance != null && _amountValue > balance;
+  }
+
+  bool get _usesDeferredArrival => _amountValue >= 10000000;
 
   List<TextEditingController> get _requiredControllers => [
         _nameController,
@@ -68,10 +98,46 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
     for (final controller in _requiredControllers) {
       controller.addListener(_refresh);
     }
+    _amountFocusNode.addListener(_handleAmountFocusChanged);
+    _descriptionFocusNode.addListener(_refresh);
   }
 
   void _refresh() {
     if (mounted) setState(() {});
+  }
+
+  void _handleAmountFocusChanged() {
+    final original = _amountController.text;
+    if (original.isEmpty) {
+      _refresh();
+      return;
+    }
+    final updated = _amountFocusNode.hasFocus
+        ? _editableAmount(original)
+        : _displayAmount(original);
+    if (updated != original) {
+      _amountController.value = TextEditingValue(
+        text: updated,
+        selection: TextSelection.collapsed(offset: updated.length),
+      );
+    }
+    _refresh();
+  }
+
+  String _editableAmount(String value) {
+    var result = value.replaceAll(',', '');
+    if (result.endsWith('.00')) result = result.substring(0, result.length - 3);
+    if (result.contains('.')) {
+      result = result.replaceFirst(RegExp(r'0+$'), '');
+      result = result.replaceFirst(RegExp(r'\.$'), '');
+    }
+    return result;
+  }
+
+  String _displayAmount(String value) {
+    final parsed = double.tryParse(value.replaceAll(',', ''));
+    if (parsed == null) return value;
+    return NumberFormat('#,##0.00').format(parsed);
   }
 
   void _fillRecipient(ContactsModel? recipient) {
@@ -111,8 +177,14 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
     if (result != null && mounted) setState(() => _arrivalTime = result);
   }
 
+  Future<void> _showArrivalExplanation() async {
+    FocusScope.of(context).unfocus();
+    await showArrivalExplanationSheet(context);
+  }
+
   void _continue() {
     if (!_canContinue) return;
+    _amountFocusNode.unfocus();
     final recipient = ContactsModel()
       ..name = _nameController.text.trim()
       ..bankCard = _accountController.text.trim()
@@ -122,7 +194,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
         recipient: recipient,
         amount: _amountController.text.trim(),
         description: _descriptionController.text.trim(),
-        arrivalTime: _arrivalTime,
+        arrivalTime: _usesDeferredArrival ? '实时提交，预计1小时内到账' : _arrivalTime,
       ),
     );
   }
@@ -137,6 +209,12 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
     _bankController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
+    _amountFocusNode
+      ..removeListener(_handleAmountFocusChanged)
+      ..dispose();
+    _descriptionFocusNode
+      ..removeListener(_refresh)
+      ..dispose();
     super.dispose();
   }
 
@@ -215,24 +293,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
             const SizedBox(height: 14),
             Row(
               children: [
-                Expanded(
-                  child: Text.rich(
-                    TextSpan(
-                      style: const TextStyle(
-                        color: Color(0xFF888888),
-                        fontSize: 14,
-                      ),
-                      children: [
-                        const TextSpan(text: '预计'),
-                        TextSpan(
-                          text: _arrivalTime.replaceFirst('预计', ''),
-                          style: const TextStyle(color: Color(0xFFFF4F54)),
-                        ),
-                        const TextSpan(text: ' ⓘ'),
-                      ],
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildArrivalSummary()),
                 TextButton(
                   onPressed: _chooseArrivalTime,
                   child: const Text(
@@ -288,8 +349,67 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
           bankName: bank.bankName,
           title: '${bank.bankName} $cardType(**$suffix)',
           balance: '可用余额 ${bank.accountBalance.bankBalance}元',
+          onTap: () => _showPayerAccountSheet(
+            bankName: bank.bankName,
+            title: '${bank.bankName} $cardType (**$suffix)',
+            balance: '可用余额${bank.accountBalance.bankBalance}元',
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildArrivalSummary() {
+    if (_usesDeferredArrival) {
+      return _ArrivalSummaryButton(
+        onPressed: _showArrivalExplanation,
+        children: const [
+          TextSpan(
+            text: '实时提交，预计1小时内到账',
+            style: TextStyle(color: Color(0xFFFF575A)),
+          ),
+        ],
+      );
+    }
+    if (_arrivalTime != '预计实时到账') {
+      return _ArrivalSummaryButton(
+        onPressed: _showArrivalExplanation,
+        children: [TextSpan(text: _arrivalTime)],
+      );
+    }
+    return _ArrivalSummaryButton(
+      onPressed: _showArrivalExplanation,
+      children: const [
+        TextSpan(text: '预计'),
+        TextSpan(
+          text: '实时',
+          style: TextStyle(color: Color(0xFFFF575A)),
+        ),
+        TextSpan(text: '到账'),
+      ],
+    );
+  }
+
+  Future<void> _showPayerAccountSheet({
+    required String bankName,
+    required String title,
+    required String balance,
+  }) async {
+    FocusScope.of(context).unfocus();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black45,
+      builder: (sheetContext) => SizedBox(
+        height: _supplementalReferencePixels(sheetContext, 1644),
+        child: _PayerAccountSheet(
+          bankName: bankName,
+          title: title,
+          balance: balance,
+          onClose: () => Navigator.of(sheetContext).pop(),
+        ),
+      ),
     );
   }
 
@@ -355,13 +475,14 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   }
 
   Widget _buildAmountCard() {
+    final unit = _amountUnit(_amountValue);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+        padding: const EdgeInsets.fromLTRB(16, 9, 16, 6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -370,7 +491,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
                 const Expanded(
                   child: Text(
                     '转账金额',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ),
                 TextButton(
@@ -383,61 +504,548 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
               ],
             ),
             Container(
-              height: 50,
+              height: _hasInsufficientBalance ? 62 : 56,
               decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
               ),
-              child: Row(
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  const Text(
-                    '¥',
-                    style: TextStyle(fontSize: 30, color: Color(0xFF333333)),
-                  ),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: TextField(
-                      controller: _amountController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 26,
-                        color: Color(0xFF222222),
-                      ),
-                      decoration: const InputDecoration(
-                        hintText: '0',
-                        hintStyle: TextStyle(
-                          color: Color(0xFFCCCCCC),
-                          fontSize: 26,
+                  Positioned.fill(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Transform.translate(
+                          key: const Key('transfer-currency-symbol'),
+                          offset: const Offset(0, 4),
+                          child: const Text(
+                            '¥',
+                            style: TextStyle(
+                              fontSize: 31,
+                              height: 1,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF292929),
+                            ),
+                          ),
                         ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            key: const Key('transfer-amount-field'),
+                            controller: _amountController,
+                            focusNode: _amountFocusNode,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: const [_TransferAmountFormatter()],
+                            textInputAction: TextInputAction.done,
+                            style: const TextStyle(
+                              fontSize: 30,
+                              height: 1,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF292929),
+                            ),
+                            decoration: InputDecoration(
+                              hintText: '0手续费',
+                              hintStyle: const TextStyle(
+                                color: Color(0xFFD5D9E1),
+                                fontSize: 20,
+                                height: 1,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              suffixIconConstraints: const BoxConstraints(
+                                minWidth: 30,
+                                minHeight: 30,
+                              ),
+                              suffixIcon: _amountFocusNode.hasFocus &&
+                                      _amountController.text.isNotEmpty
+                                  ? IconButton(
+                                      key: const Key('clear-transfer-amount'),
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                      onPressed: _amountController.clear,
+                                      icon: const Icon(
+                                        Icons.cancel,
+                                        size: 17,
+                                        color: Color(0xFFC7CCD5),
+                                      ),
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.only(top: 8),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  if (unit != null)
+                    Positioned(
+                      key: const Key('amount-unit-tooltip'),
+                      left: 21,
+                      top: -2,
+                      child: _AmountUnitBubble(label: unit),
+                    ),
+                  if (_hasInsufficientBalance)
+                    const Positioned(
+                      key: Key('amount-insufficient-message'),
+                      left: 23,
+                      bottom: -7,
+                      child: _InsufficientBalanceBubble(),
+                    ),
+                ],
+              ),
+            ),
+            TextField(
+              key: const Key('transfer-description-field'),
+              controller: _descriptionController,
+              focusNode: _descriptionFocusNode,
+              maxLength: 60,
+              decoration: InputDecoration(
+                counterText: '',
+                hintText:
+                    _descriptionFocusNode.hasFocus ? '选填，对方可见，60字内' : '添加转账说明',
+                hintStyle: const TextStyle(
+                  color: Color(0xFFD5D9E1),
+                  fontSize: 15,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.only(top: 13, bottom: 10),
+              ),
+            ),
+            if (_descriptionFocusNode.hasFocus) ...[
+              const SizedBox(height: 2),
+              _DescriptionSuggestions(
+                onSelected: (value) {
+                  _descriptionController.text = value;
+                  _descriptionController.selection = TextSelection.collapsed(
+                    offset: value.length,
+                  );
+                },
+              ),
+              const SizedBox(height: 6),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _amountUnit(double amount) {
+    if (amount >= 100000000) return '亿';
+    if (amount >= 10000000) return '千万';
+    if (amount >= 1000000) return '百万';
+    if (amount >= 100000) return '十万';
+    if (amount >= 10000) return '万';
+    if (amount >= 1000) return '千';
+    return null;
+  }
+}
+
+class _TransferAmountFormatter extends TextInputFormatter {
+  const _TransferAmountFormatter();
+
+  static final _validAmount = RegExp(r'^\d{0,12}(?:\.\d{0,2})?$');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final candidate = newValue.text.replaceAll(',', '');
+    if (!_validAmount.hasMatch(candidate)) return oldValue;
+    final selectionEnd = newValue.selection.end;
+    final safeEnd = selectionEnd.clamp(0, newValue.text.length);
+    final removedCommas =
+        ','.allMatches(newValue.text.substring(0, safeEnd)).length;
+    final cursor = (safeEnd - removedCommas).clamp(0, candidate.length);
+    return newValue.copyWith(
+      text: candidate,
+      selection: TextSelection.collapsed(offset: cursor),
+      composing: TextRange.empty,
+    );
+  }
+}
+
+class _ArrivalSummaryButton extends StatelessWidget {
+  const _ArrivalSummaryButton({
+    required this.onPressed,
+    required this.children,
+  });
+
+  final VoidCallback onPressed;
+  final List<InlineSpan> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          key: const Key('arrival-summary-text'),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text.rich(
+            TextSpan(
+              style: const TextStyle(
+                color: Color(0xFF8B99AA),
+                fontSize: 14,
+              ),
+              children: children,
+            ),
+          ),
+        ),
+        const SizedBox(width: 2),
+        Semantics(
+          button: true,
+          label: '查看到账说明',
+          child: InkResponse(
+            key: const Key('arrival-explanation-button'),
+            onTap: onPressed,
+            radius: 18,
+            child: const SizedBox(
+              width: 36,
+              height: 36,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: Color(0xFF8B99AA),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AmountUnitBubble extends StatelessWidget {
+  const _AmountUnitBubble({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: const _AmountUnitBubblePainter(),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(7, 2, 7, 6),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF0875E8),
+            fontSize: 11,
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AmountUnitBubblePainter extends CustomPainter {
+  const _AmountUnitBubblePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..moveTo(.5, .5)
+      ..lineTo(size.width - .5, .5)
+      ..lineTo(size.width - .5, size.height - 5.5)
+      ..lineTo(size.width / 2 + 4, size.height - 5.5)
+      ..lineTo(size.width / 2, size.height - .5)
+      ..lineTo(size.width / 2 - 4, size.height - 5.5)
+      ..lineTo(.5, size.height - 5.5)
+      ..close();
+    canvas.drawPath(path, Paint()..color = Colors.white);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = const Color(0xFF0875E8),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _InsufficientBalanceBubble extends StatelessWidget {
+  const _InsufficientBalanceBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    // The supplied 1206 px screenshot was captured at 3x. The unscaled
+    // Flutter bubble is 192 logical px wide (= 576 source px at 3x), so this
+    // factor preserves its 576/1206 viewport ratio on the current device.
+    final referenceScale = _supplementalReferencePixels(context, 576) / 192;
+    return Transform.scale(
+      key: const Key('amount-insufficient-reference-scale'),
+      scale: referenceScale,
+      alignment: Alignment.topLeft,
+      child: const CustomPaint(
+        key: Key('amount-insufficient-tip-shape'),
+        painter: _InsufficientBalanceBubblePainter(),
+        child: Padding(
+          // The supplemental reference has a 9 px upward tip above an 18 dp
+          // message body. Keep that space inside the painted bounds so the
+          // bubble remains anchored to the amount underline by its bottom edge.
+          padding: EdgeInsets.fromLTRB(6, 5, 6, 2),
+          child: Text(
+            '余额不足，更换付款卡或补充资金',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              height: 1.2,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InsufficientBalanceBubblePainter extends CustomPainter {
+  const _InsufficientBalanceBubblePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const tipHeight = 3.0;
+    const tipCenter = 12.5;
+    const tipHalfWidth = 3.5;
+    const radius = Radius.circular(1.5);
+
+    final body = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, tipHeight, size.width, size.height - tipHeight),
+      radius,
+    );
+    final path = Path()
+      ..addRRect(body)
+      ..moveTo(tipCenter - tipHalfWidth, tipHeight)
+      ..lineTo(tipCenter, 0)
+      ..lineTo(tipCenter + tipHalfWidth, tipHeight)
+      ..close();
+
+    canvas.drawPath(path, Paint()..color = const Color(0xFFFF575A));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _DescriptionSuggestions extends StatelessWidget {
+  const _DescriptionSuggestions({required this.onSelected});
+
+  static const values = [
+    '生活费',
+    '工资福利',
+    '投资理财',
+    '还信用卡',
+    '商业贷款',
+    '还房租',
+    '还贷款',
+    '归还欠款',
+  ];
+
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final availableWidth = MediaQuery.sizeOf(context).width - 50;
+    final tileWidth = (availableWidth - 18) / 4;
+    final gridHeight = tileWidth / 2.55 * 2 + 6;
+    return SizedBox(
+      height: gridHeight,
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          mainAxisSpacing: 6,
+          crossAxisSpacing: 6,
+          childAspectRatio: 2.55,
+        ),
+        itemCount: values.length,
+        itemBuilder: (context, index) {
+          final value = values[index];
+          return Material(
+            color: const Color(0xFFF7F7F7),
+            borderRadius: BorderRadius.circular(7),
+            child: InkWell(
+              onTap: () => onSelected(value),
+              borderRadius: BorderRadius.circular(7),
+              child: Center(
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    color: Color(0xFF333333),
+                    fontSize: 12.5,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PayerAccountSheet extends StatelessWidget {
+  const _PayerAccountSheet({
+    required this.bankName,
+    required this.title,
+    required this.balance,
+    required this.onClose,
+  });
+
+  final String bankName;
+  final String title;
+  final String balance;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      key: const Key('payer-account-sheet'),
+      color: const Color(0xFFF8F8F8),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(_supplementalReferencePixels(context, 32)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: _supplementalReferencePixels(context, 164),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
                   const Text(
-                    '0手续费',
-                    style: TextStyle(color: Color(0xFFCCCCCC), fontSize: 15),
+                    '选择付款账户',
+                    style: TextStyle(
+                      color: Color(0xFF222222),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Positioned(
+                    left: _supplementalReferencePixels(context, 4),
+                    child: IconButton(
+                      tooltip: '关闭',
+                      onPressed: onClose,
+                      icon: Icon(
+                        Icons.close,
+                        size: _supplementalReferencePixels(context, 57),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            SizedBox(
-              height: 40,
-              child: TextField(
-                controller: _descriptionController,
-                maxLength: 30,
-                decoration: const InputDecoration(
-                  counterText: '',
-                  hintText: '添加转账说明',
-                  hintStyle: TextStyle(
-                    color: Color(0xFFCCCCCC),
-                    fontSize: 14,
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                _supplementalReferencePixels(context, 45),
+                _supplementalReferencePixels(context, 59),
+                _supplementalReferencePixels(context, 45),
+                0,
+              ),
+              child: Container(
+                key: const Key('payer-account-option'),
+                height: _supplementalReferencePixels(context, 222),
+                padding: EdgeInsets.symmetric(
+                  horizontal: _supplementalReferencePixels(context, 28),
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(
+                    _supplementalReferencePixels(context, 22),
                   ),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.only(top: 12),
+                  border: Border.all(color: const Color(0xFF0875E8)),
+                ),
+                child: Row(
+                  children: [
+                    _PayerBankLogo(bankName: bankName),
+                    SizedBox(
+                      width: _supplementalReferencePixels(context, 21),
+                    ),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 15, height: 1),
+                          ),
+                          SizedBox(
+                            height: _supplementalReferencePixels(context, 33),
+                          ),
+                          Text(
+                            balance,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              color: Color(0xFF999999),
+                              fontSize: 13,
+                              height: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: _supplementalReferencePixels(context, 59),
+                      height: _supplementalReferencePixels(context, 59),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0875E8),
+                        borderRadius: BorderRadius.circular(
+                          _supplementalReferencePixels(context, 17),
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: _supplementalReferencePixels(context, 45),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Spacer(),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                _supplementalReferencePixels(context, 45),
+                0,
+                _supplementalReferencePixels(context, 45),
+                _supplementalReferencePixels(context, 129),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                height: _supplementalReferencePixels(context, 138),
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF0875E8),
+                    side: const BorderSide(color: Color(0xFF0875E8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        _supplementalReferencePixels(context, 22),
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_circle_outline, size: 23),
+                  label: const Text('添加付款账户', style: TextStyle(fontSize: 17)),
                 ),
               ),
             ),
@@ -448,69 +1056,148 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   }
 }
 
+Future<void> showArrivalExplanationSheet(BuildContext context) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black45,
+    builder: (sheetContext) => SizedBox(
+      height: _supplementalReferencePixels(sheetContext, 1644),
+      child: Material(
+        key: const Key('arrival-explanation-sheet'),
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(
+            _supplementalReferencePixels(sheetContext, 32),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: _supplementalReferencePixels(sheetContext, 164),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Text(
+                      '到账说明',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Positioned(
+                      left: _supplementalReferencePixels(sheetContext, 4),
+                      child: IconButton(
+                        tooltip: '关闭',
+                        onPressed: () => Navigator.of(sheetContext).pop(),
+                        icon: Icon(
+                          Icons.close,
+                          size: _supplementalReferencePixels(sheetContext, 57),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  _supplementalReferencePixels(sheetContext, 45),
+                  _supplementalReferencePixels(sheetContext, 66),
+                  _supplementalReferencePixels(sheetContext, 45),
+                  0,
+                ),
+                child: const Text(
+                  '1.我行将根据您选择的到账时间自动确定转账交易实际处理的时间。\n'
+                  '2.请您注意转账交易在我行的实际处理时间。交行行内转账，一般实时到账，跨行转账具体到账时间，以收款银行入账时间为准。\n'
+                  '3.对于非实时到账的转账交易，您可随时在交易实际处理时间前，通过个人手机银行-转账-转账记录、个人网银-转账-转账记录查询-可撤销交易查询等任一渠道办理撤销。',
+                  style: TextStyle(
+                    color: Color(0xFF333333),
+                    fontSize: 14,
+                    height: 1.55,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class _PayerCard extends StatelessWidget {
   const _PayerCard({
     required this.bankName,
     required this.title,
     required this.balance,
+    required this.onTap,
   });
 
   final String bankName;
   final String title;
   final String balance;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      key: const Key('payer-account-card'),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(6),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 12, 18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '付款账户',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                _PayerBankLogo(bankName: bankName),
-                SizedBox(
-                  width: _referencePixels(context, 12),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        balance,
-                        style: const TextStyle(
-                          color: Color(0xFF555555),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 12, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '付款账户',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  _PayerBankLogo(bankName: bankName),
+                  SizedBox(
+                    width: _referencePixels(context, 12),
                   ),
-                ),
-                const _TransferSuffixIcon(
-                  asset: _rowChevronAsset,
-                  sourceWidth: 10,
-                  sourceHeight: 19,
-                ),
-              ],
-            ),
-          ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          balance,
+                          style: const TextStyle(
+                            color: Color(0xFF555555),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const _TransferSuffixIcon(
+                    asset: _rowChevronAsset,
+                    sourceWidth: 10,
+                    sourceHeight: 19,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
