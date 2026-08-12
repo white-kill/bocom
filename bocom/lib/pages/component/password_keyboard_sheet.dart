@@ -1,40 +1,107 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
-import 'package:wb_base_widget/wb_base_widget.dart';
-import 'package:bocom/utils/stack_position.dart';
-import 'package:bocom/config/app_config.dart';
+import 'package:wb_base_widget/extension/widget_extension.dart';
+import '../../config/app_config.dart';
+import '../../utils/stack_position.dart';
 import 'indicator_loading.dart';
 
+class TransactionPasswordContext {
+  const TransactionPasswordContext({
+    required this.payeeName,
+    required this.amountDisplay,
+    required this.bankName,
+    required this.accountNumber,
+  });
+
+  final String payeeName;
+  final String amountDisplay;
+  final String bankName;
+  final String accountNumber;
+
+  String get primaryText => '转给 $payeeName $amountDisplay';
+
+  String get secondaryText {
+    final digits = accountNumber.replaceAll(RegExp(r'\s+'), '');
+    final groups = <String>[];
+    for (var start = 0; start < digits.length; start += 4) {
+      final end = (start + 4).clamp(0, digits.length);
+      groups.add(digits.substring(start, end));
+    }
+    return '$bankName ${groups.join(' ')}'.trim();
+  }
+}
+
+typedef PasswordVerificationLauncher = Future<bool?> Function(
+  BuildContext context,
+  TransactionPasswordContext transaction,
+);
+typedef PasswordVerifier = Future<bool> Function(String password);
+
+// 交易密码弹层
+// 说明：交通银行安全键盘使用项目既有位图，转账对象、金额、银行、账号与六位输入状态由 Flutter 动态绘制。
 class PasswordKeyboardSheet extends StatefulWidget {
-  const PasswordKeyboardSheet({super.key, this.onCompleted});
+  const PasswordKeyboardSheet({
+    super.key,
+    this.transaction,
+    this.passwordVerifier,
+  });
 
-  final Future<void> Function()? onCompleted;
+  final TransactionPasswordContext? transaction;
+  final PasswordVerifier? passwordVerifier;
 
-  static Future<T?> show<T>(
+  static Future<bool?> showForVerification(
     BuildContext context, {
-    Future<void> Function()? onCompleted,
+    TransactionPasswordContext? transaction,
+    PasswordVerifier? passwordVerifier,
   }) {
-    return showModalBottomSheet<T>(
+    return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: false,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black54,
-      builder: (_) => PasswordKeyboardSheet(onCompleted: onCompleted),
+      barrierColor: Colors.black.withValues(alpha: 0.63),
+      builder: (_) => PasswordKeyboardSheet(
+        transaction: transaction,
+        passwordVerifier: passwordVerifier,
+      ),
     );
   }
 
+  /// 兼容原资产页调用；验证完成后显示加载动画并执行回调。
+  static Future<bool?> show(
+    BuildContext context, {
+    Future<void> Function()? onCompleted,
+    TransactionPasswordContext? transaction,
+    PasswordVerifier? passwordVerifier,
+  }) async {
+    final verified = await showForVerification(
+      context,
+      transaction: transaction,
+      passwordVerifier: passwordVerifier,
+    );
+    if (verified == true && context.mounted && onCompleted != null) {
+      await BocomLoading.run(context, onCompleted);
+    }
+    return verified;
+  }
+
   @override
-  State<PasswordKeyboardSheet> createState() =>
-      _PasswordKeyboardSheetState();
+  State<PasswordKeyboardSheet> createState() => _PasswordKeyboardSheetState();
 }
 
 class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
     with SingleTickerProviderStateMixin {
-  static const int _passwordLength = 6;
+  static const _passwordLength = 6;
+  static const _designWidth = 645.0;
+  static const _designHeight = 1008.0;
+  static const _keyboardSourceTop = 295.0;
+  static const _keyboardHeight = 523.0;
+  static const _keyboardTop = 485.0;
+  static const _titleFontSize = 29.0;
+  static const _primaryFontSize = 33.0;
+  static const _secondaryFontSize = 30.0;
 
   int _inputCount = 0;
+  bool _completed = false;
   late final AnimationController _cursorController;
 
   @override
@@ -52,136 +119,268 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
     super.dispose();
   }
 
-  Future<void> _inputDigit() async {
-    if (_inputCount >= _passwordLength) return;
-    setState(() => _inputCount++);
+  Future<void> _inputDigit(String _) async {
+    if (_completed || _inputCount >= _passwordLength) return;
+    setState(() {
+      _inputCount++;
+    });
     if (_inputCount == _passwordLength) {
-      await BocomLoading.show(context);
-      Get.back();
-      await widget.onCompleted?.call();
+      _completed = true;
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
     }
   }
 
   void _deleteDigit() {
-    if (_inputCount == 0) return;
-    setState(() => _inputCount--);
+    if (_completed || _inputCount == 0) return;
+    setState(() {
+      _inputCount--;
+    });
   }
+
+  void _close() => Navigator.of(context).pop(false);
 
   @override
   Widget build(BuildContext context) {
-    StackPosition stackPosition =
-        StackPosition(designWidth: 645, designHeight: 818, deviceWidth: 1.sw);
+    final width = MediaQuery.sizeOf(context).width;
+    final position = StackPosition(
+      designWidth: _designWidth,
+      designHeight: _designHeight,
+      deviceWidth: width,
+    );
+    final transaction = widget.transaction;
+
     return SizedBox(
-      width: 1.sw,
-      height: stackPosition.getHeight(818),
+      key: const Key('password-keyboard-sheet'),
+      width: width,
+      height: position.getHeight(_designHeight),
       child: Stack(
         children: [
-          Image(
-            image: 'bg_keyboard_sheet'.png3x,
-            width: 1.sw,
-            fit: BoxFit.fitWidth,
-          ),
-          Positioned(
-            left: 0,
-            top: stackPosition.getY(100),
-            width: 1.sw,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const BaseText(
-                  text: '请输入银行账号',
-                  fontSize: 12,
-                  color: Colors.black,
-                ),
-                BaseText(
-                  text: '(**${AppConfig.config.abcLogic.cardFour()})',
-                  fontSize: 13,
-                  color: Colors.orangeAccent,
-                ),
-                const BaseText(
-                  text: '的交易密码',
-                  fontSize: 12,
-                  color: Colors.black,
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            left: stackPosition.getX(102.5),
-            top: stackPosition.getY(150),
-            width: stackPosition.getWidth(440),
-            height: stackPosition.getHeight(61),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _inputDigit,
-              child: Row(
-                children: List.generate(
-                  _passwordLength,
-                  (index) => Expanded(
-                    child: Container(
-                      margin: EdgeInsets.symmetric(
-                        horizontal: stackPosition.getWidth(5),
-                      ),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F2F4),
-                        borderRadius:
-                            BorderRadius.circular(stackPosition.getWidth(4)),
-                      ),
-                      child: index < _inputCount
-                          ? Container(
-                              width: stackPosition.getWidth(19),
-                              height: stackPosition.getWidth(19),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF292929),
-                                shape: BoxShape.circle,
-                              ),
-                            )
-                          : index == _inputCount
-                              ? FadeTransition(
-                                  opacity: _cursorController,
-                                  child: Container(
-                                    width: stackPosition.getWidth(2),
-                                    height: stackPosition.getHeight(32),
-                                    color: const Color(0xFF61A5FF),
-                                  ),
-                                )
-                              : null,
-                    ),
-                  ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(position.getWidth(18)),
                 ),
               ),
             ),
           ),
           Positioned(
             left: 0,
-            top: stackPosition.getY(300),
-            width: 1.sw,
-            height: stackPosition.getHeight(380),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _inputDigit,
+            right: 0,
+            top: position.getY(_keyboardTop),
+            height: position.getHeight(_keyboardHeight),
+            child: ClipRect(
+              child: OverflowBox(
+                alignment: Alignment.topCenter,
+                minWidth: width,
+                maxWidth: width,
+                minHeight: position.getHeight(818),
+                maxHeight: position.getHeight(818),
+                child: Transform.translate(
+                  offset: Offset(0, -position.getY(_keyboardSourceTop)),
+                  child: Image(
+                    image: 'bg_keyboard_sheet'.png3x,
+                    width: width,
+                    height: position.getHeight(818),
+                    fit: BoxFit.fill,
+                  ),
+                ),
+              ),
             ),
           ),
           Positioned(
-            left: stackPosition.getX(475),
-            top: stackPosition.getY(565),
-            width: stackPosition.getWidth(145),
-            height: stackPosition.getHeight(110),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _deleteDigit,
+            left: position.getX(80),
+            right: position.getX(80),
+            top: position.getY(29),
+            child: Text(
+              '交易密码',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: const Color(0xFF242424),
+                fontSize: position.getWidth(_titleFontSize),
+                fontWeight: FontWeight.w600,
+                height: 1.05,
+              ),
             ),
           ),
           Positioned(
-            left: 0,
-            top: 0,
-            width: stackPosition.getWidth(72),
-            height: stackPosition.getHeight(80),
-            child: const SizedBox.expand().withOnTap(onTap: () => Get.back()),
+            left: position.getX(14),
+            top: position.getY(20),
+            width: position.getWidth(62),
+            height: position.getHeight(62),
+            child: IconButton(
+              key: const Key('password-keyboard-close'),
+              tooltip: '关闭',
+              padding: EdgeInsets.zero,
+              onPressed: _close,
+              icon: Icon(
+                Icons.close,
+                size: position.getWidth(34),
+                color: const Color(0xFF151515),
+              ),
+            ),
+          ),
+          if (transaction != null) ...[
+            Positioned(
+              left: position.getX(70),
+              right: position.getX(70),
+              top: position.getY(129),
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: '转给 ',
+                      style: TextStyle(fontWeight: FontWeight.w400),
+                    ),
+                    TextSpan(
+                      text:
+                          '${transaction.payeeName} ${transaction.amountDisplay}',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: const Color(0xFF242424),
+                  fontSize: position.getWidth(_primaryFontSize),
+                  height: 1,
+                ),
+              ),
+            ),
+            Positioned(
+              left: position.getX(45),
+              right: position.getX(45),
+              top: position.getY(175),
+              child: Text(
+                transaction.secondaryText,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: const Color(0xFF969EAC),
+                  fontSize: position.getWidth(_secondaryFontSize),
+                  height: 1,
+                ),
+              ),
+            ),
+          ] else
+            Positioned(
+              left: position.getX(40),
+              right: position.getX(40),
+              top: position.getY(145),
+              child: Text(
+                '请输入银行账号(**${AppConfig.config.abcLogic.cardFour()})的交易密码',
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: const Color(0xFF242424),
+                  fontSize: position.getWidth(22),
+                  height: 1,
+                ),
+              ),
+            ),
+          Positioned(
+            left: position.getX(98),
+            top: position.getY(224),
+            width: position.getWidth(449),
+            height: position.getHeight(64),
+            child: Row(
+              children: List.generate(
+                _passwordLength,
+                (index) => Expanded(
+                  child: Container(
+                    key: Key('password-code-box-$index'),
+                    margin: EdgeInsets.symmetric(
+                      horizontal: position.getWidth(5),
+                    ),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F2F4),
+                      borderRadius: BorderRadius.circular(
+                        position.getWidth(5),
+                      ),
+                    ),
+                    child: index < _inputCount
+                        ? Container(
+                            key: Key('password-dot-$index'),
+                            width: position.getWidth(19),
+                            height: position.getWidth(19),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF292929),
+                              shape: BoxShape.circle,
+                            ),
+                          )
+                        : index == _inputCount
+                            ? FadeTransition(
+                                opacity: _cursorController,
+                                child: Container(
+                                  width: position.getWidth(2),
+                                  height: position.getHeight(32),
+                                  color: const Color(0xFF61A5FF),
+                                ),
+                              )
+                            : null,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          for (final key in const [
+            _SecurityKey('6', 10, 499),
+            _SecurityKey('7', 222, 499),
+            _SecurityKey('1', 434, 499),
+            _SecurityKey('0', 10, 591),
+            _SecurityKey('2', 222, 591),
+            _SecurityKey('9', 434, 591),
+            _SecurityKey('3', 10, 682),
+            _SecurityKey('4', 222, 682),
+            _SecurityKey('5', 434, 682),
+            _SecurityKey('8', 222, 773),
+          ])
+            Positioned(
+              left: position.getX(key.left),
+              top: position.getY(key.top),
+              width: position.getWidth(201),
+              height: position.getHeight(80),
+              child: Semantics(
+                button: true,
+                label: '安全键盘${key.digit}',
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _inputDigit(key.digit),
+                ),
+              ),
+            ),
+          Positioned(
+            left: position.getX(475),
+            top: position.getY(765),
+            width: position.getWidth(145),
+            height: position.getHeight(90),
+            child: Semantics(
+              button: true,
+              label: '删除密码数字',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _deleteDigit,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _SecurityKey {
+  const _SecurityKey(this.digit, this.left, this.top);
+
+  final String digit;
+  final double left;
+  final double top;
 }

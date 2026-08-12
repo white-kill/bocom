@@ -54,8 +54,8 @@ dependencies:
 #    path: modules/flutter_picker_plus
 #  f_verification_box:
 #    path: modules/f_verification_box
-#  gallery_saver_plus:
-#    path: modules/gallery_saver_plus
+  gallery_saver_plus:
+    path: modules/gallery_saver_plus
   popup_menu: any
   camera: 0.11.2+1
   lunar: ^1.7.8
@@ -83,6 +83,8 @@ flutter:
     - assets/images/account_transfer/icons/
     - assets/images/account_transfer/banks/
     - assets/images/account_transfer/limit_sheet/
+    - assets/images/account_transfer/result/
+    - assets/images/account_transfer/transfer_loading_arc.png
     - assets/images/transaction_detail/
     - assets/dist/
     - assets/dist/static/

@@ -1,4 +1,5 @@
 import 'package:bocom/config/dio/network.dart';
+import 'package:bocom/config/app_config.dart';
 import 'package:bocom/config/model/contacts_model.dart';
 import 'package:bocom/config/net_config/apis.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -7,6 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:lpinyin/lpinyin.dart';
+
+import '../../../../component/auth_sm.dart';
+import '../../../../component/indicator_loading.dart';
+import '../../../../component/password_keyboard_sheet.dart';
+import 'account_transfer_result_pages.dart';
 
 const _blue = Color(0xFF0875E8);
 const _pageBackground = Color(0xFFF5F6F8);
@@ -1478,19 +1484,114 @@ class _AspectCorrectCameraPreview extends StatelessWidget {
   }
 }
 
-class AccountTransferConfirmationPage extends StatelessWidget {
+class AccountTransferConfirmationPage extends StatefulWidget {
   const AccountTransferConfirmationPage({
     super.key,
     required this.recipient,
     required this.amount,
     required this.description,
     required this.arrivalTime,
+    this.passwordVerificationLauncher,
+    this.smsVerificationLauncher,
   });
 
   final ContactsModel recipient;
   final String amount;
   final String description;
   final String arrivalTime;
+  final PasswordVerificationLauncher? passwordVerificationLauncher;
+  final SmsVerificationLauncher? smsVerificationLauncher;
+
+  @override
+  State<AccountTransferConfirmationPage> createState() =>
+      _AccountTransferConfirmationPageState();
+}
+
+class _AccountTransferConfirmationPageState
+    extends State<AccountTransferConfirmationPage> {
+  bool _isSubmitting = false;
+
+  String get _memberPhone {
+    try {
+      return AppConfig.config.abcLogic.memberInfo.phone;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+    try {
+      final transferContext = AuthSmTransferContext(
+        payeeName: widget.recipient.name.trim(),
+        cardLast4: _cardLastFour(widget.recipient.bankCard),
+        amountDisplay: widget.amount.replaceAll(',', '').trim(),
+      );
+      final verified = await (widget.smsVerificationLauncher?.call(
+            context,
+            _memberPhone,
+            transferContext,
+          ) ??
+          showSmsVerificationCode(
+            context,
+            phone: _memberPhone,
+            transferContext: transferContext,
+          ));
+      if (!mounted || verified != true) return;
+      final transaction = TransactionPasswordContext(
+        payeeName: widget.recipient.name.trim(),
+        amountDisplay: widget.amount,
+        bankName: widget.recipient.bankName.trim(),
+        accountNumber: widget.recipient.bankCard.trim(),
+      );
+      final passwordVerified = await (widget.passwordVerificationLauncher?.call(
+            context,
+            transaction,
+          ) ??
+          PasswordKeyboardSheet.showForVerification(
+            context,
+            transaction: transaction,
+          ));
+      if (!mounted || passwordVerified != true) return;
+      await BocomLoading.run<void>(
+        context,
+        () => Future<void>.delayed(const Duration(milliseconds: 550)),
+        alignment: const Alignment(0, -0.22),
+      );
+      if (!mounted) return;
+      final transactionTime = DateTime.now();
+      final result = AccountTransferResultData.fromTransfer(
+        billId: transactionTime.millisecondsSinceEpoch,
+        recipientName: widget.recipient.name.trim(),
+        recipientAccount: widget.recipient.bankCard.trim(),
+        recipientBank: widget.recipient.bankName.trim(),
+        amount: num.parse(widget.amount.replaceAll(',', '').trim()).toDouble(),
+        transactionTime: transactionTime,
+        arrivalText: widget.arrivalTime,
+        purpose: widget.description.trim(),
+      );
+      Get.off<int>(
+        () => AccountTransferSuccessPage(
+          data: result,
+          billDetailLoader: (_) async => null,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('转账提交失败，请稍后重试')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  String _cardLastFour(String cardNumber) {
+    final digits = cardNumber.replaceAll(RegExp(r'\D'), '');
+    if (digits.length <= 4) return digits;
+    return digits.substring(digits.length - 4);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1508,67 +1609,106 @@ class AccountTransferConfirmationPage extends StatelessWidget {
           title: const Text('确认转账信息', style: TextStyle(color: Colors.black)),
           centerTitle: true,
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Container(
-                width: double.infinity,
-                color: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                child: Column(
-                  children: [
-                    _ConfirmationRow(label: '收款人', value: recipient.name),
-                    _ConfirmationRow(label: '收款账号', value: recipient.bankCard),
-                    _ConfirmationRow(label: '收款银行', value: recipient.bankName),
-                    _ConfirmationRow(label: '到账时间', value: arrivalTime),
-                    if (description.isNotEmpty)
-                      _ConfirmationRow(label: '转账说明', value: description),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                color: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 30),
-                child: Column(
-                  children: [
-                    const Text('转账金额',
-                        style: TextStyle(color: Color(0xFF666666))),
-                    const SizedBox(height: 12),
-                    Text(
-                      '¥ $amount',
-                      style: const TextStyle(
-                          fontSize: 36, fontWeight: FontWeight.w500),
+        body: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Container(
+                    width: double.infinity,
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 8,
                     ),
-                    const SizedBox(height: 8),
-                    const Text('手续费 0元',
-                        style: TextStyle(color: Color(0xFF999999))),
-                  ],
-                ),
+                    child: Column(
+                      children: [
+                        _ConfirmationRow(
+                          label: '收款人',
+                          value: widget.recipient.name,
+                        ),
+                        _ConfirmationRow(
+                          label: '收款账号',
+                          value: widget.recipient.bankCard,
+                        ),
+                        _ConfirmationRow(
+                          label: '收款银行',
+                          value: widget.recipient.bankName,
+                        ),
+                        _ConfirmationRow(
+                          label: '到账时间',
+                          value: widget.arrivalTime,
+                        ),
+                        if (widget.description.isNotEmpty)
+                          _ConfirmationRow(
+                            label: '转账说明',
+                            value: widget.description,
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 30),
+                    child: Column(
+                      children: [
+                        const Text(
+                          '转账金额',
+                          style: TextStyle(color: Color(0xFF666666)),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '¥ ${widget.amount}',
+                          style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          '手续费 0元',
+                          style: TextStyle(color: Color(0xFF999999)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const Spacer(),
-              SizedBox(
+            ),
+            SafeArea(
+              top: false,
+              minimum: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('演示环境未提交真实转账')),
-                  ),
+                  onPressed: _isSubmitting ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _blue,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
-                  child: const Text('确认转账',
-                      style: TextStyle(color: Colors.white, fontSize: 18)),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          '确认转账',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
                 ),
               ),
-              const SizedBox(height: 24),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

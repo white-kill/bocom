@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 
@@ -6,7 +7,6 @@ import '../../utils/sp_util.dart';
 import '../app_config.dart';
 import '../net_config/net_config.dart';
 import 'interceptor.dart';
-
 
 enum HttpMethod {
   /// Get.
@@ -33,25 +33,29 @@ class NetUtil {
   Dio dio = Dio();
   final CancelToken _cancelToken = CancelToken();
 
-
   LoadingInterceptor loadingInterceptor = LoadingInterceptor();
 
   NetUtil._internal() {
     // BaseOptions、Options、RequestOptions 都可以配置参数，优先级别依次递增，且可以根据优先级别覆盖参数
     dio.options = BaseOptions(
-      baseUrl:AppConfig.config.netConfig.baseUrl??'',
+      baseUrl: AppConfig.config.netConfig.baseUrl ?? '',
       // 连接超时
-      connectTimeout: Duration(milliseconds: AppConfig.config.netConfig.connectTimeout),
+      connectTimeout:
+          Duration(milliseconds: AppConfig.config.netConfig.connectTimeout),
       //发送超时
-      sendTimeout:  Duration(milliseconds: AppConfig.config.netConfig.sendTimeout),
+      sendTimeout:
+          Duration(milliseconds: AppConfig.config.netConfig.sendTimeout),
       // 响应流上前后两次接受到数据的间隔，单位为毫秒。
-      receiveTimeout:  Duration(milliseconds: AppConfig.config.netConfig.receiveTimeout),
+      receiveTimeout:
+          Duration(milliseconds: AppConfig.config.netConfig.receiveTimeout),
       // Http请求头.
       headers: {
         'content-type': 'application/json',
-        'Authorization':token,
-        'client_type':'APP',
-        'BANKTYPE':'4'
+        'Authorization': token,
+        'client_type': 'APP',
+        'banktype': '5',
+        'BANKTYPE': '5',
+        'login_device': Platform.isIOS ? '1' : '2',
       },
     );
 
@@ -65,17 +69,15 @@ class NetUtil {
     dio.interceptors.add(loadingInterceptor);
     // 注入设备类型请求头，放在最后确保不被其他拦截器覆盖
     dio.interceptors.add(DeviceHeaderInterceptor());
-
   }
-
 
   /// Get 操作
   Future<T> get<T>(
-      String path, {
-        Map<String, dynamic>? queryParameters,
-        Options? options,
-        CancelToken? cancelToken,
-      }) async {
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
     var response = await request<T>(
       path,
       method: HttpMethod.get,
@@ -88,12 +90,12 @@ class NetUtil {
 
   /// Post 操作
   Future<T> post<T>(
-      String path, {
-        data,
-        Map<String, dynamic>? queryParameters,
-        Options? options,
-        CancelToken? cancelToken,
-      }) async {
+    String path, {
+    data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
     var response = await request<T>(
       path,
       method: HttpMethod.post,
@@ -107,12 +109,12 @@ class NetUtil {
 
   /// Put 操作
   Future<T> put<T>(
-      String path, {
-        data,
-        Map<String, dynamic>? queryParameters,
-        Options? options,
-        CancelToken? cancelToken,
-      }) async {
+    String path, {
+    data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
     var response = await request<T>(
       path,
       method: HttpMethod.put,
@@ -126,12 +128,12 @@ class NetUtil {
 
   /// delete 操作
   Future<T> delete<T>(
-      String path, {
-        data,
-        Map<String, dynamic>? queryParameters,
-        Options? options,
-        CancelToken? cancelToken,
-      }) async {
+    String path, {
+    data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) async {
     var response = await request<T>(
       path,
       method: HttpMethod.delete,
@@ -145,16 +147,16 @@ class NetUtil {
 
   /// Request 操作
   Future<T> request<T>(
-      String path, {
-        required HttpMethod method,
-        data,
-        Map<String, dynamic>? queryParameters,
-        Options? options,
-        CancelToken? cancelToken,
-        ProgressCallback? onSendProgress,
-        ProgressCallback? onReceiveProgress,
-        bool isLoading = true,
-      }) async {
+    String path, {
+    required HttpMethod method,
+    data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+    bool isLoading = true,
+  }) async {
     loadingInterceptor.isLoading = isLoading;
     //处理网络类型
     if (method == HttpMethod.get) {
@@ -169,27 +171,27 @@ class NetUtil {
     //处理请求设置
     options = options ?? Options();
     Completer<T> completer = Completer();
-    dio.request<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-      cancelToken: cancelToken ?? _cancelToken,
-      onSendProgress: onSendProgress,
-      onReceiveProgress: onReceiveProgress,
-    )
+    dio
+        .request<T>(
+          path,
+          data: data,
+          queryParameters: queryParameters,
+          options: options,
+          cancelToken: cancelToken ?? _cancelToken,
+          onSendProgress: onSendProgress,
+          onReceiveProgress: onReceiveProgress,
+        )
         .then((value) => {
-      completer.complete(value.data),
-    })
+              completer.complete(value.data),
+            })
         .catchError((error) => {
-      completer.complete(null),
-      completer.completeError(error),
-    })
+              completer.complete(null),
+              completer.completeError(error),
+            })
         .whenComplete(() => null);
 
     return completer.future;
   }
-
 
   /// 设置headers
   void setHeaders(Map<String, dynamic> map) {

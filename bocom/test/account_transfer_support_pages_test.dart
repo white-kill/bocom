@@ -349,4 +349,39 @@ void main() {
     await tester.tap(find.bySemanticsLabel('关闭'));
     await tester.pumpAndSettle();
   });
+
+  testWidgets('确认转账完成校验后显示 loading 并直接进入结果页', (tester) async {
+    final recipient = ContactsModel()
+      ..name = ' 张三 '
+      ..bankCard = ' 6222000012341234 '
+      ..bankName = ' 中国工商银行 ';
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: AccountTransferConfirmationPage(
+          recipient: recipient,
+          amount: '1,500.25',
+          description: ' 货款 ',
+          arrivalTime: '预计2小时后到账',
+          passwordVerificationLauncher: (_, __) async => true,
+          smsVerificationLauncher: (_, __, ___) async => true,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('确认转账'));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byKey(const Key('transfer-loading-indicator')), findsOneWidget);
+    expect(
+      tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
+      isNull,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('account-transfer-success-page')),
+      findsOneWidget,
+    );
+    expect(find.text('张三'), findsOneWidget);
+    expect(find.text('中国工商银行(**1234)'), findsOneWidget);
+  });
 }

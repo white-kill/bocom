@@ -1,4 +1,5 @@
 import 'package:bocom/config/abc_config/boc_logic.dart';
+import 'package:bocom/config/app_config.dart';
 import 'package:bocom/config/model/contacts_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +7,11 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:wb_base_widget/extension/double_extension.dart';
 
+import '../../../../component/auth_sm.dart';
+import '../../../../component/indicator_loading.dart';
+import '../../../../component/password_keyboard_sheet.dart';
 import 'account_transfer_support_pages.dart';
+import 'account_transfer_result_pages.dart';
 
 const _accountTransferReferenceWidth = 588.0;
 const _accountTransferSupplementalReferenceWidth = 1206.0;
@@ -39,11 +44,17 @@ class HomeAccountTransferPage extends StatefulWidget {
     this.initialRecipient,
     this.contactsLoader,
     this.bankLoader,
+    this.passwordVerificationLauncher,
+    this.smsVerificationLauncher,
+    this.now,
   });
 
   final ContactsModel? initialRecipient;
   final Future<List<ContactsModel>> Function()? contactsLoader;
   final Future<List<RecipientBank>> Function()? bankLoader;
+  final PasswordVerificationLauncher? passwordVerificationLauncher;
+  final SmsVerificationLauncher? smsVerificationLauncher;
+  final DateTime Function()? now;
 
   @override
   State<HomeAccountTransferPage> createState() =>
@@ -59,6 +70,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   final _amountFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
   String _arrivalTime = '预计实时到账';
+  bool _isSubmitting = false;
 
   double get _amountValue =>
       double.tryParse(
@@ -87,9 +99,12 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
         _amountController,
       ];
 
-  bool get _canContinue => _requiredControllers.every(
+  bool get _canContinue =>
+      _requiredControllers.every(
         (controller) => controller.text.trim().isNotEmpty,
-      );
+      ) &&
+      _amountValue >= 0.01 &&
+      !_hasInsufficientBalance;
 
   @override
   void initState() {
@@ -182,21 +197,97 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
     await showArrivalExplanationSheet(context);
   }
 
-  void _continue() {
-    if (!_canContinue) return;
+  Future<void> _continue() async {
+    if (!_canContinue || _isSubmitting) return;
     _amountFocusNode.unfocus();
     final recipient = ContactsModel()
       ..name = _nameController.text.trim()
       ..bankCard = _accountController.text.trim()
       ..bankName = _bankController.text.trim();
-    Get.to(
-      () => AccountTransferConfirmationPage(
-        recipient: recipient,
-        amount: _amountController.text.trim(),
-        description: _descriptionController.text.trim(),
-        arrivalTime: _usesDeferredArrival ? '实时提交，预计1小时内到账' : _arrivalTime,
-      ),
-    );
+    final amount = _displayAmount(_amountController.text.trim());
+    setState(() => _isSubmitting = true);
+    try {
+      final transferContext = AuthSmTransferContext(
+        payeeName: recipient.name,
+        cardLast4: _cardLastFour(recipient.bankCard),
+        amountDisplay: amount.replaceAll(',', ''),
+      );
+      final phone = _memberPhone;
+      final smsVerified = await (widget.smsVerificationLauncher?.call(
+            context,
+            phone,
+            transferContext,
+          ) ??
+          showSmsVerificationCode(
+            context,
+            phone: phone,
+            transferContext: transferContext,
+          ));
+      if (!mounted || smsVerified != true) return;
+      final transaction = TransactionPasswordContext(
+        payeeName: recipient.name,
+        amountDisplay: amount,
+        bankName: recipient.bankName,
+        accountNumber: recipient.bankCard,
+      );
+      final passwordVerified = await (widget.passwordVerificationLauncher
+              ?.call(context, transaction) ??
+          PasswordKeyboardSheet.showForVerification(
+            context,
+            transaction: transaction,
+          ));
+      if (!mounted || passwordVerified != true) return;
+      await BocomLoading.run<void>(
+        context,
+        () => Future<void>.delayed(const Duration(milliseconds: 550)),
+        alignment: const Alignment(0, -0.22),
+      );
+      if (!mounted) return;
+      final transactionTime = widget.now?.call() ?? DateTime.now();
+      final billId = transactionTime.millisecondsSinceEpoch;
+      if (mounted) {
+        final result = AccountTransferResultData.fromTransfer(
+          billId: billId,
+          recipientName: recipient.name,
+          recipientAccount: recipient.bankCard,
+          recipientBank: recipient.bankName,
+          amount: num.parse(amount.replaceAll(',', '')).toDouble(),
+          transactionTime: transactionTime,
+          arrivalText: _arrivalTime,
+          purpose: _descriptionController.text.trim(),
+        );
+        Get.off<int>(
+          () => AccountTransferSuccessPage(
+            data: result,
+            billDetailLoader: (_) async => null,
+            onContinueTransfer: () =>
+                Get.off<void>(() => const HomeAccountTransferPage()),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('转账提交失败，请稍后重试')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  String get _memberPhone {
+    try {
+      return AppConfig.config.abcLogic.memberInfo.phone;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  String _cardLastFour(String cardNumber) {
+    final digits = cardNumber.replaceAll(RegExp(r'\D'), '');
+    if (digits.length <= 4) return digits;
+    return digits.substring(digits.length - 4);
   }
 
   @override
@@ -307,7 +398,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
             SizedBox(
               height: 50,
               child: ElevatedButton(
-                onPressed: _canContinue ? _continue : null,
+                onPressed: _canContinue && !_isSubmitting ? _continue : null,
                 style: ElevatedButton.styleFrom(
                   elevation: 0,
                   backgroundColor: const Color(0xFF72A7E9),

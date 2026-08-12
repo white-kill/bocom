@@ -28,10 +28,12 @@ class Apis {
   ///银行卡转账
   static const transfer = '/serviceboc/bill/transfer';
 
+  ///单笔账单详情
+  static const billDetail = '/serviceboc/bill/detail';
+
   ///分页查询账单打印申请列表
   static const applyPageList = '/serviceboc/flowExport/applyPage';
 
   ///账单信息打印
   static const print = '/serviceboc/flowExport/print';
-
 }

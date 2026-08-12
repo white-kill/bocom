@@ -69,15 +69,25 @@ void main() {
     expect(find.bySemanticsLabel('返回'), findsOneWidget);
   });
 
-  testWidgets('账号转账表单支持预填、输入金额并进入确认页', (tester) async {
+  testWidgets('账号转账表单完成两步校验后直接进入本地结果页', (tester) async {
     final recipient = ContactsModel()
       ..name = '张三'
       ..bankCard = '6222000012345678'
       ..bankName = '交通银行';
+    final steps = <String>[];
     await tester.pumpWidget(
       GetMaterialApp(
         home: HomeAccountTransferPage(
           initialRecipient: recipient,
+          passwordVerificationLauncher: (_, transaction) async {
+            steps.add('password');
+            expect(transaction.primaryText, '转给 张三 100.00');
+            return true;
+          },
+          smsVerificationLauncher: (_, __, ___) async {
+            steps.add('sms');
+            return true;
+          },
         ),
       ),
     );
@@ -107,8 +117,51 @@ void main() {
     await tester.pump();
     await tester.tap(nextButton);
     await tester.pumpAndSettle();
-    expect(find.text('确认转账信息'), findsOneWidget);
-    expect(find.text('¥ 100.00'), findsOneWidget);
+    expect(
+      find.byKey(const Key('account-transfer-success-page')),
+      findsOneWidget,
+    );
+    expect(find.text('确认转账信息'), findsNothing);
+    expect(steps, ['sms', 'password']);
+    expect(find.text('张三'), findsOneWidget);
+    expect(find.text('交通银行(**5678)'), findsOneWidget);
+  });
+
+  testWidgets('本地结果页保留用户选择的到账时间', (tester) async {
+    final recipient = ContactsModel()
+      ..name = '张三'
+      ..bankCard = '6222000012345678'
+      ..bankName = '交通银行';
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: HomeAccountTransferPage(
+          initialRecipient: recipient,
+          now: () => DateTime(2026, 8, 12, 10, 30),
+          passwordVerificationLauncher: (_, __) async => true,
+          smsVerificationLauncher: (_, __, ___) async => true,
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('transfer-amount-field')),
+      '100',
+    );
+    await tester.tap(find.text('更换到账时间'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('预计2小时后到账'));
+    await tester.pumpAndSettle();
+    final nextButton = find.widgetWithText(ElevatedButton, '下一步');
+    await tester.scrollUntilVisible(
+      nextButton,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pump();
+    await tester.tap(nextButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('预计2小时后到账，实际到账时间取决于收款银行'), findsOneWidget);
   });
 
   testWidgets('金额空态、聚焦和失焦格式与补图一致', (tester) async {
