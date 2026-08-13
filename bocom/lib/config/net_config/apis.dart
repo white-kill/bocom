@@ -34,10 +34,12 @@ class Apis {
   ///账单信息打印
   static const print = '/servicecomm/flowExport/print';
 
-
-
-
   // 账本总览
   static const bookOverView = '/servicecomm/bill/book/overview';
 
+  // 明细流水
+  static const bookDetailPage = '/servicecomm/bill/book/detailPage';
+
+  // 账本分析
+  static const bookAnalysis = '/servicecomm/bill/book/analysis';
 }

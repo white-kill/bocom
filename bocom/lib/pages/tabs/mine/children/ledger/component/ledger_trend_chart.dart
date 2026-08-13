@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,11 +10,13 @@ class LedgerTrendChart extends StatefulWidget {
     super.key,
     this.incomeValues = const [],
     this.expenseValues = const [],
+    this.dateValues = const [],
     this.title = '近一月收支',
   });
 
   final List<double> incomeValues;
   final List<double> expenseValues;
+  final List<String> dateValues;
   final String title;
 
   @override
@@ -22,8 +26,31 @@ class LedgerTrendChart extends StatefulWidget {
 class _LedgerTrendChartState extends State<LedgerTrendChart> {
   static const _incomeColor = Color(0xFF5B9FF2);
   static const _expenseColor = Color(0xFFFF914D);
-  static const _pointCount = 32;
-  int _selectedIndex = _pointCount - 1;
+  late int _selectedIndex;
+
+  int get _pointCount => math.max(
+        2,
+        math.max(
+          widget.dateValues.length,
+          math.max(widget.incomeValues.length, widget.expenseValues.length),
+        ),
+      );
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = _pointCount - 1;
+  }
+
+  @override
+  void didUpdateWidget(covariant LedgerTrendChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.dateValues.length != widget.dateValues.length ||
+        oldWidget.incomeValues.length != widget.incomeValues.length ||
+        oldWidget.expenseValues.length != widget.expenseValues.length) {
+      _selectedIndex = _pointCount - 1;
+    }
+  }
 
   List<double> _values(List<double> source) {
     final values = source.take(_pointCount).toList();
@@ -68,8 +95,13 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
 
   Widget _buildChart(double chartWidth) {
     final selectedX = chartWidth * _selectedIndex / (_pointCount - 1);
+    final plotHeight = 140.w;
+    final incomeY = plotHeight *
+        (1 - _values(widget.incomeValues)[_selectedIndex] / _maxY);
+    final expenseY = plotHeight *
+        (1 - _values(widget.expenseValues)[_selectedIndex] / _maxY);
     final tooltipWidth = 115.w;
-    final showTooltipOnRight = _selectedIndex < 14;
+    final showTooltipOnRight = _selectedIndex < _pointCount ~/ 2;
     final tooltipLeft = showTooltipOnRight
         ? (selectedX + 12.w)
             .clamp(0.0, chartWidth - tooltipWidth)
@@ -110,27 +142,15 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
             child: CustomPaint(painter: _SelectedDashPainter()),
           ),
         ),
-        Positioned(
-          left: selectedX - 8.w,
-          bottom: 22.w,
-          child: Container(
-            width: 16.w,
-            height: 16.w,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: Color(0x445B9FF2),
-              shape: BoxShape.circle,
-            ),
-            child: Container(
-              width: 8.w,
-              height: 8.w,
-              decoration: BoxDecoration(
-                color: _incomeColor,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2.w),
-              ),
-            ),
-          ),
+        _selectedPoint(
+          x: selectedX,
+          y: expenseY,
+          color: _expenseColor,
+        ),
+        _selectedPoint(
+          x: selectedX,
+          y: incomeY,
+          color: _incomeColor,
         ),
         Positioned(
           left: tooltipLeft,
@@ -140,22 +160,56 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         Positioned(
           left: 0,
           bottom: 0,
-          child: const BaseText(
-            text: '07-07',
+          child: BaseText(
+            text: _dateLabel(0),
             fontSize: 13,
-            color: Color(0xFFA6ADB7),
+            color: const Color(0xFFA6ADB7),
           ),
         ),
         Positioned(
           right: 0,
           bottom: 0,
-          child: const BaseText(
-            text: '今天08-07',
+          child: BaseText(
+            text: _endDateLabel(),
             fontSize: 13,
-            color: Color(0xFF222222),
+            color: const Color(0xFF222222),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _selectedPoint({
+    required double x,
+    required double y,
+    required Color color,
+  }) {
+    return Positioned(
+      left: x - 8.w,
+      top: y - 8.w,
+      child: Container(
+        width: 16.w,
+        height: 16.w,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              color.withValues(alpha: 0.38),
+              color.withValues(alpha: 0.12),
+            ],
+          ),
+        ),
+        child: Container(
+          width: 8.w,
+          height: 8.w,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2.w),
+          ),
+        ),
+      ),
     );
   }
 
@@ -188,9 +242,9 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
   Widget _buildTooltip() {
     final income = _values(widget.incomeValues)[_selectedIndex];
     final expense = _values(widget.expenseValues)[_selectedIndex];
-    final date = DateTime(2026, 7, 7).add(Duration(days: _selectedIndex));
-    final dateText =
-        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final dateText = _selectedIndex < widget.dateValues.length
+        ? widget.dateValues[_selectedIndex]
+        : '';
     return Container(
       width: 115.w,
       padding: EdgeInsets.all(9.w),
@@ -223,6 +277,20 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
           BaseText(text: '$label ${value.toStringAsFixed(2)}', fontSize: 12, color: const Color(0xFF666666)),
         ],
       );
+
+  String _dateLabel(int index) {
+    if (index >= widget.dateValues.length) return '';
+    final value = widget.dateValues[index];
+    return value.length >= 10 ? value.substring(5, 10) : value;
+  }
+
+  String _endDateLabel() {
+    if (widget.dateValues.isEmpty) return '';
+    final value = widget.dateValues.last;
+    final date = DateTime.tryParse(value);
+    final today = date != null && DateUtils.isSameDay(date, DateTime.now());
+    return '${today ? '今天' : ''}${_dateLabel(widget.dateValues.length - 1)}';
+  }
 
   LineChartData _chartData() {
     return LineChartData(

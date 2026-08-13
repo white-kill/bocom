@@ -31,28 +31,31 @@ class LedgerOverviewTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return ColoredBox(
       color: const Color(0xFFF7F7F7),
-      child: SmartRefresher(
-        controller: state.overviewRefreshController,
-        enablePullDown: true,
-        enablePullUp: true,
-        header: _refreshHeader(),
-        footer: _loadFooter(),
-        onRefresh: () => logic.refreshLedger(state.overviewRefreshController),
-        onLoading: () => logic.loadMoreLedger(state.overviewRefreshController),
-        child: ListView.separated(
-          padding: EdgeInsets.zero,
-          itemCount: state.dataList.length + 1,
-          separatorBuilder: (_, __) => const SizedBox.shrink(),
-          itemBuilder: (context, index) {
-            if (index == 0) return _overviewHeader();
-            return LedgerBillItem(
-              item: state.dataList[index - 1],
-              isFirst: index == 1,
-              isLast: index == state.dataList.length,
-            ).marginSymmetric(horizontal: _position.getX(30));
-          },
-        ),
-      ),
+      child: Obx(() {
+        final dataList = logic.bookDetailPage.value.list;
+        return SmartRefresher(
+          controller: state.overviewRefreshController,
+          enablePullDown: true,
+          enablePullUp: logic.bookOverview.value.billCount != 0,
+          header: _refreshHeader(),
+          footer: _loadFooter(),
+          onRefresh: () => logic.refreshLedger(state.overviewRefreshController),
+          onLoading: () => logic.loadMoreLedger(state.overviewRefreshController),
+          child: ListView.separated(
+            padding: EdgeInsets.zero,
+            itemCount: dataList.length + 1,
+            separatorBuilder: (_, __) => const SizedBox.shrink(),
+            itemBuilder: (context, index) {
+              if (index == 0) return _overviewHeader();
+              return LedgerBillItem(
+                item: dataList[index - 1],
+                isFirst: index == 1,
+                isLast: index == dataList.length,
+              ).marginSymmetric(horizontal: _position.getX(30));
+            },
+          ),
+        );
+      }),
     );
   }
 
@@ -60,12 +63,24 @@ class LedgerOverviewTab extends StatelessWidget {
         children: [
           _statistics(),
           Obx(
-            () => LedgerTrendChart(
-              title: logic.periodMode.value == 1 ? '近一年收支' : '近一月收支',
-            ).marginSymmetric(
-              horizontal: _position.getX(30),
-              vertical: 10.w,
-            ),
+            () {
+              final overview = logic.bookOverview.value;
+              return LedgerTrendChart(
+                title: logic.periodMode.value == 1 ? '近一年收支' : '近一月收支',
+                incomeValues: overview.trendList
+                    .map((item) => double.tryParse(item.incomeTotal) ?? 0)
+                    .toList(),
+                expenseValues: overview.trendList
+                    .map((item) => double.tryParse(item.expensesTotal) ?? 0)
+                    .toList(),
+                dateValues: overview.trendList
+                    .map((item) => item.dateTime)
+                    .toList(),
+              ).marginSymmetric(
+                horizontal: _position.getX(30),
+                vertical: 10.w,
+              );
+            },
           ),
           _ledgerEntry().marginSymmetric(horizontal: _position.getX(30)),
           SizedBox(height: 10.w),
@@ -103,18 +118,35 @@ class LedgerOverviewTab extends StatelessWidget {
                           fontSize: 13,
                           color: const Color(0xFF333333),
                         ).marginOnly(left: 2.w, bottom: 3.w),
-                        const BaseText(
-                          text: '共0笔',
-                          fontSize: 11,
-                          color: Color(0xFF999999),
+                        Obx(
+                          () => BaseText(
+                            text: '共${logic.bookOverview.value.billCount}笔',
+                            fontSize: 11,
+                            color: const Color(0xFF999999),
+                          ),
                         ).marginOnly(left: 13.w, bottom: 3.w),
                       ],
                     ),
                   );
                 }),
-                _amount(left: 80, top: 250, text: '0.00', fontSize: 20),
-                _amount(left: 540, top: 250, text: '0.00', fontSize: 20),
-                _amount(left: 175, top: 340, text: '0.00', fontSize: 14),
+                Obx(() => _amount(
+                      left: 80,
+                      top: 250,
+                      text: _value(logic.bookOverview.value.incomeTotal),
+                      fontSize: 20,
+                    )),
+                Obx(() => _amount(
+                      left: 540,
+                      top: 250,
+                      text: _value(logic.bookOverview.value.expensesTotal),
+                      fontSize: 20,
+                    )),
+                Obx(() => _amount(
+                      left: 175,
+                      top: 340,
+                      text: _value(logic.bookOverview.value.balance),
+                      fontSize: 14,
+                    )),
               ],
             ),
           ),
@@ -129,7 +161,14 @@ class LedgerOverviewTab extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const BaseText(text: '前3月平均支出0元/月', fontSize: 13, color: Color(0xFF333333)),
+                Obx(
+                  () => BaseText(
+                    text:
+                        '前3月平均支出${_value(logic.bookOverview.value.lastThreeMonthAverageExpenses)}元/月',
+                    fontSize: 13,
+                    color: const Color(0xFF333333),
+                  ),
+                ),
                 const Spacer(),
                 Container(
                   height: 28.w,
@@ -146,6 +185,8 @@ class LedgerOverviewTab extends StatelessWidget {
           ),
         ],
       );
+
+  String _value(String value) => value.isEmpty ? '0.00' : value;
 
   Widget _amount({
     required double left,

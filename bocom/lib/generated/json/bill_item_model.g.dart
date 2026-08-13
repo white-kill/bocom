@@ -12,10 +12,7 @@ BillItemModel $BillItemModelFromJson(Map<String, dynamic> json) {
   if (total != null) {
     billItemModel.total = total;
   }
-  final dynamic pages = json['pages'];
-  if (pages != null) {
-    billItemModel.pages = pages;
-  }
+  billItemModel.pages = jsonConvert.convert<int>(json['pages']) ?? 0;
   final String? incomeTotal = jsonConvert.convert<String>(json['incomeTotal']);
   if (incomeTotal != null) {
     billItemModel.incomeTotal = incomeTotal;
@@ -47,7 +44,7 @@ extension BillItemModelExtension on BillItemModel {
   BillItemModel copyWith({
     List<BillItemList>? list,
     int? total,
-    dynamic pages,
+    int? pages,
     String? incomeTotal,
     String? expensesTotal,
     dynamic customizeParam,
@@ -72,15 +69,8 @@ BillItemList $BillItemListFromJson(Map<String, dynamic> json) {
   if (excerpt != null) {
     billItemList.excerpt = excerpt;
   }
-  final String? amount = jsonConvert.convert<String>(json['amount']);
-  if (amount != null) {
-    billItemList.amount = amount;
-  }
-  final String? accountBalance = jsonConvert.convert<String>(
-      json['accountBalance']);
-  if (accountBalance != null) {
-    billItemList.accountBalance = accountBalance;
-  }
+  billItemList.amount = json['amount']?.toString() ?? '';
+  billItemList.accountBalance = json['accountBalance']?.toString() ?? '';
   final String? day = jsonConvert.convert<String>(json['day']);
   if (day != null) {
     billItemList.day = day;
@@ -93,10 +83,7 @@ BillItemList $BillItemListFromJson(Map<String, dynamic> json) {
   if (currency != null) {
     billItemList.currency = currency;
   }
-  final String? type = jsonConvert.convert<String>(json['type']);
-  if (type != null) {
-    billItemList.type = type;
-  }
+  billItemList.type = json['type']?.toString() ?? '';
   final String? transactionTime = jsonConvert.convert<String>(
       json['transactionTime']);
   if (transactionTime != null) {
@@ -115,6 +102,12 @@ BillItemList $BillItemListFromJson(Map<String, dynamic> json) {
   if (year != null) {
     billItemList.year = year;
   }
+  billItemList.icon = json['icon']?.toString() ?? '';
+  billItemList.dayIncomeTotal = json['dayIncomeTotal']?.toString() ?? '';
+  billItemList.dayExpensesTotal = json['dayExpensesTotal']?.toString() ?? '';
+  billItemList.monthIncomeTotal = json['monthIncomeTotal']?.toString() ?? '';
+  billItemList.monthExpensesTotal =
+      json['monthExpensesTotal']?.toString() ?? '';
   final String? incomeTotal = jsonConvert.convert<String>(json['incomeTotal']);
   if (incomeTotal != null) {
     billItemList.incomeTotal = incomeTotal;
@@ -145,6 +138,11 @@ Map<String, dynamic> $BillItemListToJson(BillItemList entity) {
   data['oppositeName'] = entity.oppositeName;
   data['month'] = entity.month;
   data['year'] = entity.year;
+  data['icon'] = entity.icon;
+  data['dayIncomeTotal'] = entity.dayIncomeTotal;
+  data['dayExpensesTotal'] = entity.dayExpensesTotal;
+  data['monthIncomeTotal'] = entity.monthIncomeTotal;
+  data['monthExpensesTotal'] = entity.monthExpensesTotal;
   data['incomeTotal'] = entity.incomeTotal;
   data['expensesTotal'] = entity.expensesTotal;
   data['billDetail'] = entity.billDetail?.toJson();
@@ -165,6 +163,11 @@ extension BillItemListExtension on BillItemList {
     String? oppositeName,
     String? month,
     String? year,
+    String? icon,
+    String? dayIncomeTotal,
+    String? dayExpensesTotal,
+    String? monthIncomeTotal,
+    String? monthExpensesTotal,
     String? incomeTotal,
     String? expensesTotal,
     BillItemListBillDetail? billDetail,
@@ -182,6 +185,11 @@ extension BillItemListExtension on BillItemList {
       ..oppositeName = oppositeName ?? this.oppositeName
       ..month = month ?? this.month
       ..year = year ?? this.year
+      ..icon = icon ?? this.icon
+      ..dayIncomeTotal = dayIncomeTotal ?? this.dayIncomeTotal
+      ..dayExpensesTotal = dayExpensesTotal ?? this.dayExpensesTotal
+      ..monthIncomeTotal = monthIncomeTotal ?? this.monthIncomeTotal
+      ..monthExpensesTotal = monthExpensesTotal ?? this.monthExpensesTotal
       ..incomeTotal = incomeTotal ?? this.incomeTotal
       ..expensesTotal = expensesTotal ?? this.expensesTotal
       ..billDetail = billDetail ?? this.billDetail;

@@ -37,9 +37,11 @@ class LedgerBillItem extends StatelessWidget {
         : (detail?.oppositeName.isNotEmpty == true
             ? detail!.oppositeName
             : item.excerpt);
-    final card = detail?.bankCard ?? '';
+    final card = detail?.bankCard.isNotEmpty == true
+        ? '借记卡(${detail?.bankCard.substring(detail.bankCard.length - 6)})'
+        : (detail?.bankName ?? '');
     final time = item.transactionTime.isNotEmpty
-        ? item.transactionTime
+        ? (item.transactionTime.substring(5, 16).startsWith('0') ? item.transactionTime.substring(6, 16):item.transactionTime.substring(5, 16))
         : (detail?.transactionTime ?? '');
     final isIncome = item.type == '1' ||
         item.type.toLowerCase() == 'income' ||
@@ -49,6 +51,7 @@ class LedgerBillItem extends StatelessWidget {
     final billType = detail?.billType ?? '';
 
     final content = Container(
+      // margin: EdgeInsets.symmetric(horizontal: 10.w),
       // margin: EdgeInsets.symmetric(horizontal: 10.w),
       padding: EdgeInsets.all(15.w),
       decoration: BoxDecoration(
@@ -72,7 +75,11 @@ class LedgerBillItem extends StatelessWidget {
               color: const Color(0xFF333333),
             ),
             SizedBox(height: 9.w),
-            _totals(color: const Color(0xFF333333)),
+            _totals(
+              income: item.monthIncomeTotal,
+              expenses: item.monthExpensesTotal,
+              color: const Color(0xFF333333),
+            ),
             SizedBox(height: 16.w),
           ],
           if (item.day.isNotEmpty) ...[
@@ -85,13 +92,17 @@ class LedgerBillItem extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14.w),
                   ),
                   child: BaseText(
-                    text: '${item.day}${item.week.isEmpty ? '' : ' ${_week(item.week)}'}',
+                    text: item.day,
                     fontSize: 14,
                     color: const Color(0xFF888888),
                   ),
                 ),
                 const Spacer(),
-                _totals(color: const Color(0xFF666666)),
+                _totals(
+                  income: item.dayIncomeTotal,
+                  expenses: item.dayExpensesTotal,
+                  color: const Color(0xFF666666),
+                ),
               ],
             ),
             SizedBox(height: 17.w),
@@ -99,7 +110,19 @@ class LedgerBillItem extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.sync_alt, size: 22.w, color: const Color(0xFF333333)),
+              item.icon.isEmpty
+                  ? Icon(Icons.sync_alt,
+                      size: 22.w, color: const Color(0xFF333333))
+                  : Image.network(
+                      item.icon,
+                      width: 22.w,
+                      height: 22.w,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.sync_alt,
+                        size: 22.w,
+                        color: const Color(0xFF333333),
+                      ),
+                    ),
               SizedBox(width: 12.w),
               Expanded(
                 child: Column(
@@ -152,14 +175,18 @@ class LedgerBillItem extends StatelessWidget {
     return content;
   }
 
-  Widget _totals({required Color color}) => Row(
+  Widget _totals({
+    required String income,
+    required String expenses,
+    required Color color,
+  }) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const BaseText(text: '收入', fontSize: 14, color: Color(0xFF999999)),
-          BaseText(text: _total(item.incomeTotal), fontSize: 14, color: color),
+          BaseText(text: _total(income), fontSize: 14, color: color),
           SizedBox(width: 12.w),
           const BaseText(text: '支出', fontSize: 14, color: Color(0xFF999999)),
-          BaseText(text: _total(item.expensesTotal), fontSize: 14, color: color),
+          BaseText(text: _total(expenses), fontSize: 14, color: color),
         ],
       );
 }

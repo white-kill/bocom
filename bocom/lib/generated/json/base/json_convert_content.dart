@@ -6,6 +6,8 @@
 import 'package:flutter/material.dart' show debugPrint;
 import 'package:bocom/config/model/apply_record_model.dart';
 import 'package:bocom/config/model/bill_item_model.dart';
+import 'package:bocom/config/model/book_analysis_model.dart';
+import 'package:bocom/config/model/book_overview_model.dart';
 import 'package:bocom/config/model/contacts_model.dart';
 import 'package:bocom/config/model/member_info_model.dart';
 import 'package:bocom/config/model/pay_ment_model.dart';
@@ -168,6 +170,30 @@ class JsonConvert {
       return data.map<BillItemListBillDetail>((Map<String, dynamic> e) =>
           BillItemListBillDetail.fromJson(e)).toList() as M;
     }
+    if (<BookOverviewModel>[] is M) {
+      return data.map<BookOverviewModel>((Map<String, dynamic> e) =>
+          BookOverviewModel.fromJson(e)).toList() as M;
+    }
+    if (<BookAnalysisModel>[] is M) {
+      return data.map<BookAnalysisModel>((Map<String, dynamic> e) =>
+          BookAnalysisModel.fromJson(e)).toList() as M;
+    }
+    if (<BookAnalysisCategoryList>[] is M) {
+      return data.map<BookAnalysisCategoryList>((Map<String, dynamic> e) =>
+          BookAnalysisCategoryList.fromJson(e)).toList() as M;
+    }
+    if (<BookAnalysisTrendList>[] is M) {
+      return data.map<BookAnalysisTrendList>((Map<String, dynamic> e) =>
+          BookAnalysisTrendList.fromJson(e)).toList() as M;
+    }
+    if (<BookAnalysisRankList>[] is M) {
+      return data.map<BookAnalysisRankList>((Map<String, dynamic> e) =>
+          BookAnalysisRankList.fromJson(e)).toList() as M;
+    }
+    if (<BookOverviewTrendList>[] is M) {
+      return data.map<BookOverviewTrendList>((Map<String, dynamic> e) =>
+          BookOverviewTrendList.fromJson(e)).toList() as M;
+    }
     if (<ContactsModel>[] is M) {
       return data.map<ContactsModel>((Map<String, dynamic> e) =>
           ContactsModel.fromJson(e)).toList() as M;
@@ -226,6 +252,12 @@ class JsonConvertClassCollection {
     (BillItemModel).toString(): BillItemModel.fromJson,
     (BillItemList).toString(): BillItemList.fromJson,
     (BillItemListBillDetail).toString(): BillItemListBillDetail.fromJson,
+    (BookAnalysisModel).toString(): BookAnalysisModel.fromJson,
+    (BookAnalysisCategoryList).toString(): BookAnalysisCategoryList.fromJson,
+    (BookAnalysisTrendList).toString(): BookAnalysisTrendList.fromJson,
+    (BookAnalysisRankList).toString(): BookAnalysisRankList.fromJson,
+    (BookOverviewModel).toString(): BookOverviewModel.fromJson,
+    (BookOverviewTrendList).toString(): BookOverviewTrendList.fromJson,
     (ContactsModel).toString(): ContactsModel.fromJson,
     (MemberInfoModel).toString(): MemberInfoModel.fromJson,
     (MemberInfoBankList).toString(): MemberInfoBankList.fromJson,

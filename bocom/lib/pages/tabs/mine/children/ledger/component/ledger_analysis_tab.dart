@@ -1,53 +1,53 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:wb_base_widget/text_widget/bank_text.dart';
+import 'package:bocom/config/model/book_analysis_model.dart';
+import 'package:wb_base_widget/wb_base_widget.dart';
+import '../ledger_logic.dart';
 
 class LedgerAnalysisTab extends StatefulWidget {
-  const LedgerAnalysisTab({super.key});
+  const LedgerAnalysisTab({super.key, required this.logic});
+  final LedgerLogic logic;
 
   @override
   State<LedgerAnalysisTab> createState() => _LedgerAnalysisTabState();
 }
 
 class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
-  bool _showExpense = true;
-  int _selectedYearIndex = 3;
+  int _selectedYearIndex = -1;
   bool _showExpenseRanking = true;
 
-  static const _years = ['2020', '2021', '2022', '2023', '2024'];
-  static const _incomeValues = [3200.0, 4800.0, 410000.0, 4.95, 360016.02];
-  static const _expenseValues = [2800.0, 2600.0, 435000.0, 39414.36, 373061.44];
-  static const _expenseRanking = [
-    _RankingItem('全部提前还款', '借记卡(**2037)', '−357,762.34', Icons.subdirectory_arrow_right),
-    _RankingItem('转账汇款-杨路', '借记卡(**2037)', '−3,600.00', Icons.sync_alt),
-    _RankingItem('贷款到期归还', '借记卡(**2037)', '−2,968.61', Icons.subdirectory_arrow_right),
-    _RankingItem('贷款到期归还', '借记卡(**2037)', '−2,962.64', Icons.subdirectory_arrow_right),
-    _RankingItem('贷款到期归还', '借记卡(**2037)', '−2,921.67', Icons.subdirectory_arrow_right),
-  ];
-  static const _incomeRanking = [
-    _RankingItem('工资收入', '借记卡(**2037)', '+352,800.00', Icons.account_balance_wallet_outlined),
-    _RankingItem('转账汇款-杨路', '借记卡(**2037)', '+3,600.00', Icons.sync_alt),
-    _RankingItem('退款入账', '借记卡(**2037)', '+1,826.02', Icons.subdirectory_arrow_left),
-    _RankingItem('利息收入', '借记卡(**2037)', '+1,200.00', Icons.savings_outlined),
-    _RankingItem('其他收入', '借记卡(**2037)', '+590.00', Icons.add_card_outlined),
-  ];
+  BookAnalysisModel get _data => widget.logic.bookAnalysis.value;
+  List<BookAnalysisTrendList> get _trends => _data.trendList;
+  int get _trendIndex => _trends.isEmpty
+      ? 0
+      : (_selectedYearIndex < 0 || _selectedYearIndex >= _trends.length)
+          ? _trends.length - 1
+          : _selectedYearIndex;
+  bool get _showExpense => widget.logic.analysisIncomeExpenseType.value == 2;
+  bool get _hasAnalysisTimeRange =>
+      widget.logic.analysisBeginTime.value != null ||
+      widget.logic.analysisEndTime.value != null;
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: const Color(0xFFF7F7F7),
-      child: ListView(
-        padding: EdgeInsets.fromLTRB(15.w, 0, 15.w, 20.w),
-        children: [
-          _buildExpenseCard(),
-          SizedBox(height: 12.w),
-          _buildYearComparisonCard(),
-          SizedBox(height: 12.w),
-          _buildRankingCard(),
-        ],
-      ),
-    );
+    return Obx(() => ColoredBox(
+          color: const Color(0xFFF7F7F7),
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(15.w, 0, 15.w, 20.w),
+            children: [
+              _buildExpenseCard(),
+              if (!_hasAnalysisTimeRange) ...[
+                SizedBox(height: 12.w),
+                _buildYearComparisonCard(),
+                SizedBox(height: 12.w),
+                _buildRankingCard(),
+              ],
+            ],
+          ),
+        ));
   }
 
   Widget _buildExpenseCard() {
@@ -63,7 +63,8 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
           Row(
             children: [
               BaseText(
-                text: _showExpense ? '2024年总支出6笔' : '2024年总收入6笔',
+                text:
+                    '${_analysisTitle()}总${_showExpense ? '支出' : '收入'}${_data.billCount}笔',
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: const Color(0xFF2E2E2E),
@@ -80,47 +81,70 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
               color: const Color(0xFFF5F7FA),
               borderRadius: BorderRadius.circular(4.w),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                BaseText(text: '合计', fontSize: 14, color: Color(0xFF999999)),
-                BaseText(text: '373,061.44', fontSize: 14, color: Color(0xFF333333)),
-                Spacer(),
-                BaseText(text: '较去年', fontSize: 14, color: Color(0xFF999999)),
-                BaseText(text: '+333,647.08', fontSize: 14, color: Color(0xFFFF565B)),
+                const BaseText(
+                    text: '合计', fontSize: 14, color: Color(0xFF999999)),
+                BaseText(
+                    text: _formatAmount(_data.totalAmount),
+                    fontSize: 14,
+                    color: const Color(0xFF333333)),
+                if (!_hasAnalysisTimeRange) ...[
+                  const Spacer(),
+                  BaseText(
+                      text: _compareLabel(),
+                      fontSize: 14,
+                      color: const Color(0xFF999999)),
+                  BaseText(
+                      text: _signedAmount(_data.comparedPrevious),
+                      fontSize: 14,
+                      color: _changeColor(_data.comparedPrevious)),
+                ],
               ],
             ),
           ),
           SizedBox(height: 22.w),
-          const BaseText(text: '钱都去哪儿:', fontSize: 14, color: Color(0xFF999999)),
-          SizedBox(height: 20.w),
-          const _CategoryItem(
-            icon: Icons.subdirectory_arrow_right,
-            title: '还款',
-            percent: '99.0%',
-            count: '5笔',
-            amount: '369,461.44',
-            progress: 0.99,
+          BaseText(
+            text: _showExpense ? '钱都去哪儿:' : '钱从哪里来:',
+            fontSize: 14,
+            color: const Color(0xFF999999),
           ),
-          SizedBox(height: 29.w),
-          const _CategoryItem(
-            icon: Icons.sync_alt,
-            title: '转账',
-            percent: '1.0%',
-            count: '1笔',
-            amount: '3,600.00',
-            progress: 0.01,
-          ),
-          SizedBox(height: 18.w),
-          Center(
-            child: TextButton(
-              onPressed: () {},
-              child: BaseText(
-                text: _showExpense ? '全部支出分类' : '全部收入分类',
-                fontSize: 14,
-                color: const Color(0xFF087DFF),
+          if (_data.categoryList.isEmpty)
+            _buildEmptyState(
+              text: '暂无${_showExpense ? '支出' : '收入'}明细',
+              height: 170.w,
+            )
+          else ...[
+            SizedBox(height: 20.w),
+            ...List.generate(_data.categoryList.length, (index) {
+              final item = _data.categoryList[index];
+              return Padding(
+                padding: EdgeInsets.only(
+                    bottom: index == _data.categoryList.length - 1 ? 0 : 29.w),
+                child: _CategoryItem(
+                  imageUrl: item.icon,
+                  title: item.categoryName,
+                  percent: '${item.percentage}%',
+                  count: '${item.billCount}笔',
+                  amount: _formatAmount(item.amount),
+                  progress: ((double.tryParse(item.percentage) ?? 0) / 100)
+                      .clamp(0, 1)
+                      .toDouble(),
+                ),
+              );
+            }),
+            SizedBox(height: 18.w),
+            Center(
+              child: TextButton(
+                onPressed: () {},
+                child: BaseText(
+                  text: _showExpense ? '全部支出分类' : '全部收入分类',
+                  fontSize: 14,
+                  color: const Color(0xFF087DFF),
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -136,8 +160,10 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
         ),
         child: Row(
           children: [
-            _switchItem('支出', _showExpense, () => setState(() => _showExpense = true)),
-            _switchItem('收入', !_showExpense, () => setState(() => _showExpense = false)),
+            _switchItem('支出', _showExpense,
+                () => widget.logic.selectAnalysisIncomeExpenseType(2)),
+            _switchItem('收入', !_showExpense,
+                () => widget.logic.selectAnalysisIncomeExpenseType(1)),
           ],
         ),
       );
@@ -164,9 +190,11 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
   }
 
   Widget _buildYearComparisonCard() {
-    final year = _years[_selectedYearIndex];
-    final income = _incomeValues[_selectedYearIndex];
-    final expense = _expenseValues[_selectedYearIndex];
+    final trend =
+        _trends.isEmpty ? BookAnalysisTrendList() : _trends[_trendIndex];
+    final year = trend.dateTime;
+    final income = double.tryParse(trend.incomeTotal) ?? 0;
+    final expense = double.tryParse(trend.expensesTotal) ?? 0;
     final balance = income - expense;
 
     return Container(
@@ -178,11 +206,11 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const BaseText(
-            text: '年收支对比',
+          BaseText(
+            text: _data.dateType == '月' ? '月收支对比' : '年收支对比',
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF222222),
+            color: const Color(0xFF222222),
           ),
           SizedBox(height: 18.w),
           Container(
@@ -194,12 +222,19 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                BaseText(text: '$year年', fontSize: 14, color: const Color(0xFF666666)),
+                BaseText(
+                    text: _comparisonPeriodText(year),
+                    fontSize: 14,
+                    color: const Color(0xFF666666)),
                 SizedBox(height: 11.w),
                 Row(
                   children: [
-                    Expanded(child: _yearAmount(_incomeColor, '收入', _amountText(income))),
-                    Expanded(child: _yearAmount(_expenseColor, '支出', _amountText(expense))),
+                    Expanded(
+                        child: _yearAmount(
+                            _incomeColor, '收入', _amountText(income))),
+                    Expanded(
+                        child: _yearAmount(
+                            _expenseColor, '支出', _amountText(expense))),
                   ],
                 ),
                 SizedBox(height: 15.w),
@@ -214,11 +249,9 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
                     ),
                     Expanded(
                       child: _labelValue(
-                        '较去年',
-                        _selectedYearIndex == 3 ? '−15,813.59' : '+26,363.99',
-                        _selectedYearIndex == 3
-                            ? const Color(0xFF21BC82)
-                            : const Color(0xFFFF565B),
+                        _compareLabel(),
+                        _signedAmount(_data.balanceComparedPrevious),
+                        _changeColor(_data.balanceComparedPrevious),
                       ),
                     ),
                   ],
@@ -230,7 +263,8 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
           SizedBox(
             height: 180.w,
             child: LayoutBuilder(
-              builder: (context, constraints) => _buildYearChart(constraints.maxWidth),
+              builder: (context, constraints) =>
+                  _buildYearChart(constraints.maxWidth),
             ),
           ),
         ],
@@ -268,16 +302,18 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
   }
 
   Widget _buildYearChart(double width) {
+    if (_trends.isEmpty) return const SizedBox.shrink();
     final plotLeft = 43.w;
     final plotWidth = width - plotLeft - 3.w;
-    final selectedX = plotLeft + plotWidth * (_selectedYearIndex + 0.5) / _years.length;
-    final showTooltipOnRight = _selectedYearIndex < _years.length ~/ 2;
+    final selectedX =
+        plotLeft + plotWidth * (_trendIndex + 0.5) / _trends.length;
+    final showTooltipOnRight = _trendIndex < _trends.length ~/ 2;
 
     return Stack(
       clipBehavior: Clip.none,
       children: [
         BarChart(
-          _yearChartData(),
+          _yearChartData(plotWidth),
           duration: const Duration(milliseconds: 250),
         ),
         Positioned(
@@ -305,26 +341,40 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
     );
   }
 
-  BarChartData _yearChartData() {
+  BarChartData _yearChartData(double plotWidth) {
+    final values = _trends.expand((e) => [
+          double.tryParse(e.incomeTotal) ?? 0,
+          double.tryParse(e.expensesTotal) ?? 0,
+        ]);
+    final largest =
+        values.fold<double>(0, (max, value) => value > max ? value : max);
+    final maxY = largest <= 0 ? 1.0 : largest * 1.2;
+    // 每组包含收入、支出两根柱子。根据可用宽度和数据条数动态
+    // 分配柱宽，最多 12 组时也不会互相挤压，少量数据时则限制最大宽度。
+    final groupWidth = plotWidth / _trends.length;
+    final rodWidth = (groupWidth * 0.28).clamp(4.w, 21.w).toDouble();
+    final groupsSpace = (groupWidth * 0.18).clamp(2.w, 11.w).toDouble();
     return BarChartData(
       minY: 0,
-      maxY: 500000,
+      maxY: maxY,
       alignment: BarChartAlignment.spaceAround,
-      groupsSpace: 11.w,
+      groupsSpace: groupsSpace,
       barTouchData: BarTouchData(
         enabled: true,
         touchTooltipData: BarTouchTooltipData(
           getTooltipItem: (_, __, ___, ____) => null,
         ),
         touchCallback: (event, response) {
-          if (!event.isInterestedForInteractions || response?.spot == null) return;
-          setState(() => _selectedYearIndex = response!.spot!.touchedBarGroupIndex);
+          if (!event.isInterestedForInteractions || response?.spot == null)
+            return;
+          setState(
+              () => _selectedYearIndex = response!.spot!.touchedBarGroupIndex);
         },
       ),
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,
-        horizontalInterval: 125000,
+        horizontalInterval: maxY / 4,
         getDrawingHorizontalLine: (_) => const FlLine(
           color: Color(0xFFD8DEE7),
           strokeWidth: 1,
@@ -337,27 +387,19 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
       ),
       titlesData: FlTitlesData(
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles:
+            const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         leftTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 43.w,
-            interval: 125000,
+            interval: maxY / 4,
             getTitlesWidget: (value, meta) {
-              final text = value == 0
-                  ? '0'
-                  : value == 125000
-                      ? '12.5万'
-                      : value == 250000
-                          ? '25万'
-                          : value == 375000
-                              ? '37.5万'
-                              : value == 500000
-                                  ? '50万'
-                                  : '';
+              final text = _axisAmount(value);
               return SideTitleWidget(
                 axisSide: meta.axisSide,
-                child: BaseText(text: text, fontSize: 11, color: const Color(0xFF8E9AAA)),
+                child: BaseText(
+                    text: text, fontSize: 11, color: const Color(0xFF8E9AAA)),
               );
             },
           ),
@@ -368,36 +410,42 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
             reservedSize: 27.w,
             getTitlesWidget: (value, meta) {
               final index = value.toInt();
-              if (index < 0 || index >= _years.length) return const SizedBox.shrink();
-              final selected = index == _selectedYearIndex;
+              if (index < 0 || index >= _trends.length)
+                return const SizedBox.shrink();
+              if (_data.dateType == '月' && index % 3 != 0) {
+                return const SizedBox.shrink();
+              }
+              final selected = index == _trendIndex;
               return SideTitleWidget(
                 axisSide: meta.axisSide,
                 space: 7.w,
                 child: BaseText(
-                  text: _years[index],
+                  text: _trendLabel(_trends[index].dateTime),
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                  color: selected ? const Color(0xFF333333) : const Color(0xFFB3BAC3),
+                  color: selected
+                      ? const Color(0xFF333333)
+                      : const Color(0xFFB3BAC3),
                 ),
               );
             },
           ),
         ),
       ),
-      barGroups: List.generate(_years.length, (index) {
+      barGroups: List.generate(_trends.length, (index) {
         return BarChartGroupData(
           x: index,
           barsSpace: 0,
           barRods: [
             BarChartRodData(
-              toY: _incomeValues[index],
-              width: 21.w,
+              toY: double.tryParse(_trends[index].incomeTotal) ?? 0,
+              width: rodWidth,
               color: _incomeColor,
               borderRadius: BorderRadius.zero,
             ),
             BarChartRodData(
-              toY: _expenseValues[index],
-              width: 21.w,
+              toY: double.tryParse(_trends[index].expensesTotal) ?? 0,
+              width: rodWidth,
               color: _expenseColor,
               borderRadius: BorderRadius.zero,
             ),
@@ -408,8 +456,9 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
   }
 
   Widget _buildYearTooltip() {
-    final income = _amountText(_incomeValues[_selectedYearIndex]);
-    final expense = _amountText(_expenseValues[_selectedYearIndex]);
+    final trend = _trends[_trendIndex];
+    final income = _formatAmount(trend.incomeTotal);
+    final expense = _formatAmount(trend.expensesTotal);
     return Container(
       padding: EdgeInsets.all(8.w),
       decoration: BoxDecoration(
@@ -419,7 +468,10 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          BaseText(text: _years[_selectedYearIndex], fontSize: 15, color: Colors.white),
+          BaseText(
+              text: _tooltipPeriodText(trend.dateTime),
+              fontSize: 15,
+              color: Colors.white),
           SizedBox(height: 6.w),
           _tooltipRow(_incomeColor, '收入：$income'),
           SizedBox(height: 5.w),
@@ -431,7 +483,10 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
 
   Widget _tooltipRow(Color color, String text) => Row(
         children: [
-          Container(width: 9.w, height: 9.w, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+              width: 9.w,
+              height: 9.w,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           SizedBox(width: 5.w),
           BaseText(text: text, fontSize: 13, color: Colors.white),
         ],
@@ -450,8 +505,77 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
     return '${grouped.reversed.join()}.${parts.last}';
   }
 
+  String _formatAmount(String value) =>
+      _amountText(double.tryParse(value.replaceAll(',', '')) ?? 0);
+
+  String _signedAmount(String value) {
+    final number = double.tryParse(value.replaceAll(',', '')) ?? 0;
+    return '${number >= 0 ? '+' : '−'}${_amountText(number.abs())}';
+  }
+
+  Color _changeColor(String value) =>
+      (double.tryParse(value.replaceAll(',', '')) ?? 0) < 0
+          ? const Color(0xFF21BC82)
+          : const Color(0xFFFF565B);
+
+  String _analysisTitle() {
+    if (_data.dateType == '自定义') return '';
+    final period = _data.period;
+    if (period.isEmpty) return '';
+    if (_data.dateType == '月') {
+      final month = int.tryParse(period.split('-').last);
+      return month == null ? '' : '$month月';
+    }
+    return '${period}年';
+  }
+
+  String _compareLabel() => _data.dateType == '月' ? '较上月' : '较去年';
+
+  String _comparisonPeriodText(String period) {
+    if (_data.dateType == '月') {
+      final parts = period.split('-');
+      if (parts.length >= 2) {
+        final month = int.tryParse(parts[1]);
+        if (month != null) return '${parts[0]}年$month月';
+      }
+      return period;
+    }
+    return period.isEmpty || period.endsWith('年') ? period : '${period}年';
+  }
+
+  String _trendLabel(String value) {
+    if (_data.dateType == '月' && value.length >= 7 && value[4] == '-') {
+      final month = int.tryParse(value.substring(5, 7));
+      return month == null ? value : '$month月';
+    }
+    return value.length >= 4 ? value.substring(0, 4) : value;
+  }
+
+  String _tooltipPeriodText(String value) {
+    if (_data.dateType == '月') {
+      final parts = value.split('-');
+      if (parts.length >= 2) {
+        final month = int.tryParse(parts[1]);
+        if (month != null) return '$month月';
+      }
+      return value;
+    }
+    return value.length >= 4 ? value.substring(0, 4) : value;
+  }
+
+  String _axisAmount(double value) {
+    if (value == 0) return '0';
+    if (value >= 10000) {
+      final text =
+          (value / 10000).toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
+      return '$text万';
+    }
+    return value.toStringAsFixed(0);
+  }
+
   Widget _buildRankingCard() {
-    final data = _showExpenseRanking ? _expenseRanking : _incomeRanking;
+    final data =
+        _showExpenseRanking ? _data.expenseRankList : _data.incomeRankList;
     return Container(
       padding: EdgeInsets.fromLTRB(15.w, 0, 15.w, 5.w),
       decoration: BoxDecoration(
@@ -481,20 +605,67 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
               ],
             ),
           ),
-          ...List.generate(data.length, (index) {
-            return Column(
-              children: [
-                _rankingItem(data[index], index),
-                if (index != data.length - 1)
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    indent: 0,
-                    color: const Color(0xFFE2E4E7),
+          if (data.isEmpty)
+            _buildEmptyState(text: '暂无排行数据', height: 200.w)
+          else
+            ...List.generate(data.length, (index) {
+              return Column(
+                children: [
+                  _rankingItem(data[index], index),
+                  if (index != data.length - 1)
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      indent: 0,
+                      color: Color(0xFFE2E4E7),
+                    ),
+                ],
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState({required String text, required double height}) {
+    return SizedBox(
+      height: height,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 1.sw,
+            child: Center(
+              child: Stack(
+                children: [
+                  Image.asset(
+                    'assets/images/bg_lefger_water_empty.png',
+                    width: 110.w,
+                    fit: BoxFit.fitWidth,
                   ),
-              ],
-            );
-          }),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        BaseText(
+                          text: text,
+                          fontSize: 14,
+                          color: const Color(0xFF333333),
+                        )
+                      ],
+                    ).withSizedBox(width: 110.w),)
+                ],
+              ),
+            ),
+          ),
+          // SizedBox(height: 14.w),
+          // BaseText(
+          //   text: text,
+          //   fontSize: 16,
+          //   color: const Color(0xFF333333),
+          // ),
         ],
       ),
     );
@@ -532,7 +703,7 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
     );
   }
 
-  Widget _rankingItem(_RankingItem item, int index) {
+  Widget _rankingItem(BookAnalysisRankList item, int index) {
     final income = !_showExpenseRanking;
     return SizedBox(
       height: 76.w,
@@ -571,7 +742,12 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
                   ),
           ),
           SizedBox(width: 9.w),
-          Icon(item.icon, size: 22.w, color: const Color(0xFF333333)),
+          Icon(
+              item.type == 1
+                  ? Icons.account_balance_wallet_outlined
+                  : Icons.sync_alt,
+              size: 22.w,
+              color: const Color(0xFF333333)),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -579,7 +755,7 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 BaseText(
-                  text: item.title,
+                  text: item.excerpt,
                   fontSize: 16,
                   color: const Color(0xFF333333),
                   maxLines: 1,
@@ -587,7 +763,7 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
                 ),
                 SizedBox(height: 5.w),
                 BaseText(
-                  text: item.account,
+                  text: '借记卡(${ item.bankCardText.substring(item.bankCardText.length - 6) })',
                   fontSize: 14,
                   color: const Color(0xFF999999),
                 ),
@@ -596,7 +772,7 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
           ),
           SizedBox(width: 8.w),
           BaseText(
-            text: item.amount,
+            text: '${income ? '+' : '−'}${_formatAmount(item.amount)}',
             fontSize: 15,
             fontWeight: FontWeight.w500,
             color: income ? const Color(0xFFFF565B) : const Color(0xFF333333),
@@ -605,15 +781,6 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
       ),
     );
   }
-}
-
-class _RankingItem {
-  const _RankingItem(this.title, this.account, this.amount, this.icon);
-
-  final String title;
-  final String account;
-  final String amount;
-  final IconData icon;
 }
 
 class _AnalysisHorizontalDashPainter extends CustomPainter {
@@ -638,7 +805,7 @@ class _AnalysisHorizontalDashPainter extends CustomPainter {
 
 class _CategoryItem extends StatelessWidget {
   const _CategoryItem({
-    required this.icon,
+    required this.imageUrl,
     required this.title,
     required this.percent,
     required this.count,
@@ -646,7 +813,7 @@ class _CategoryItem extends StatelessWidget {
     required this.progress,
   });
 
-  final IconData icon;
+  final String imageUrl;
   final String title;
   final String percent;
   final String count;
@@ -659,7 +826,16 @@ class _CategoryItem extends StatelessWidget {
       children: [
         Padding(
           padding: EdgeInsets.only(top: 2.w),
-          child: Icon(icon, size: 22.w, color: const Color(0xFF333333)),
+          child: imageUrl.isEmpty
+              ? Icon(Icons.receipt_long_outlined,
+                  size: 22.w, color: const Color(0xFF333333))
+              : Image.network(imageUrl,
+                  width: 22.w,
+                  height: 22.w,
+                  errorBuilder: (_, __, ___) => Icon(
+                      Icons.receipt_long_outlined,
+                      size: 22.w,
+                      color: const Color(0xFF333333))),
         ),
         SizedBox(width: 12.w),
         Expanded(
@@ -667,11 +843,20 @@ class _CategoryItem extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  BaseText(text: title, fontSize: 16, color: const Color(0xFF333333)),
+                  BaseText(
+                      text: title,
+                      fontSize: 16,
+                      color: const Color(0xFF333333)),
                   SizedBox(width: 10.w),
-                  BaseText(text: percent, fontSize: 14, color: const Color(0xFF999999)),
+                  BaseText(
+                      text: percent,
+                      fontSize: 14,
+                      color: const Color(0xFF999999)),
                   SizedBox(width: 5.w),
-                  BaseText(text: count, fontSize: 14, color: const Color(0xFF999999)),
+                  BaseText(
+                      text: count,
+                      fontSize: 14,
+                      color: const Color(0xFF999999)),
                   const Spacer(),
                   BaseText(
                     text: amount,

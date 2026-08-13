@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 import 'package:wb_base_widget/extension/widget_extension.dart';
 import 'package:wb_base_widget/state_widget/state_less_widget.dart';
 import 'package:wb_base_widget/text_widget/bank_text.dart';
+import 'package:bocom/utils/stack_position.dart';
+import 'package:bocom/config/app_config.dart';
 
 import 'component/ledger_overview_tab.dart';
 import 'component/ledger_analysis_tab.dart';
@@ -32,15 +34,20 @@ class LedgerPage extends BaseStateless {
         final expanded = logic.ledgerTypeExpanded.value;
         final selectedIndex = logic.ledgerType.value;
         final selectedLedger = logic.ledgerTypeList[selectedIndex];
+        final showPeriodSelector = logic.ledgerTab.value != 3;
+        final collapsedHeight = showPeriodSelector ? 140.w : 90.w;
+        final expandedHeight = showPeriodSelector ? 310.w : 260.w;
 
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: logic.suppressHeaderAnimation.value
+              ? Duration.zero
+              : const Duration(milliseconds: 250),
           curve: Curves.easeInOut,
-          height: statusBarHeight + (expanded ? 310.w : 140.w),
+          height: statusBarHeight + (expanded ? expandedHeight : collapsedHeight),
           child: Stack(
             children: [
               Positioned.fill(
-                bottom: 50.w,
+                bottom: showPeriodSelector ? 50.w : 0,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -192,14 +199,29 @@ class LedgerPage extends BaseStateless {
                   ),
                 ),
               ],
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: logic.ledgerTab.value == 0
-                    ? _buildPeriodSelector(context)
-                    : _buildWaterPeriodSelector(context),
-              ),
+              if (showPeriodSelector)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: logic.ledgerTab.value == 0
+                      ? _buildPeriodSelector(context)
+                      : _buildWaterPeriodSelector(context),
+                ),
+              if (!showPeriodSelector)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    height: 16.w,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F7F7),
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(16.w)),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -309,7 +331,8 @@ class LedgerPage extends BaseStateless {
 
     return Obx(() {
       final visible =
-          logic.ledgerTab.value == 1 && logic.waterFilterExpanded.value != 0;
+          (logic.ledgerTab.value == 1 || logic.ledgerTab.value == 2) &&
+              logic.waterFilterExpanded.value != 0;
       return Container(
         height: 67.w,
         padding: EdgeInsets.symmetric(horizontal: 15.w),
@@ -324,18 +347,24 @@ class LedgerPage extends BaseStateless {
                 child: _buildWaterSelectorItem(
                   onTap: () => logic.toggleWaterFilter(1),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      BaseText(
-                        text: logic.ledgerTab.value == 2
-                            ? '2024年'
-                            : logic.waterPeriodLabel.value.isEmpty
-                                ? defaultPeriodText
-                                : logic.waterPeriodLabel.value,
-                        fontSize: 14,
-                        color: periodActive
-                            ? const Color(0xFF0075F6)
-                            : const Color(0xFF333333),
+                      Flexible(
+                        child: BaseText(
+                          text: logic.ledgerTab.value == 2
+                              ? (logic.analysisPeriodLabel.value.isEmpty
+                                  ? defaultPeriodText
+                                  : logic.analysisPeriodLabel.value)
+                              : logic.waterPeriodLabel.value.isEmpty
+                                  ? defaultPeriodText
+                                  : logic.waterPeriodLabel.value,
+                          fontSize: 14,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          color: periodActive
+                              ? const Color(0xFF0075F6)
+                              : const Color(0xFF333333),
+                        ),
                       ),
                       SizedBox(width: 5.w),
                       _buildSelectorArrow(periodActive, active: periodActive),
@@ -352,7 +381,9 @@ class LedgerPage extends BaseStateless {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       BaseText(
-                        text: logic.waterAccount.value,
+                        text: logic.ledgerTab.value == 2
+                            ? logic.analysisAccount.value
+                            : logic.waterAccount.value,
                         fontSize: 14,
                         color: accountActive
                             ? const Color(0xFF0075F6)
@@ -464,12 +495,19 @@ class LedgerPage extends BaseStateless {
         ),
         itemBuilder: (_, index) => _waterChoiceButton(
           periods[index],
-          selected: logic.waterPeriodLabel.value == periods[index],
+          selected: (logic.ledgerTab.value == 2
+                  ? logic.analysisPeriodLabel.value
+                  : logic.waterPeriodLabel.value) ==
+              periods[index],
           onTap: () {
             if (periods[index] == '自定义') {
               _showWaterCustomPeriodPicker(context);
             } else {
-              logic.selectWaterPeriod(periods[index]);
+              if (logic.ledgerTab.value == 2) {
+                logic.selectAnalysisPeriod(periods[index]);
+              } else {
+                logic.selectWaterPeriod(periods[index]);
+              }
             }
           },
         ),
@@ -484,7 +522,9 @@ class LedgerPage extends BaseStateless {
           .map(
             (account) => Expanded(
               child: InkWell(
-                onTap: () => logic.selectWaterAccount(account),
+                onTap: () => logic.ledgerTab.value == 2
+                    ? logic.selectAnalysisAccount(account)
+                    : logic.selectWaterAccount(account),
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15.w),
                   child: Row(
@@ -493,12 +533,18 @@ class LedgerPage extends BaseStateless {
                         child: BaseText(
                           text: account,
                           fontSize: 14,
-                          color: logic.waterAccount.value == account
+                          color: (logic.ledgerTab.value == 2
+                                      ? logic.analysisAccount.value
+                                      : logic.waterAccount.value) ==
+                                  account
                               ? const Color(0xFF0075F6)
                               : const Color(0xFF333333),
                         ),
                       ),
-                      if (logic.waterAccount.value == account)
+                      if ((logic.ledgerTab.value == 2
+                              ? logic.analysisAccount.value
+                              : logic.waterAccount.value) ==
+                          account)
                         Icon(Icons.check,
                             color: const Color(0xFF0075F6), size: 24.w),
                     ],
@@ -580,7 +626,7 @@ class LedgerPage extends BaseStateless {
                 child: InkWell(
                   onTap: () {
                     FocusManager.instance.primaryFocus?.unfocus();
-                    logic.closeWaterFilter();
+                    logic.applyWaterAmount();
                   },
                   child: const ColoredBox(
                     color: Color(0xFF0075F6),
@@ -724,13 +770,12 @@ class LedgerPage extends BaseStateless {
     );
     if (result == null) return;
 
-    logic.periodMode.value = result.mode == 1 ? 1 : 0;
-    logic.selectPeriod(year: result.start.year, month: result.start.month);
-    logic.waterPeriodLabel.value = result.mode == 0
-        ? '${result.start.year}年${result.start.month}月'
-        : result.mode == 1
-            ? '${result.start.year}年'
-            : '自定义';
+    if (logic.ledgerTab.value == 2) {
+      logic.selectAnalysisPeriodSelection(
+          result.mode, result.start, result.end);
+    } else {
+      logic.selectWaterCustomPeriod(result.start, result.end);
+    }
   }
 
   Future<void> _showPeriodPicker(BuildContext context) async {
@@ -819,12 +864,37 @@ class LedgerPage extends BaseStateless {
         case 1:
           return LedgerWaterTab(logic: logic, state: state);
         case 2:
-          return const LedgerAnalysisTab();
+          return LedgerAnalysisTab(logic: logic);
         case 3:
-          return const ColoredBox(
-            color: Color(0xFFF7F7F7),
-            child: SizedBox.expand(),
-          );
+          StackPosition stackPosition = StackPosition(designWidth: 1080, designHeight: 1674, deviceWidth: 1.sw);
+          return Obx(() {
+            final selectedIndex = logic.ledgerType.value;
+            final selectedLedger = logic.ledgerTypeList[selectedIndex];
+            return ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                Stack(
+                  children: [
+                    Image(
+                      image: selectedLedger['manageImage']!.png,
+                      width: 1.sw,
+                      fit: BoxFit.fitWidth,
+                    ),
+                    if(logic.ledgerType.value != 0)
+                      Positioned(
+                        right: stackPosition.getX(170),
+                        top: stackPosition.getY(1025),
+                        child: BaseText(
+                            text: '借记卡(**${AppConfig.config.abcLogic.cardFour()})',
+                            fontSize: 13,
+                            color: const Color(0xFF888888)
+                        ),
+                      )
+                  ],
+                )
+              ],
+            );
+          });
         default:
           return const SizedBox.shrink();
       }
@@ -847,9 +917,22 @@ class LedgerPage extends BaseStateless {
             _buildBottomTab(),
           ],
         ),
+        Positioned(
+          right: 15.w,
+          bottom: MediaQuery.paddingOf(context).bottom + 85.w,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {},
+            child: Image.asset(
+              'assets/images/ic_ledger_add.png',
+              width: 45.w,
+              height: 45.w,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
         Obx(() {
-          final visible = logic.ledgerTab.value == 1 &&
-              logic.waterFilterExpanded.value != 0;
+          final visible = logic.waterFilterExpanded.value != 0;
           final filter = visible
               ? logic.waterFilterExpanded.value
               : logic.waterLastFilter.value;

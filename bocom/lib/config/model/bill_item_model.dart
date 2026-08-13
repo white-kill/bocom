@@ -7,7 +7,7 @@ export 'package:bocom/generated/json/bill_item_model.g.dart';
 class BillItemModel {
 	List<BillItemList> list = [];
 	int total = 0;
-	dynamic pages;
+	int pages = 0;
 	String incomeTotal = '';
 	String expensesTotal = '';
 	dynamic customizeParam;
@@ -38,6 +38,11 @@ class BillItemList {
 	String oppositeName = '';
 	String month = '';
 	String year = '';
+	String icon = '';
+	String dayIncomeTotal = '';
+	String dayExpensesTotal = '';
+	String monthIncomeTotal = '';
+	String monthExpensesTotal = '';
 	String incomeTotal = '';
 	String expensesTotal = '';
 	BillItemListBillDetail? billDetail;
