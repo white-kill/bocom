@@ -7,6 +7,7 @@ import 'package:bocom/config/model/book_analysis_model.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
 import '../ledger_logic.dart';
 import 'ledger_analysis_category_page.dart';
+import 'ledger_analysis_category_detail_page.dart';
 
 class LedgerAnalysisTab extends StatefulWidget {
   const LedgerAnalysisTab({super.key, required this.logic});
@@ -123,6 +124,12 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
                 padding: EdgeInsets.only(
                     bottom: index == _data.categoryList.length - 1 ? 0 : 29.w),
                 child: _CategoryItem(
+                  onTap: () => Get.to(
+                    () => LedgerAnalysisCategoryDetailPage(
+                      params: widget.logic.buildAnalysisParams(),
+                      category: item,
+                    ),
+                  ),
                   imageUrl: item.icon,
                   title: item.categoryName,
                   percent: '${item.percentage}%',
@@ -512,9 +519,8 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
       _amountText(double.tryParse(value.replaceAll(',', '')) ?? 0);
 
   double _progressValue(String percentage) {
-    final value = ((double.tryParse(percentage) ?? 0) / 100)
-        .clamp(0, 1)
-        .toDouble();
+    final value =
+        ((double.tryParse(percentage) ?? 0) / 100).clamp(0, 1).toDouble();
     return value > 0 && value < 0.001 ? 0.001 : value;
   }
 
@@ -817,6 +823,7 @@ class _AnalysisHorizontalDashPainter extends CustomPainter {
 
 class _CategoryItem extends StatelessWidget {
   const _CategoryItem({
+    required this.onTap,
     required this.imageUrl,
     required this.title,
     required this.percent,
@@ -825,6 +832,7 @@ class _CategoryItem extends StatelessWidget {
     required this.progress,
   });
 
+  final VoidCallback onTap;
   final String imageUrl;
   final String title;
   final String percent;
@@ -834,64 +842,67 @@ class _CategoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Padding(
-          padding: EdgeInsets.only(top: 2.w),
-          child: imageUrl.isEmpty
-              ? Icon(Icons.receipt_long_outlined,
-                  size: 22.w, color: const Color(0xFF333333))
-              : Image.network(imageUrl,
-                  width: 22.w,
-                  height: 22.w,
-                  errorBuilder: (_, __, ___) => Icon(
-                      Icons.receipt_long_outlined,
-                      size: 22.w,
-                      color: const Color(0xFF333333))),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  BaseText(
-                      text: title,
-                      fontSize: 16,
-                      color: const Color(0xFF333333)),
-                  SizedBox(width: 10.w),
-                  BaseText(
-                      text: percent,
-                      fontSize: 14,
-                      color: const Color(0xFF999999)),
-                  SizedBox(width: 5.w),
-                  BaseText(
-                      text: count,
-                      fontSize: 14,
-                      color: const Color(0xFF999999)),
-                  const Spacer(),
-                  BaseText(
-                    text: amount,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF333333),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8.w),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(2.w),
-                child: LinearProgressIndicator(
-                  minHeight: 4.w,
-                  value: progress,
-                  backgroundColor: const Color(0xFFEDF1F5),
-                  valueColor: const AlwaysStoppedAnimation(Color(0xFFFFB57C)),
-                ),
-              ),
-            ],
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: 2.w),
+            child: imageUrl.isEmpty
+                ? Icon(Icons.receipt_long_outlined,
+                    size: 22.w, color: const Color(0xFF333333))
+                : Image.network(imageUrl,
+                    width: 22.w,
+                    height: 22.w,
+                    errorBuilder: (_, __, ___) => Icon(
+                        Icons.receipt_long_outlined,
+                        size: 22.w,
+                        color: const Color(0xFF333333))),
           ),
-        ),
-      ],
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    BaseText(
+                        text: title,
+                        fontSize: 16,
+                        color: const Color(0xFF333333)),
+                    SizedBox(width: 10.w),
+                    BaseText(
+                        text: percent,
+                        fontSize: 14,
+                        color: const Color(0xFF999999)),
+                    SizedBox(width: 5.w),
+                    BaseText(
+                        text: count,
+                        fontSize: 14,
+                        color: const Color(0xFF999999)),
+                    const Spacer(),
+                    BaseText(
+                      text: amount,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF333333),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.w),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(2.w),
+                  child: LinearProgressIndicator(
+                    minHeight: 4.w,
+                    value: progress,
+                    backgroundColor: const Color(0xFFEDF1F5),
+                    valueColor: const AlwaysStoppedAnimation(Color(0xFFFFB57C)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

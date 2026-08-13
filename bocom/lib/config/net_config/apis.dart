@@ -49,4 +49,8 @@ class Apis {
   // 账本分析全部分类
   static const bookAnalysisCategoryList =
       '/servicecomm/bill/book/analysis/categoryList';
+
+  // 账本分析分类流水详情
+  static const bookAnalysisCategoryDetailPage =
+      '/servicecomm/bill/book/analysis/categoryDetailPage';
 }
