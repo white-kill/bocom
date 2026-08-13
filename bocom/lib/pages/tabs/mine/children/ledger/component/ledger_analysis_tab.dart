@@ -6,6 +6,7 @@ import 'package:wb_base_widget/text_widget/bank_text.dart';
 import 'package:bocom/config/model/book_analysis_model.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
 import '../ledger_logic.dart';
+import 'ledger_analysis_category_page.dart';
 
 class LedgerAnalysisTab extends StatefulWidget {
   const LedgerAnalysisTab({super.key, required this.logic});
@@ -127,16 +128,18 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
                   percent: '${item.percentage}%',
                   count: '${item.billCount}笔',
                   amount: _formatAmount(item.amount),
-                  progress: ((double.tryParse(item.percentage) ?? 0) / 100)
-                      .clamp(0, 1)
-                      .toDouble(),
+                  progress: _progressValue(item.percentage),
                 ),
               );
             }),
             SizedBox(height: 18.w),
             Center(
               child: TextButton(
-                onPressed: () {},
+                onPressed: () => Get.to(
+                  () => LedgerAnalysisCategoryPage(
+                    params: widget.logic.buildAnalysisParams(),
+                  ),
+                ),
                 child: BaseText(
                   text: _showExpense ? '全部支出分类' : '全部收入分类',
                   fontSize: 14,
@@ -508,6 +511,13 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
   String _formatAmount(String value) =>
       _amountText(double.tryParse(value.replaceAll(',', '')) ?? 0);
 
+  double _progressValue(String percentage) {
+    final value = ((double.tryParse(percentage) ?? 0) / 100)
+        .clamp(0, 1)
+        .toDouble();
+    return value > 0 && value < 0.001 ? 0.001 : value;
+  }
+
   String _signedAmount(String value) {
     final number = double.tryParse(value.replaceAll(',', '')) ?? 0;
     return '${number >= 0 ? '+' : '−'}${_amountText(number.abs())}';
@@ -655,7 +665,8 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
                           color: const Color(0xFF333333),
                         )
                       ],
-                    ).withSizedBox(width: 110.w),)
+                    ).withSizedBox(width: 110.w),
+                  )
                 ],
               ),
             ),
@@ -763,7 +774,8 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
                 ),
                 SizedBox(height: 5.w),
                 BaseText(
-                  text: '借记卡(${ item.bankCardText.substring(item.bankCardText.length - 6) })',
+                  text:
+                      '借记卡(${item.bankCardText.substring(item.bankCardText.length - 6)})',
                   fontSize: 14,
                   color: const Color(0xFF999999),
                 ),

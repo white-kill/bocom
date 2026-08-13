@@ -45,4 +45,8 @@ class Apis {
 
   // 账本分析
   static const bookAnalysis = '/servicecomm/bill/book/analysis';
+
+  // 账本分析全部分类
+  static const bookAnalysisCategoryList =
+      '/servicecomm/bill/book/analysis/categoryList';
 }

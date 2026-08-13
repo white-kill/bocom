@@ -445,6 +445,16 @@ class LedgerLogic extends GetxController {
 
   Future<void> getBookAnalysis() async {
     if (token == '') return;
+    final params = buildAnalysisParams();
+    final value =
+        await Http.post(Apis.bookAnalysis, data: params, isLoading: false);
+    if (value is Map) {
+      bookAnalysis.value =
+          BookAnalysisModel.fromJson(Map<String, dynamic>.from(value));
+    }
+  }
+
+  Map<String, dynamic> buildAnalysisParams() {
     final params = <String, dynamic>{
       'bookType': ledgerTypeList[ledgerType.value]['name'],
       'incomeExpenseType': analysisIncomeExpenseType.value,
@@ -470,12 +480,7 @@ class LedgerLogic extends GetxController {
       final card = AppConfig.config.abcLogic.card1();
       if (card != '--' && card.isNotEmpty) params['bankCard'] = card;
     }
-    final value =
-        await Http.post(Apis.bookAnalysis, data: params, isLoading: false);
-    if (value is Map) {
-      bookAnalysis.value =
-          BookAnalysisModel.fromJson(Map<String, dynamic>.from(value));
-    }
+    return params;
   }
 
   DateTime _dateOnly(DateTime value) =>
