@@ -184,6 +184,56 @@ void main() {
     expect(find.text('交通银行'), findsNothing);
   });
 
+  testWidgets('银行页默认使用真实页面假数据并保持参考图比例', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2340);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const GetMaterialApp(home: RecipientBankPage()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('收款银行'), findsOneWidget);
+    expect(find.text('热门银行'), findsOneWidget);
+    expect(find.text('交通银行'), findsWidgets);
+    expect(find.text('华夏银行'), findsWidgets);
+    expect(
+      tester.getSize(find.byKey(const Key('recipient-bank-header'))).height,
+      closeTo(270, 0.1),
+    );
+    expect(
+      tester
+          .getSize(find.byKey(const Key('recipient-bank-section-热门银行')))
+          .height,
+      closeTo(95, 0.1),
+    );
+    expect(
+      tester
+          .getSize(
+            find.byKey(const Key('recipient-bank-row-交通银行')).first,
+          )
+          .height,
+      closeTo(132, 0.1),
+    );
+    expect(
+      tester
+          .getSize(find.byKey(const Key('recipient-bank-alphabet-rail')))
+          .height,
+      closeTo(1196, 0.1),
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('recipient-bank-search')),
+      '民生',
+    );
+    await tester.pump();
+    expect(find.text('中国民生银行'), findsOneWidget);
+    expect(find.text('交通银行'), findsNothing);
+    expect(find.byKey(const Key('recipient-bank-alphabet-rail')), findsNothing);
+  });
+
   testWidgets('扫描银行卡页按设计比例绘制四角框并在拍摄后返回', (tester) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 1;
@@ -298,5 +348,40 @@ void main() {
     expect(collapseTaps, 1);
     await tester.tap(find.bySemanticsLabel('关闭'));
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('确认转账完成校验后显示 loading 并直接进入结果页', (tester) async {
+    final recipient = ContactsModel()
+      ..name = ' 张三 '
+      ..bankCard = ' 6222000012341234 '
+      ..bankName = ' 中国工商银行 ';
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: AccountTransferConfirmationPage(
+          recipient: recipient,
+          amount: '1,500.25',
+          description: ' 货款 ',
+          arrivalTime: '预计2小时后到账',
+          passwordVerificationLauncher: (_, __) async => true,
+          smsVerificationLauncher: (_, __, ___) async => true,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('确认转账'));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byKey(const Key('transfer-loading-indicator')), findsOneWidget);
+    expect(
+      tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
+      isNull,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('account-transfer-success-page')),
+      findsOneWidget,
+    );
+    expect(find.text('张三'), findsOneWidget);
+    expect(find.text('中国工商银行(**1234)'), findsOneWidget);
   });
 }

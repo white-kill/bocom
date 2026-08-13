@@ -28,6 +28,9 @@ class Apis {
   ///银行卡转账
   static const transfer = '/servicecomm/bill/transfer';
 
+  ///单笔账单详情
+  static const billDetail = '/serviceboc/bill/detail';
+
   ///分页查询账单打印申请列表
   static const applyPageList = '/servicecomm/flowExport/applyPage';
 
