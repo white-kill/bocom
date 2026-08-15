@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'transaction_advanced_filter_model.dart';
@@ -69,13 +70,22 @@ class _TransactionAdvancedFilterPanelState
   ];
 
   final _scrollController = ScrollController();
+  final _minAmountKey = GlobalKey();
+  final _maxAmountKey = GlobalKey();
+  final _customBankKey = GlobalKey();
   final _accountNameKey = GlobalKey();
   final _accountNumberKey = GlobalKey();
   final _summaryKey = GlobalKey();
 
+  late final TextEditingController _minAmountController;
+  late final TextEditingController _maxAmountController;
+  late final TextEditingController _customBankController;
   late final TextEditingController _accountNameController;
   late final TextEditingController _accountNumberController;
   late final TextEditingController _summaryController;
+  late final FocusNode _minAmountFocus;
+  late final FocusNode _maxAmountFocus;
+  late final FocusNode _customBankFocus;
   late final FocusNode _accountNameFocus;
   late final FocusNode _accountNumberFocus;
   late final FocusNode _summaryFocus;
@@ -95,17 +105,25 @@ class _TransactionAdvancedFilterPanelState
     _amountRange = initial.amountRange;
     _channel = initial.channel;
     _bank = initial.bank;
+    _minAmountController = TextEditingController(text: initial.minAmount);
+    _maxAmountController = TextEditingController(text: initial.maxAmount);
+    _customBankController = TextEditingController(
+      text: initial.customBankName,
+    );
     _accountNameController = TextEditingController(text: initial.accountName);
     _accountNumberController = TextEditingController(
       text: initial.accountNumber,
     );
     _summaryController = TextEditingController(text: initial.summary);
+    _minAmountFocus = _focusNodeFor(_minAmountKey, alignment: 0.68);
+    _maxAmountFocus = _focusNodeFor(_maxAmountKey, alignment: 0.68);
+    _customBankFocus = _focusNodeFor(_customBankKey, alignment: 0.48);
     _accountNameFocus = _focusNodeFor(_accountNameKey);
     _accountNumberFocus = _focusNodeFor(_accountNumberKey);
     _summaryFocus = _focusNodeFor(_summaryKey);
   }
 
-  FocusNode _focusNodeFor(GlobalKey key) {
+  FocusNode _focusNodeFor(GlobalKey key, {double alignment = 0.72}) {
     final node = FocusNode();
     node.addListener(() {
       if (!node.hasFocus) return;
@@ -114,7 +132,7 @@ class _TransactionAdvancedFilterPanelState
         if (!mounted || fieldContext == null || !fieldContext.mounted) return;
         Scrollable.ensureVisible(
           fieldContext,
-          alignment: 0.72,
+          alignment: alignment,
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
         );
@@ -126,9 +144,15 @@ class _TransactionAdvancedFilterPanelState
   @override
   void dispose() {
     _scrollController.dispose();
+    _minAmountController.dispose();
+    _maxAmountController.dispose();
+    _customBankController.dispose();
     _accountNameController.dispose();
     _accountNumberController.dispose();
     _summaryController.dispose();
+    _minAmountFocus.dispose();
+    _maxAmountFocus.dispose();
+    _customBankFocus.dispose();
     _accountNameFocus.dispose();
     _accountNumberFocus.dispose();
     _summaryFocus.dispose();
@@ -139,8 +163,13 @@ class _TransactionAdvancedFilterPanelState
         direction: _direction,
         commonType: _commonType,
         amountRange: _amountRange,
+        minAmount:
+            _amountRange == '自定义' ? _minAmountController.text.trim() : '',
+        maxAmount:
+            _amountRange == '自定义' ? _maxAmountController.text.trim() : '',
         channel: _channel,
         bank: _bank,
+        customBankName: _bank == '自定义' ? _customBankController.text.trim() : '',
         accountName: _accountNameController.text,
         accountNumber: _accountNumberController.text,
         summary: _summaryController.text,
@@ -154,6 +183,9 @@ class _TransactionAdvancedFilterPanelState
       _amountRange = null;
       _channel = null;
       _bank = null;
+      _minAmountController.clear();
+      _maxAmountController.clear();
+      _customBankController.clear();
       _accountNameController.clear();
       _accountNumberController.clear();
       _summaryController.clear();
@@ -167,6 +199,7 @@ class _TransactionAdvancedFilterPanelState
     required ValueChanged<String> onSelected,
   }) {
     return Column(
+      key: ValueKey('advanced_filter_section_$title'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -198,6 +231,159 @@ class _TransactionAdvancedFilterPanelState
           },
         ),
       ],
+    );
+  }
+
+  Widget _customAmountFields() {
+    return Padding(
+      padding: EdgeInsets.only(top: 18.w),
+      child: Row(
+        key: const ValueKey('advanced_filter_custom_amount_fields'),
+        children: [
+          Expanded(
+            flex: 49,
+            child: _amountField(
+              fieldKey: _minAmountKey,
+              inputKey: const ValueKey('advanced_filter_min_amount'),
+              prefix: '¥ ',
+              hint: '最小金额',
+              controller: _minAmountController,
+              focusNode: _minAmountFocus,
+              inputAction: TextInputAction.next,
+              onSubmitted: (_) => _maxAmountFocus.requestFocus(),
+            ),
+          ),
+          SizedBox(width: 4.w),
+          Text(
+            '至',
+            key: const ValueKey('advanced_filter_amount_separator'),
+            style: TextStyle(
+              color: const Color(0xFF30343B),
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          SizedBox(width: 4.w),
+          Expanded(
+            flex: 51,
+            child: _amountField(
+              fieldKey: _maxAmountKey,
+              inputKey: const ValueKey('advanced_filter_max_amount'),
+              prefix: '¥ ',
+              hint: '最大金额',
+              controller: _maxAmountController,
+              focusNode: _maxAmountFocus,
+              inputAction: TextInputAction.done,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _amountField({
+    required GlobalKey fieldKey,
+    required Key inputKey,
+    required String prefix,
+    required String hint,
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required TextInputAction inputAction,
+    ValueChanged<String>? onSubmitted,
+  }) {
+    final textStyle = TextStyle(
+      color: const Color(0xFF30343B),
+      fontSize: 16.sp,
+      fontWeight: FontWeight.w400,
+    );
+    return SizedBox(
+      key: fieldKey,
+      height: 48.w,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: const Color(0xFFE0E3E7),
+              width: 0.5.w,
+            ),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(prefix, style: textStyle),
+            Expanded(
+              child: TextField(
+                key: inputKey,
+                controller: controller,
+                focusNode: focusNode,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                textInputAction: inputAction,
+                inputFormatters: const [_TransactionAmountInputFormatter()],
+                onSubmitted: onSubmitted,
+                cursorColor: const Color(0xFF0879E8),
+                style: textStyle,
+                decoration: InputDecoration(
+                  hintText: hint,
+                  hintStyle: textStyle.copyWith(
+                    color: const Color(0xFFD1D4D8),
+                  ),
+                  isDense: true,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _customBankField() {
+    return Padding(
+      padding: EdgeInsets.only(top: 18.w),
+      child: SizedBox(
+        key: _customBankKey,
+        height: 34.w,
+        child: TextField(
+          key: const ValueKey('advanced_filter_custom_bank'),
+          controller: _customBankController,
+          focusNode: _customBankFocus,
+          textInputAction: TextInputAction.next,
+          keyboardType: TextInputType.text,
+          cursorColor: const Color(0xFF0879E8),
+          style: TextStyle(
+            color: const Color(0xFF303030),
+            fontSize: 14.sp,
+          ),
+          decoration: InputDecoration(
+            hintText: '请输入对方开户行',
+            hintStyle: TextStyle(
+              color: const Color(0xFFD1D4D8),
+              fontSize: 14.sp,
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(7.w),
+              borderSide: BorderSide(
+                color: const Color(0xFFDADDE1),
+                width: 0.5.w,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(7.w),
+              borderSide: BorderSide(
+                color: const Color(0xFF0077DF),
+                width: 0.8.w,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -303,6 +489,7 @@ class _TransactionAdvancedFilterPanelState
                       _amountRange = _amountRange == value ? null : value;
                     }),
                   ),
+                  if (_amountRange == '自定义') _customAmountFields(),
                   SizedBox(height: 23.w),
                   _section(
                     title: '渠道/地点',
@@ -321,6 +508,7 @@ class _TransactionAdvancedFilterPanelState
                       _bank = _bank == value ? null : value;
                     }),
                   ),
+                  if (_bank == '自定义') _customBankField(),
                   SizedBox(height: 25.w),
                   _textField(
                     fieldKey: _accountNameKey,
@@ -360,6 +548,20 @@ class _TransactionAdvancedFilterPanelState
         ],
       ),
     );
+  }
+}
+
+class _TransactionAmountInputFormatter extends TextInputFormatter {
+  const _TransactionAmountInputFormatter();
+
+  static final RegExp _validAmount = RegExp(r'^\d{0,12}(?:\.\d{0,2})?$');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return _validAmount.hasMatch(newValue.text) ? newValue : oldValue;
   }
 }
 
