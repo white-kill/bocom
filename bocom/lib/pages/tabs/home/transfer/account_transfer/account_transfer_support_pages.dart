@@ -844,15 +844,93 @@ class _OptionalValueDialogState extends State<_OptionalValueDialog> {
 class RecipientBank {
   const RecipientBank({
     required this.name,
+    this.id,
     this.icon = '',
     this.asset = '',
     this.initial = '',
+    this.hot = false,
   });
 
+  final int? id;
   final String name;
   final String icon;
   final String asset;
   final String initial;
+  final bool hot;
+
+  factory RecipientBank.fromJson(Map<String, dynamic> json) {
+    String firstString(List<String> keys) {
+      for (final key in keys) {
+        final value = json[key];
+        if (value != null && value.toString().trim().isNotEmpty) {
+          return value.toString().trim();
+        }
+      }
+      return '';
+    }
+
+    final name = firstString(const ['bankName', 'name', 'bank_name', 'label']);
+    final idValue = json['id'];
+    final hotValue = json['hot'];
+    return RecipientBank(
+      id: idValue is int ? idValue : int.tryParse(idValue?.toString() ?? ''),
+      name: name,
+      icon: firstString(
+        const [
+          'bankLogo',
+          'bankIcon',
+          'icon',
+          'logo',
+          'imgUrl',
+          'imageUrl',
+        ],
+      ),
+      initial: firstString(
+        const ['initial', 'firstLetter', 'letter', 'pinyinInitial'],
+      ),
+      hot: hotValue == true ||
+          hotValue == 1 ||
+          hotValue?.toString().toLowerCase() == 'true' ||
+          hotValue?.toString() == '1',
+      asset: _bankAssetForName(name),
+    );
+  }
+}
+
+class RecipientBankCatalog {
+  const RecipientBankCatalog({
+    required this.banks,
+    required this.hotBanks,
+  });
+
+  final List<RecipientBank> banks;
+  final List<RecipientBank> hotBanks;
+
+  factory RecipientBankCatalog.fromResponse(dynamic response) {
+    final root = response is Map ? response : const <String, dynamic>{};
+    final nestedData = root['data'];
+    final data = nestedData is Map ? nestedData : root;
+
+    List<RecipientBank> parseList(dynamic value) {
+      if (value is! List) return const [];
+      return value
+          .whereType<Map>()
+          .map(
+            (item) => RecipientBank.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .where((bank) => bank.name.isNotEmpty)
+          .toList(growable: false);
+    }
+
+    final banks = parseList(data['bankList']);
+    final responseHotBanks = parseList(data['hotList']);
+    return RecipientBankCatalog(
+      banks: banks,
+      hotBanks: responseHotBanks.isNotEmpty
+          ? responseHotBanks
+          : banks.where((bank) => bank.hot).toList(growable: false),
+    );
+  }
 }
 
 // Logo 切图均来自 1080×2340 真实页面，裁剪框为 x=31、w=84、h=84，
@@ -930,6 +1008,13 @@ const _mockRecipientBanks = <RecipientBank>[
   ),
 ];
 
+String _bankAssetForName(String name) {
+  for (final bank in _mockRecipientBanks) {
+    if (bank.name == name) return bank.asset;
+  }
+  return '';
+}
+
 // 收款银行页
 // 说明：页面使用原生 Flutter 绘制，银行 Logo 从真实页面截图裁切，导航由页面固定绘制。
 class RecipientBankPage extends StatefulWidget {
@@ -975,6 +1060,7 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
   List<RecipientBank> _banks = const [];
+  List<RecipientBank> _hotBanks = const [];
   Map<String, double> _sectionOffsets = const {};
   _RequestState _requestState = _RequestState.loading;
   String? _activeSection;
@@ -984,13 +1070,7 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
     super.initState();
     _searchController.addListener(_refresh);
     _scrollController.addListener(_updateActiveSection);
-    if (widget.bankLoader == null) {
-      _banks = _mockRecipientBanks;
-      _requestState = _RequestState.loaded;
-      _activeSection = '热';
-    } else {
-      _loadBanks();
-    }
+    _loadBanks();
   }
 
   @override
@@ -1000,28 +1080,32 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
   }
 
   Future<void> _loadBanks() async {
-    if (widget.bankLoader == null) {
-      setState(() {
-        _banks = _mockRecipientBanks;
-        _requestState = _RequestState.loaded;
-        _activeSection = '热';
-      });
-      return;
-    }
     setState(() => _requestState = _RequestState.loading);
     try {
-      final banks = List<RecipientBank>.of(
-        await widget.bankLoader!.call(),
-      );
-      banks.sort((a, b) => _sortKey(a.name).compareTo(_sortKey(b.name)));
+      final RecipientBankCatalog catalog;
+      if (widget.bankLoader case final loader?) {
+        final banks = List<RecipientBank>.of(await loader());
+        catalog = RecipientBankCatalog(
+          banks: banks,
+          hotBanks: banks.where((bank) => bank.hot).toList(growable: false),
+        );
+      } else {
+        catalog = await _fetchBanks();
+      }
       if (!mounted) return;
       setState(() {
-        _banks = banks;
+        _banks = catalog.banks;
+        _hotBanks = catalog.hotBanks;
         _requestState = _RequestState.loaded;
       });
     } catch (_) {
       if (mounted) setState(() => _requestState = _RequestState.error);
     }
+  }
+
+  Future<RecipientBankCatalog> _fetchBanks() async {
+    final response = await Http.get(Apis.bankList, isLoading: false);
+    return RecipientBankCatalog.fromResponse(response);
   }
 
   void _refresh() {
@@ -1049,14 +1133,7 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
           : bank.initial.toUpperCase();
       groups.putIfAbsent(initial, () => []).add(bank);
     }
-    final entries = groups.entries.toList(growable: false)
-      ..sort((a, b) {
-        final aIndex = _alphabet.indexOf(a.key);
-        final bIndex = _alphabet.indexOf(b.key);
-        return (aIndex < 0 ? _alphabet.length : aIndex)
-            .compareTo(bIndex < 0 ? _alphabet.length : bIndex);
-      });
-    return Map.fromEntries(entries);
+    return groups;
   }
 
   String _sortKey(String value) => PinyinHelper.getPinyinE(value).toUpperCase();
@@ -1137,7 +1214,9 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
   Widget _buildBanksBody(double scale) {
     switch (_requestState) {
       case _RequestState.loading:
-        return const _LoadingState(label: '正在加载银行');
+        return const Center(
+          child: BocomArcLoadingIndicator(),
+        );
       case _RequestState.error:
         return _ErrorState(label: '银行列表加载失败', onRetry: _loadBanks);
       case _RequestState.loaded:
@@ -1145,8 +1224,8 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
         final filtering = _searchController.text.trim().isNotEmpty;
         final groups = _groupedBanks;
         final sections = <String, List<RecipientBank>>{};
-        if (!filtering) {
-          sections['热'] = _banks.take(14).toList(growable: false);
+        if (!filtering && _hotBanks.isNotEmpty) {
+          sections['热'] = _hotBanks;
         }
         sections.addAll(groups);
 
@@ -1174,7 +1253,10 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
           }
         }
         _sectionOffsets = offsets;
-        _activeSection ??= filtering ? sections.keys.first : '热';
+        _activeSection ??= sections.keys.first;
+        final railSections = _hotBanks.isEmpty
+            ? _alphabet.skip(1).toList(growable: false)
+            : _alphabet;
         return Stack(
           children: [
             ListView(
@@ -1189,7 +1271,7 @@ class _RecipientBankPageState extends State<RecipientBankPage> {
                 right: 0,
                 width: 56 * scale,
                 child: _BankAlphabetRail(
-                  sections: _alphabet,
+                  sections: railSections,
                   activeSection: _activeSection,
                   onSelect: _scrollToSection,
                   scale: scale,
@@ -1328,12 +1410,14 @@ class _BankCardScannerPageState extends State<BankCardScannerPage> {
                   top: 129 * heightScale,
                   left: 0,
                   right: 0,
-                  child: Text(
-                    '扫描银行卡',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 57 * widthScale,
+                  child: IgnorePointer(
+                    child: Text(
+                      '扫描银行卡',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 57 * widthScale,
+                      ),
                     ),
                   ),
                 ),

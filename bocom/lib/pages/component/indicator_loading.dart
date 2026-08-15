@@ -4,16 +4,12 @@ import 'package:flutter/material.dart';
 
 /// 全局遮罩 loading。
 ///
-/// [run] 用于包裹异步任务，[show] 用于固定时长展示；两者都保留转账页
-/// 使用的图片旋转样式以及自定义对齐方式。
+/// [run] 用于包裹异步任务，[show] 用于固定时长展示；两者都使用
+/// 几何中心固定的转账圆弧，并支持自定义对齐方式。
 class BocomLoading {
   BocomLoading._();
 
-  static const _asset =
-      'assets/images/account_transfer/transfer_loading_arc.png';
-
   static const Duration _duration = Duration(seconds: 2);
-
 
   static Future<T> run<T>(
     BuildContext context,
@@ -64,47 +60,13 @@ class _TransferLoadingOverlay extends StatelessWidget {
   }
 }
 
-class _TransferLoadingIndicator extends StatefulWidget {
+class _TransferLoadingIndicator extends StatelessWidget {
   const _TransferLoadingIndicator();
 
   @override
-  State<_TransferLoadingIndicator> createState() =>
-      _TransferLoadingIndicatorState();
-}
-
-class _TransferLoadingIndicatorState extends State<_TransferLoadingIndicator>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 850),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Semantics(
-      label: '加载中',
-      child: RotationTransition(
-        key: const Key('transfer-loading-indicator'),
-        turns: _controller,
-        child: Image.asset(
-          BocomLoading._asset,
-          width: 34,
-          height: 34,
-          filterQuality: FilterQuality.high,
-        ),
-      ),
+    return const BocomArcLoadingIndicator(
+      key: Key('transfer-loading-indicator'),
     );
   }
 }

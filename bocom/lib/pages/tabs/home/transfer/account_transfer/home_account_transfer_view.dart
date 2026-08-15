@@ -1,6 +1,8 @@
 import 'package:bocom/config/abc_config/boc_logic.dart';
 import 'package:bocom/config/app_config.dart';
+import 'package:bocom/config/dio/network.dart';
 import 'package:bocom/config/model/contacts_model.dart';
+import 'package:bocom/config/net_config/apis.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -24,6 +26,10 @@ const _bankOfCommunicationsAsset =
 const _bankOfChinaAsset =
     'assets/images/account_transfer/icons/bank_of_china.png';
 
+typedef AccountTransferSubmitter = Future<dynamic> Function(
+  Map<String, dynamic> data,
+);
+
 double _referencePixels(BuildContext context, double pixels) {
   return MediaQuery.sizeOf(context).width /
       _accountTransferReferenceWidth *
@@ -46,6 +52,8 @@ class HomeAccountTransferPage extends StatefulWidget {
     this.bankLoader,
     this.passwordVerificationLauncher,
     this.smsVerificationLauncher,
+    this.transferSubmitter,
+    this.billDetailLoader,
     this.now,
   });
 
@@ -54,6 +62,8 @@ class HomeAccountTransferPage extends StatefulWidget {
   final Future<List<RecipientBank>> Function()? bankLoader;
   final PasswordVerificationLauncher? passwordVerificationLauncher;
   final SmsVerificationLauncher? smsVerificationLauncher;
+  final AccountTransferSubmitter? transferSubmitter;
+  final TransferBillDetailLoader? billDetailLoader;
   final DateTime Function()? now;
 
   @override
@@ -237,29 +247,55 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
             transaction: transaction,
           ));
       if (!mounted || passwordVerified != true) return;
-      await BocomLoading.run<void>(
+      final transactionTime = widget.now?.call() ?? DateTime.now();
+      final amountValue = num.parse(amount.replaceAll(',', '')).toDouble();
+      final purpose = _descriptionController.text.trim();
+      final accountsTime = _accountsTimeFor(transactionTime);
+      final payload = <String, dynamic>{
+        'type': '0',
+        'realName': recipient.name,
+        'cardNo': recipient.bankCard,
+        'bankName': recipient.bankName,
+        'amount': amountValue,
+        if (purpose.isNotEmpty) 'purpose': purpose,
+        if (accountsTime != null)
+          'accountsTime':
+              DateFormat('yyyy-MM-dd HH:mm:ss').format(accountsTime),
+      };
+      final response = await BocomLoading.run<dynamic>(
         context,
-        () => Future<void>.delayed(const Duration(milliseconds: 550)),
+        () =>
+            widget.transferSubmitter?.call(payload) ??
+            Http.post(
+              Apis.transfer,
+              data: payload,
+              isLoading: false,
+            ),
         alignment: const Alignment(0, -0.22),
       );
       if (!mounted) return;
-      final transactionTime = widget.now?.call() ?? DateTime.now();
-      final billId = transactionTime.millisecondsSinceEpoch;
+      final billId = _transferBillId(response);
+      if (billId == null) throw StateError('转账接口未返回账单ID');
+      if (Get.isRegistered<BocLogic>()) {
+        Get.find<BocLogic>().memberInfoData();
+      }
       if (mounted) {
+        final arrivalText =
+            _usesDeferredArrival ? '实时提交，预计1小时内到账' : _arrivalTime;
         final result = AccountTransferResultData.fromTransfer(
           billId: billId,
           recipientName: recipient.name,
           recipientAccount: recipient.bankCard,
           recipientBank: recipient.bankName,
-          amount: num.parse(amount.replaceAll(',', '')).toDouble(),
+          amount: amountValue,
           transactionTime: transactionTime,
-          arrivalText: _arrivalTime,
-          purpose: _descriptionController.text.trim(),
+          arrivalText: arrivalText,
+          purpose: purpose,
         );
         Get.off<int>(
           () => AccountTransferSuccessPage(
             data: result,
-            billDetailLoader: (_) async => null,
+            billDetailLoader: widget.billDetailLoader,
             onContinueTransfer: () =>
                 Get.off<void>(() => const HomeAccountTransferPage()),
           ),
@@ -274,6 +310,22 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  DateTime? _accountsTimeFor(DateTime now) {
+    if (_usesDeferredArrival) return now.add(const Duration(hours: 1));
+    return switch (_arrivalTime) {
+      '预计2小时后到账' => now.add(const Duration(hours: 2)),
+      '预计次日到账' => now.add(const Duration(days: 1)),
+      _ => null,
+    };
+  }
+
+  int? _transferBillId(dynamic response) {
+    final value = response is Map ? response['data'] : response;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
   }
 
   String get _memberPhone {
@@ -546,6 +598,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
               ),
             ),
             _TransferInputRow(
+              key: const Key('transfer-recipient-bank-row'),
               label: '银行',
               semanticsLabel: '收款银行',
               hint: '请选择收款账户开户银行',
@@ -1436,6 +1489,7 @@ class _PayerCardEmpty extends StatelessWidget {
 
 class _TransferInputRow extends StatelessWidget {
   const _TransferInputRow({
+    super.key,
     required this.label,
     required this.hint,
     required this.controller,
@@ -1459,7 +1513,7 @@ class _TransferInputRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final content = Container(
       height: 43,
       decoration: BoxDecoration(
         border: showDivider
@@ -1480,7 +1534,6 @@ class _TransferInputRow extends StatelessWidget {
                 controller: controller,
                 keyboardType: keyboardType,
                 readOnly: readOnly,
-                onTap: onTap,
                 decoration: InputDecoration(
                   hintText: hint,
                   hintStyle: const TextStyle(
@@ -1499,6 +1552,18 @@ class _TransferInputRow extends StatelessWidget {
           ),
           if (suffix != null) suffix!,
         ],
+      ),
+    );
+    if (onTap == null) return content;
+    return Semantics(
+      button: true,
+      label: semanticsLabel ?? label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ExcludeSemantics(
+          child: AbsorbPointer(child: content),
+        ),
       ),
     );
   }

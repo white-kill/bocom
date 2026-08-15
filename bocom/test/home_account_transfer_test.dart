@@ -1,6 +1,7 @@
 import 'package:bocom/config/abc_config/boc_logic.dart';
 import 'package:bocom/config/model/contacts_model.dart';
 import 'package:bocom/config/model/member_info_model.dart';
+import 'package:bocom/pages/tabs/home/transfer/account_transfer/account_transfer_support_pages.dart';
 import 'package:bocom/pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -69,12 +70,44 @@ void main() {
     expect(find.bySemanticsLabel('返回'), findsOneWidget);
   });
 
-  testWidgets('账号转账表单完成两步校验后直接进入本地结果页', (tester) async {
+  testWidgets('点击银行行右侧箭头可进入收款银行列表', (tester) async {
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: HomeAccountTransferPage(
+          bankLoader: () async => const [
+            RecipientBank(name: '交通银行', initial: 'J', hot: true),
+          ],
+        ),
+      ),
+    );
+
+    final bankRow = find.byKey(const Key('transfer-recipient-bank-row'));
+    final chevron = find.descendant(
+      of: bankRow,
+      matching: find.image(
+        const AssetImage(
+          'assets/images/account_transfer/icons/row_chevron.png',
+        ),
+      ),
+    );
+    expect(chevron, findsOneWidget);
+
+    await tester.tapAt(tester.getCenter(chevron));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RecipientBankPage), findsOneWidget);
+    expect(find.text('收款银行'), findsOneWidget);
+    expect(find.text('交通银行'), findsWidgets);
+  });
+
+  testWidgets('账号转账完成两步校验后调用接口并使用返回账单ID', (tester) async {
     final recipient = ContactsModel()
       ..name = '张三'
       ..bankCard = '6222000012345678'
       ..bankName = '交通银行';
     final steps = <String>[];
+    Map<String, dynamic>? requestData;
+    int? detailBillId;
     await tester.pumpWidget(
       GetMaterialApp(
         home: HomeAccountTransferPage(
@@ -87,6 +120,14 @@ void main() {
           smsVerificationLauncher: (_, __, ___) async {
             steps.add('sms');
             return true;
+          },
+          transferSubmitter: (data) async {
+            requestData = data;
+            return 10020;
+          },
+          billDetailLoader: (billId) async {
+            detailBillId = billId;
+            return null;
           },
         ),
       ),
@@ -123,15 +164,24 @@ void main() {
     );
     expect(find.text('确认转账信息'), findsNothing);
     expect(steps, ['sms', 'password']);
+    expect(requestData, {
+      'type': '0',
+      'realName': '张三',
+      'cardNo': '6222000012345678',
+      'bankName': '交通银行',
+      'amount': 100.0,
+    });
+    expect(detailBillId, 10020);
     expect(find.text('张三'), findsOneWidget);
     expect(find.text('交通银行(**5678)'), findsOneWidget);
   });
 
-  testWidgets('本地结果页保留用户选择的到账时间', (tester) async {
+  testWidgets('转账接口传递用户选择的到账时间', (tester) async {
     final recipient = ContactsModel()
       ..name = '张三'
       ..bankCard = '6222000012345678'
       ..bankName = '交通银行';
+    Map<String, dynamic>? requestData;
     await tester.pumpWidget(
       GetMaterialApp(
         home: HomeAccountTransferPage(
@@ -139,6 +189,11 @@ void main() {
           now: () => DateTime(2026, 8, 12, 10, 30),
           passwordVerificationLauncher: (_, __) async => true,
           smsVerificationLauncher: (_, __, ___) async => true,
+          transferSubmitter: (data) async {
+            requestData = data;
+            return {'data': 10021};
+          },
+          billDetailLoader: (_) async => null,
         ),
       ),
     );
@@ -162,6 +217,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('预计2小时后到账，实际到账时间取决于收款银行'), findsOneWidget);
+    expect(requestData?['accountsTime'], '2026-08-12 12:30:00');
   });
 
   testWidgets('金额空态、聚焦和失焦格式与补图一致', (tester) async {

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bocom/config/model/contacts_model.dart';
+import 'package:bocom/pages/component/indicator_loading.dart';
 import 'package:bocom/pages/tabs/home/transfer/account_transfer/account_transfer_support_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -184,14 +185,38 @@ void main() {
     expect(find.text('交通银行'), findsNothing);
   });
 
-  testWidgets('银行页默认使用真实页面假数据并保持参考图比例', (tester) async {
+  testWidgets('银行页加载态使用转账小圆弧', (tester) async {
+    final completer = Completer<List<RecipientBank>>();
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: RecipientBankPage(bankLoader: () => completer.future),
+      ),
+    );
+
+    expect(find.byType(BocomArcLoadingIndicator), findsOneWidget);
+    expect(find.text('正在加载银行'), findsNothing);
+
+    completer.complete(const [RecipientBank(name: '交通银行')]);
+    await tester.pumpAndSettle();
+    expect(find.byType(BocomArcLoadingIndicator), findsNothing);
+  });
+
+  testWidgets('银行页按接口数据保持参考图比例', (tester) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      const GetMaterialApp(home: RecipientBankPage()),
+      GetMaterialApp(
+        home: RecipientBankPage(
+          bankLoader: () async => const [
+            RecipientBank(name: '交通银行', initial: 'J', hot: true),
+            RecipientBank(name: '华夏银行', initial: 'H'),
+            RecipientBank(name: '中国民生银行', initial: 'Z'),
+          ],
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -234,6 +259,73 @@ void main() {
     expect(find.byKey(const Key('recipient-bank-alphabet-rail')), findsNothing);
   });
 
+  test('银行接口字段兼容名称、图标和首字母', () {
+    final bank = RecipientBank.fromJson({
+      'id': 1,
+      'bankName': '中国建设银行',
+      'bankLogo': 'https://example.com/ccb.png',
+      'firstLetter': 'J',
+      'hot': 1,
+    });
+
+    expect(bank.id, 1);
+    expect(bank.name, '中国建设银行');
+    expect(bank.icon, 'https://example.com/ccb.png');
+    expect(bank.initial, 'J');
+    expect(bank.hot, isTrue);
+    expect(
+      bank.asset,
+      'assets/images/account_transfer/banks/bank_construction.jpg',
+    );
+  });
+
+  test('银行列表解析真实响应并保留接口顺序和热门列表', () {
+    final catalog = RecipientBankCatalog.fromResponse({
+      'code': 200,
+      'data': {
+        'bankList': [
+          {
+            'id': 25,
+            'name': '鞍山银行',
+            'initial': 'A',
+            'icon': 'http://example.com/ascb.png',
+            'hot': 0,
+          },
+          {
+            'id': 5,
+            'name': '交通银行',
+            'initial': 'J',
+            'icon': 'http://example.com/comm.png',
+            'hot': 1,
+          },
+          {
+            'id': 1,
+            'name': '中国建设银行',
+            'initial': 'Z',
+            'icon': 'http://example.com/ccb.png',
+            'hot': 0,
+          },
+        ],
+        'hotList': [
+          {
+            'id': 5,
+            'name': '交通银行',
+            'initial': 'J',
+            'icon': 'http://example.com/comm.png',
+            'hot': 1,
+          },
+        ],
+      },
+    });
+
+    expect(
+      catalog.banks.map((bank) => bank.name),
+      ['鞍山银行', '交通银行', '中国建设银行'],
+    );
+    expect(catalog.banks.last.initial, 'Z');
+    expect(catalog.hotBanks.map((bank) => bank.name), ['交通银行']);
+  });
+
   testWidgets('扫描银行卡页按设计比例绘制四角框并在拍摄后返回', (tester) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 1;
@@ -269,6 +361,12 @@ void main() {
     expect(frameRect.width, closeTo(1006, 0.1));
     expect(frameRect.height, closeTo(654, 0.1));
 
+    await tester.tap(find.bySemanticsLabel('返回'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BankCardScannerPage), findsNothing);
+
+    await tester.tap(find.text('打开扫描页'));
+    await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('拍摄银行卡'));
     await tester.pumpAndSettle();
     expect(find.byType(BankCardScannerPage), findsNothing);

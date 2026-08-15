@@ -198,13 +198,10 @@ void main() {
     await tester.tap(find.text('开始'));
     await tester.pump();
     expect(find.byKey(const Key('transfer-loading-indicator')), findsOneWidget);
+    expect(find.byType(BocomArcLoadingIndicator), findsOneWidget);
     expect(
-      find.image(
-        const AssetImage(
-          'assets/images/account_transfer/transfer_loading_arc.png',
-        ),
-      ),
-      findsOneWidget,
+      tester.getSize(find.byKey(const Key('transfer-loading-indicator'))),
+      const Size.square(22),
     );
 
     completer.complete(1);
