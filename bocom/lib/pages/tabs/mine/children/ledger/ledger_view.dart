@@ -13,6 +13,7 @@ import 'component/ledger_analysis_tab.dart';
 import 'component/ledger_period_picker_sheet.dart';
 import 'component/ledger_water_tab.dart';
 import 'component/ledger_water_period_sheet.dart';
+import 'subpages/edit/ledger_edit_view.dart';
 import 'ledger_logic.dart';
 import 'ledger_state.dart';
 
@@ -923,7 +924,9 @@ class LedgerPage extends BaseStateless {
           bottom: MediaQuery.paddingOf(context).bottom + 85.w,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () {},
+            onTap: () {
+              Get.to(() => LedgerEditPage());
+            },
             child: Image.asset(
               'assets/images/ic_ledger_add.png',
               width: 45.w,

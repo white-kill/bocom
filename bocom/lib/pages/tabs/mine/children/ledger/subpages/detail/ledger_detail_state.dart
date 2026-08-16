@@ -1,0 +1,3 @@
+class LedgerDetailState {
+  LedgerDetailState();
+}

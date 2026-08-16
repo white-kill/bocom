@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:flutter/widgets.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:bocom/config/net_config/apis.dart';
 import 'package:bocom/utils/sp_util.dart';
@@ -72,10 +73,14 @@ class LedgerLogic extends GetxController {
   final bookOverview = BookOverviewModel().obs;
   final bookDetailPage = BillItemModel().obs;
   int _bookDetailPageNum = 0;
+  bool _overviewLoaded = false;
+  bool _overviewDetailLoaded = false;
   // 明细流水的
   final bookWaterPage = BillItemModel().obs;
   final bookAnalysis = BookAnalysisModel().obs;
   int _bookWaterPageNum = 0;
+  bool _waterLoaded = false;
+  bool _analysisLoaded = false;
 
   void toggleLedgerType() {
     waterFilterExpanded.value = 0;
@@ -83,12 +88,26 @@ class LedgerLogic extends GetxController {
   }
 
   void selectLedgerType(int index) {
+    if (ledgerType.value == index) {
+      ledgerTypeExpanded.value = false;
+      return;
+    }
+    final hadOverviewDetail = _overviewDetailLoaded;
     ledgerType.value = index;
     ledgerTypeExpanded.value = false;
-    getOverView();
-    getBookDetailPage();
-    getBookWaterPage();
-    if (ledgerTab.value == 2) getBookAnalysis();
+    _invalidateTabData();
+    switch (ledgerTab.value) {
+      case 0:
+        getOverView();
+        if (hadOverviewDetail) getBookDetailPage();
+        break;
+      case 1:
+        getBookWaterPage();
+        break;
+      case 2:
+        getBookAnalysis();
+        break;
+    }
   }
 
   void selectLedgerTab(int index) {
@@ -99,10 +118,35 @@ class LedgerLogic extends GetxController {
     Future<void>.delayed(const Duration(milliseconds: 50), () {
       suppressHeaderAnimation.value = false;
     });
-    if (index == 1 && bookWaterPage.value.list.isEmpty) {
-      getBookWaterPage();
+    _loadTabIfNeeded(index);
+  }
+
+  void _loadTabIfNeeded(int index) {
+    switch (index) {
+      case 0:
+        if (!_overviewLoaded) getOverView();
+        if (!_overviewDetailLoaded) getBookDetailPage();
+        break;
+      case 1:
+        if (!_waterLoaded) getBookWaterPage();
+        break;
+      case 2:
+        if (!_analysisLoaded) getBookAnalysis();
+        break;
     }
-    if (index == 2) getBookAnalysis();
+  }
+
+  void _invalidateTabData() {
+    _overviewLoaded = false;
+    _overviewDetailLoaded = false;
+    _waterLoaded = false;
+    _analysisLoaded = false;
+    _bookDetailPageNum = 0;
+    _bookWaterPageNum = 0;
+    bookOverview.value = BookOverviewModel();
+    bookDetailPage.value = BillItemModel();
+    bookWaterPage.value = BillItemModel();
+    bookAnalysis.value = BookAnalysisModel();
   }
 
   void toggleWaterFilter(int index) {
@@ -206,16 +250,25 @@ class LedgerLogic extends GetxController {
   }
 
   void selectPeriodMode(int index) {
+    if (periodMode.value == index) return;
+    final hadOverviewDetail = _overviewDetailLoaded;
     periodMode.value = index;
+    _invalidatePeriodData();
     getOverView();
-    getBookDetailPage();
+    if (hadOverviewDetail) getBookDetailPage();
   }
 
   void selectPeriod({required int year, required int month}) {
+    final hadOverviewDetail = _overviewDetailLoaded;
     waterPeriodLabel.value = '';
     selectedPeriod.value = DateTime(year, month);
+    _invalidatePeriodData();
     getOverView();
-    getBookDetailPage();
+    if (hadOverviewDetail) getBookDetailPage();
+  }
+
+  void _invalidatePeriodData() {
+    _invalidateTabData();
   }
 
   Future<void> refreshLedger(RefreshController refreshController) async {
@@ -263,6 +316,7 @@ class LedgerLogic extends GetxController {
     if (value is Map) {
       bookOverview.value =
           BookOverviewModel.fromJson(Map<String, dynamic>.from(value));
+      _overviewLoaded = true;
     }
   }
 
@@ -313,6 +367,7 @@ class LedgerLogic extends GetxController {
     }
     _bookDetailPageNum = pageNum;
     bookDetailPage.value = result;
+    _overviewDetailLoaded = true;
     if (!loadMore) {
       state.overviewRefreshController.resetNoData();
     }
@@ -414,8 +469,18 @@ class LedgerLogic extends GetxController {
     if (loadMore) result.list = [...current.list, ...result.list];
     _bookWaterPageNum = pageNum;
     bookWaterPage.value = result;
-    if (!loadMore) state.waterRefreshController.resetNoData();
-    return result.pages > pageNum;
+    _waterLoaded = true;
+    final hasMore = result.pages > pageNum;
+    if (!loadMore) {
+      state.waterRefreshController.resetNoData();
+      if (!hasMore && result.list.isNotEmpty) {
+        // 首次接口返回时列表可能还没有完成挂载，等首帧后再设置 noMore。
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          state.waterRefreshController.loadNoData();
+        });
+      }
+    }
+    return hasMore;
   }
 
   void _appendWaterAmountParams(Map<String, dynamic> params) {
@@ -451,6 +516,7 @@ class LedgerLogic extends GetxController {
     if (value is Map) {
       bookAnalysis.value =
           BookAnalysisModel.fromJson(Map<String, dynamic>.from(value));
+      _analysisLoaded = true;
     }
   }
 
@@ -493,7 +559,6 @@ class LedgerLogic extends GetxController {
   void onInit() {
     super.onInit();
     getOverView();
-    getBookDetailPage();
   }
 
   @override

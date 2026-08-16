@@ -3,8 +3,9 @@ import 'package:bocom/config/model/bill_item_model.dart';
 
 BillItemModel $BillItemModelFromJson(Map<String, dynamic> json) {
   final BillItemModel billItemModel = BillItemModel();
-  final List<BillItemList>? list = (json['list'] as List<dynamic>?)?.map(
-          (e) => jsonConvert.convert<BillItemList>(e) as BillItemList).toList();
+  final List<BillItemList>? list = (json['list'] as List<dynamic>?)
+      ?.map((e) => jsonConvert.convert<BillItemList>(e) as BillItemList)
+      .toList();
   if (list != null) {
     billItemModel.list = list;
   }
@@ -17,8 +18,8 @@ BillItemModel $BillItemModelFromJson(Map<String, dynamic> json) {
   if (incomeTotal != null) {
     billItemModel.incomeTotal = incomeTotal;
   }
-  final String? expensesTotal = jsonConvert.convert<String>(
-      json['expensesTotal']);
+  final String? expensesTotal =
+      jsonConvert.convert<String>(json['expensesTotal']);
   if (expensesTotal != null) {
     billItemModel.expensesTotal = expensesTotal;
   }
@@ -84,13 +85,13 @@ BillItemList $BillItemListFromJson(Map<String, dynamic> json) {
     billItemList.currency = currency;
   }
   billItemList.type = json['type']?.toString() ?? '';
-  final String? transactionTime = jsonConvert.convert<String>(
-      json['transactionTime']);
+  final String? transactionTime =
+      jsonConvert.convert<String>(json['transactionTime']);
   if (transactionTime != null) {
     billItemList.transactionTime = transactionTime;
   }
-  final String? oppositeName = jsonConvert.convert<String>(
-      json['oppositeName']);
+  final String? oppositeName =
+      jsonConvert.convert<String>(json['oppositeName']);
   if (oppositeName != null) {
     billItemList.oppositeName = oppositeName;
   }
@@ -112,12 +113,13 @@ BillItemList $BillItemListFromJson(Map<String, dynamic> json) {
   if (incomeTotal != null) {
     billItemList.incomeTotal = incomeTotal;
   }
-  final String? expensesTotal = jsonConvert.convert<String>(json['expensesTotal']);
+  final String? expensesTotal =
+      jsonConvert.convert<String>(json['expensesTotal']);
   if (expensesTotal != null) {
     billItemList.expensesTotal = expensesTotal;
   }
-  final BillItemListBillDetail? billDetail = jsonConvert.convert<
-      BillItemListBillDetail>(json['billDetail']);
+  final BillItemListBillDetail? billDetail =
+      jsonConvert.convert<BillItemListBillDetail>(json['billDetail']);
   if (billDetail != null) {
     billItemList.billDetail = billDetail;
   }
@@ -198,7 +200,8 @@ extension BillItemListExtension on BillItemList {
 
 BillItemListBillDetail $BillItemListBillDetailFromJson(
     Map<String, dynamic> json) {
-  final BillItemListBillDetail billItemListBillDetail = BillItemListBillDetail();
+  final BillItemListBillDetail billItemListBillDetail =
+      BillItemListBillDetail();
   final int? id = jsonConvert.convert<int>(json['id']);
   if (id != null) {
     billItemListBillDetail.id = id;
@@ -207,13 +210,13 @@ BillItemListBillDetail $BillItemListBillDetailFromJson(
   if (bankName != null) {
     billItemListBillDetail.bankName = bankName;
   }
-  final String? transactionType = jsonConvert.convert<String>(
-      json['transactionType']);
+  final String? transactionType =
+      jsonConvert.convert<String>(json['transactionType']);
   if (transactionType != null) {
     billItemListBillDetail.transactionType = transactionType;
   }
-  final String? oppositeBankId = jsonConvert.convert<String>(
-      json['oppositeBankId']);
+  final String? oppositeBankId =
+      jsonConvert.convert<String>(json['oppositeBankId']);
   if (oppositeBankId != null) {
     billItemListBillDetail.oppositeBankId = oppositeBankId;
   }
@@ -229,38 +232,38 @@ BillItemListBillDetail $BillItemListBillDetailFromJson(
   if (amount != null) {
     billItemListBillDetail.amount = amount;
   }
-  final double? accountBalance = jsonConvert.convert<double>(
-      json['accountBalance']);
+  final double? accountBalance =
+      jsonConvert.convert<double>(json['accountBalance']);
   if (accountBalance != null) {
     billItemListBillDetail.accountBalance = accountBalance;
   }
-  final String? transactionTime = jsonConvert.convert<String>(
-      json['transactionTime']);
+  final String? transactionTime =
+      jsonConvert.convert<String>(json['transactionTime']);
   if (transactionTime != null) {
     billItemListBillDetail.transactionTime = transactionTime;
   }
-  final String? oppositeAccount = jsonConvert.convert<String>(
-      json['oppositeAccount']);
+  final String? oppositeAccount =
+      jsonConvert.convert<String>(json['oppositeAccount']);
   if (oppositeAccount != null) {
     billItemListBillDetail.oppositeAccount = oppositeAccount;
   }
-  final String? accountsTime = jsonConvert.convert<String>(
-      json['accountsTime']);
+  final String? accountsTime =
+      jsonConvert.convert<String>(json['accountsTime']);
   if (accountsTime != null) {
     billItemListBillDetail.accountsTime = accountsTime;
   }
-  final String? merchantBranch = jsonConvert.convert<String>(
-      json['merchantBranch']);
+  final String? merchantBranch =
+      jsonConvert.convert<String>(json['merchantBranch']);
   if (merchantBranch != null) {
     billItemListBillDetail.merchantBranch = merchantBranch;
   }
-  final String? oppositeName = jsonConvert.convert<String>(
-      json['oppositeName']);
+  final String? oppositeName =
+      jsonConvert.convert<String>(json['oppositeName']);
   if (oppositeName != null) {
     billItemListBillDetail.oppositeName = oppositeName;
   }
-  final String? oppositeBankName = jsonConvert.convert<String>(
-      json['oppositeBankName']);
+  final String? oppositeBankName =
+      jsonConvert.convert<String>(json['oppositeBankName']);
   if (oppositeBankName != null) {
     billItemListBillDetail.oppositeBankName = oppositeBankName;
   }
@@ -268,8 +271,8 @@ BillItemListBillDetail $BillItemListBillDetailFromJson(
   if (type != null) {
     billItemListBillDetail.type = type;
   }
-  final String? transactionChannel = jsonConvert.convert<String>(
-      json['transactionChannel']);
+  final String? transactionChannel =
+      jsonConvert.convert<String>(json['transactionChannel']);
   if (transactionChannel != null) {
     billItemListBillDetail.transactionChannel = transactionChannel;
   }
@@ -277,21 +280,26 @@ BillItemListBillDetail $BillItemListBillDetailFromJson(
   if (billType != null) {
     billItemListBillDetail.billType = billType;
   }
-  final String? transactionCategory = jsonConvert.convert<String>(
-      json['transactionCategory']);
+  final String? transactionCategory =
+      jsonConvert.convert<String>(json['transactionCategory']);
   if (transactionCategory != null) {
     billItemListBillDetail.transactionCategory = transactionCategory;
   }
-  final String? postscriptno = jsonConvert.convert<String>(
-      json['postscriptno']);
+  final String? postscriptno =
+      jsonConvert.convert<String>(json['postscriptno']);
   if (postscriptno != null) {
     billItemListBillDetail.postscriptno = postscriptno;
   }
-  final String? transactionObject = jsonConvert.convert<String>(
-      json['transactionObject']);
+  final String? transactionObject =
+      jsonConvert.convert<String>(json['transactionObject']);
   if (transactionObject != null) {
     billItemListBillDetail.transactionObject = transactionObject;
   }
+  billItemListBillDetail.bookTypes = (json['bookTypes'] as List<dynamic>?)
+          ?.map((e) => jsonConvert.convert<int>(e))
+          .whereType<int>()
+          .toList() ??
+      [];
   return billItemListBillDetail;
 }
 
@@ -318,6 +326,7 @@ Map<String, dynamic> $BillItemListBillDetailToJson(
   data['transactionCategory'] = entity.transactionCategory;
   data['postscriptno'] = entity.postscriptno;
   data['transactionObject'] = entity.transactionObject;
+  data['bookTypes'] = entity.bookTypes;
   return data;
 }
 
@@ -343,6 +352,7 @@ extension BillItemListBillDetailExtension on BillItemListBillDetail {
     String? transactionCategory,
     String? postscriptno,
     String? transactionObject,
+    List<int>? bookTypes,
   }) {
     return BillItemListBillDetail()
       ..id = id ?? this.id
@@ -364,6 +374,7 @@ extension BillItemListBillDetailExtension on BillItemListBillDetail {
       ..billType = billType ?? this.billType
       ..transactionCategory = transactionCategory ?? this.transactionCategory
       ..postscriptno = postscriptno ?? this.postscriptno
-      ..transactionObject = transactionObject ?? this.transactionObject;
+      ..transactionObject = transactionObject ?? this.transactionObject
+      ..bookTypes = bookTypes ?? this.bookTypes;
   }
 }

@@ -34,38 +34,44 @@ class LedgerWaterTab extends StatelessWidget {
         color: const Color(0xFFF7F7F7),
         child: Obx(() {
           final dataList = logic.bookWaterPage.value.list;
-          return SmartRefresher(
-            controller: state.waterRefreshController,
-            enablePullDown: true,
-            enablePullUp: true,
-            header: _refreshHeader(),
-            footer: _loadFooter(),
-            onRefresh: () => logic.refreshLedger(state.waterRefreshController),
-            onLoading: () => logic.loadMoreLedger(state.waterRefreshController),
-            child: ListView.separated(
-              padding: EdgeInsets.zero,
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: dataList.isEmpty ? 2 : dataList.length + 1,
-              separatorBuilder: (_, __) => const SizedBox.shrink(),
-              itemBuilder: (context, index) {
-                if (index == 0) return _overviewHeader();
-                if (dataList.isEmpty) return _emptyWidget();
-                return LedgerBillItem(
-                  item: dataList[index - 1],
-                  isFirst: index == 1,
-                  isLast: index == dataList.length,
-                  topCornerBackgroundGradient: const LinearGradient(
-                    colors: [
-                      Color(0xFFECF7FF),
-                      Color(0xFFEBF4FF),
-                      Color(0xFFEAF5FF),
-                      Color(0xFFE7F3FE),
-                      Color(0xFFD8EFFE),
-                    ],
-                    stops: [0, 0.23, 0.5, 0.77, 1],
-                  ),
-                ).marginSymmetric(horizontal: _position.getX(40));
-              },
+          return RefreshConfiguration.copyAncestor(
+            context: context,
+            hideFooterWhenNotFull: false,
+            child: SmartRefresher(
+              controller: state.waterRefreshController,
+              enablePullDown: true,
+              enablePullUp: dataList.isNotEmpty,
+              header: _refreshHeader(),
+              footer: _loadFooter(),
+              onRefresh: () =>
+                  logic.refreshLedger(state.waterRefreshController),
+              onLoading: () =>
+                  logic.loadMoreLedger(state.waterRefreshController),
+              child: ListView.separated(
+                padding: EdgeInsets.zero,
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: dataList.isEmpty ? 2 : dataList.length + 1,
+                separatorBuilder: (_, __) => const SizedBox.shrink(),
+                itemBuilder: (context, index) {
+                  if (index == 0) return _overviewHeader();
+                  if (dataList.isEmpty) return _emptyWidget();
+                  return LedgerBillItem(
+                    item: dataList[index - 1],
+                    isFirst: index == 1,
+                    isLast: index == dataList.length,
+                    topCornerBackgroundGradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFECF7FF),
+                        Color(0xFFEBF4FF),
+                        Color(0xFFEAF5FF),
+                        Color(0xFFE7F3FE),
+                        Color(0xFFD8EFFE),
+                      ],
+                      stops: [0, 0.23, 0.5, 0.77, 1],
+                    ),
+                  ).marginSymmetric(horizontal: _position.getX(40));
+                },
+              ),
             ),
           );
         }),
