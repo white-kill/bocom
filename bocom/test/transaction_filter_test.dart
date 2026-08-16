@@ -138,4 +138,44 @@ void main() {
     expect(find.text('共10笔'), findsOneWidget);
     expect(find.textContaining('支出-342.15'), findsOneWidget);
   });
+
+  testWidgets('日期筛选后跨月滚动不再联动日期栏', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(375, 750);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 750),
+        builder: (_, child) => GetMaterialApp(home: child),
+        child: const TransactionDetailPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('transaction_detail_selected_month')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('近三个月'));
+    await tester.pumpAndSettle();
+
+    Text selectedDate() => tester.widget<Text>(
+          find.byKey(
+            const ValueKey('transaction_detail_selected_month'),
+          ),
+        );
+    expect(selectedDate().data, '近三个月');
+    expect(selectedDate().style?.color, const Color(0xFF0077DF));
+
+    await tester.drag(
+      find.byKey(const ValueKey('transaction_filtered_list')),
+      const Offset(0, -1000),
+    );
+    await tester.pumpAndSettle();
+
+    expect(selectedDate().data, '近三个月');
+    expect(selectedDate().style?.color, const Color(0xFF0077DF));
+  });
 }

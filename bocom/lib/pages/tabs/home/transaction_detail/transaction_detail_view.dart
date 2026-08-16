@@ -1,19 +1,25 @@
+import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:scrollview_observer/scrollview_observer.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 
+import '../../../../pages/component/indicator_loading.dart';
+import '../../../../utils/sp_util.dart';
 import 'filter/transaction_advanced_filter_model.dart';
 import 'filter/transaction_advanced_filter_panel.dart';
 import 'filter/transaction_filter_model.dart';
 import 'filter/transaction_filter_sheet.dart';
 import 'filter/transaction_future_date_dialog.dart';
 import 'filter/transaction_quick_filter_panel.dart';
+import 'transaction_bill_detail_view.dart';
 import 'transaction_detail_mock_data.dart';
 import 'transaction_detail_model.dart';
+import 'transaction_detail_repository.dart';
 
 // 交易明细页
 // 说明：当前页面参照完整截图使用 Flutter 原生绘制，系统状态栏、固定导航、跨月滚动和动态金额均未保留在截图中。
@@ -23,66 +29,114 @@ class TransactionDetailPage extends StatefulWidget {
     this.onMonthTap,
     this.onFilterTap,
     this.onExportTap,
+    this.billLoader,
+    this.today,
   });
 
   final ValueChanged<String>? onMonthTap;
   final VoidCallback? onFilterTap;
   final VoidCallback? onExportTap;
+  final TransactionBillPageLoader? billLoader;
+  final DateTime? today;
 
   @override
   State<TransactionDetailPage> createState() => _TransactionDetailPageState();
 }
 
 class _TransactionDetailPageState extends State<TransactionDetailPage> {
-  static final DateTime _today = DateTime(2026, 8, 5);
-
   late final ScrollController _scrollController;
-  late final ListObserverController _observerController;
+  late final RefreshController _listRefreshController;
+  late final RefreshController _filteredRefreshController;
 
+  List<TransactionBillEntry> _entries = const [];
+  List<TransactionMonthSection> _sections = const [];
   int _visibleMonthIndex = 0;
+  int _pageNum = 0;
+  int _pages = 0;
+  int _requestVersion = 0;
+  bool _initialLoading = true;
+  bool _loadFailed = false;
+  bool _loadingMore = false;
+  bool _loadMoreFailed = false;
   bool _showScrollToTop = false;
   bool _showQuickFilter = false;
   bool _showAdvancedFilter = false;
   TransactionFilterResult? _filterResult;
   TransactionFilterSelection? _lastDateSelection;
+  TransactionQuickRange? _quickRange;
   TransactionAdvancedFilterValue _advancedFilter =
       const TransactionAdvancedFilterValue();
 
-  TransactionMonthSection get _visibleSection =>
-      transactionDetailMockSections[_visibleMonthIndex];
+  DateTime get _today => widget.today ?? DateTime.now();
+
+  bool get _usesPreviewData => widget.billLoader == null && token.isEmpty;
+
+  bool get _hasActiveFilter =>
+      _quickRange != null ||
+      _lastDateSelection != null ||
+      !_advancedFilter.isEmpty;
+
+  bool get _hasActiveDateFilter =>
+      _quickRange != null ||
+      _lastDateSelection != null ||
+      _filterResult?.quickRange != null ||
+      _filterResult?.selection != null;
+
+  TransactionMonthSection? get _visibleSection => _sections.isEmpty
+      ? null
+      : _sections[_visibleMonthIndex.clamp(0, _sections.length - 1)];
+
+  String get _visibleMonthLabel {
+    final section = _visibleSection;
+    if (section == null) return '本月';
+    return section.year == _today.year && section.month == _today.month
+        ? '本月'
+        : section.monthKey;
+  }
+
+  String get _monthToolbarLabel {
+    if (_hasActiveDateFilter) {
+      return _filterResult?.toolbarLabel ?? _activeToolbarLabel;
+    }
+    return _visibleMonthLabel;
+  }
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_handleScroll);
-    _observerController = ListObserverController(
-      controller: _scrollController,
-    );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _observerController.dispatchOnceObserve();
-      }
-    });
+    _listRefreshController = RefreshController();
+    _filteredRefreshController = RefreshController();
+    if (_usesPreviewData) {
+      _sections = transactionDetailMockSections;
+      _initialLoading = false;
+    } else {
+      _loadTransactions();
+    }
   }
 
   void _handleScroll() {
     final show =
         _scrollController.hasClients && _scrollController.offset > 420.w;
-    if (show != _showScrollToTop && mounted) {
-      setState(() => _showScrollToTop = show);
+    var visibleMonthIndex = _visibleMonthIndex;
+    if (_filterResult == null && _sections.isNotEmpty) {
+      final offset = math.max(0.0, _scrollController.offset);
+      var sectionEnd = 0.0;
+      for (var index = 0; index < _sections.length; index++) {
+        sectionEnd += 52.w + _sections[index].records.length * 94.w;
+        if (offset < sectionEnd || index == _sections.length - 1) {
+          visibleMonthIndex = index;
+          break;
+        }
+      }
     }
-  }
-
-  void _handleObserve(ListViewObserveModel result) {
-    final index = result.firstChild?.index;
-    if (index == null ||
-        index < 0 ||
-        index >= transactionDetailMockSections.length ||
-        index == _visibleMonthIndex ||
-        !mounted) {
-      return;
+    if (mounted &&
+        (show != _showScrollToTop || visibleMonthIndex != _visibleMonthIndex)) {
+      setState(() {
+        _showScrollToTop = show;
+        _visibleMonthIndex = visibleMonthIndex;
+      });
     }
-    setState(() => _visibleMonthIndex = index);
   }
 
   Future<void> _scrollToTop() async {
@@ -94,8 +148,26 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     );
   }
 
+  void _openBillDetail(TransactionRecord record) {
+    TransactionBillEntry? entry;
+    for (final candidate in _entries) {
+      if (identical(candidate.record, record)) {
+        entry = candidate;
+        break;
+      }
+    }
+    final initialDetail = entry?.detail ??
+        (_usesPreviewData ? TransactionBillDetail.fromRecord(record) : null);
+    Get.to<void>(
+      () => TransactionBillDetailPage(
+        billId: entry?.id ?? 0,
+        initialDetail: initialDetail,
+      ),
+    );
+  }
+
   void _toggleQuickFilter() {
-    widget.onMonthTap?.call(_visibleSection.monthKey);
+    widget.onMonthTap?.call(_visibleSection?.monthKey ?? '本月');
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _showAdvancedFilter = false;
@@ -118,7 +190,15 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       await _openDateFilter();
       return;
     }
-    setState(() => _filterResult = _quickResult(range));
+    if (_usesPreviewData) {
+      setState(() => _filterResult = _quickResult(range));
+      return;
+    }
+    setState(() {
+      _quickRange = range;
+      _lastDateSelection = null;
+    });
+    await _loadTransactions();
   }
 
   Future<void> _openDateFilter() async {
@@ -134,17 +214,34 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     if (selection == null || !mounted) return;
 
     _lastDateSelection = selection;
-    final result = _resultForSelection(selection);
-    setState(() => _filterResult = result);
-
     if (selection.mode == TransactionDateFilterMode.custom &&
         TransactionDateRules.containsFutureDate(
           selection.startDate!,
           selection.endDate!,
           _today,
         )) {
+      setState(() {
+        _quickRange = null;
+        _filterResult = TransactionFilterResult(
+          toolbarLabel: selection.toolbarLabel,
+          count: 0,
+          income: 0,
+          expense: 0,
+          records: const [],
+          selection: selection,
+          showSummary: false,
+        );
+      });
       await TransactionFutureDateDialog.show(context);
+      return;
     }
+
+    if (_usesPreviewData) {
+      setState(() => _filterResult = _resultForSelection(selection));
+      return;
+    }
+    setState(() => _quickRange = null);
+    await _loadTransactions();
   }
 
   List<TransactionRecord> get _allRecords => transactionDetailMockSections
@@ -277,7 +374,18 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     );
   }
 
-  void _completeAdvancedFilter(TransactionAdvancedFilterValue value) {
+  Future<void> _completeAdvancedFilter(
+    TransactionAdvancedFilterValue value,
+  ) async {
+    if (!_usesPreviewData) {
+      setState(() {
+        _advancedFilter = value;
+        _showAdvancedFilter = false;
+      });
+      await _loadTransactions();
+      return;
+    }
+
     final records = _recordsForAdvancedFilter(value);
     final income = records
         .where((record) => record.isIncome)
@@ -293,8 +401,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
         _filterResult = null;
       } else {
         _filterResult = TransactionFilterResult(
-          toolbarLabel:
-              _visibleMonthIndex == 0 ? '本月' : _visibleSection.monthKey,
+          toolbarLabel: _visibleMonthLabel,
           count: records.length,
           income: income,
           expense: expense,
@@ -313,6 +420,8 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       if (value.direction == '全部支出' && record.isIncome) return false;
 
       final amount = record.amount.abs();
+      final customMinAmount = _amountOrNull(value.minAmount);
+      final customMaxAmount = _amountOrNull(value.maxAmount);
       final matchesAmount = switch (value.amountRange) {
         '1百以下' => amount < 100,
         '1百-1千' => amount >= 100 && amount < 1000,
@@ -320,6 +429,8 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
         '5千-1万' => amount >= 5000 && amount < 10000,
         '1万-5万' => amount >= 10000 && amount < 50000,
         '5万以上' => amount >= 50000,
+        '自定义' => (customMinAmount == null || amount >= customMinAmount) &&
+            (customMaxAmount == null || amount <= customMaxAmount),
         _ => true,
       };
       if (!matchesAmount) return false;
@@ -338,8 +449,266 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     }).toList(growable: false);
   }
 
+  double? _amountOrNull(String value) => double.tryParse(value.trim());
+
+  Future<bool> _loadTransactions({
+    bool loadMore = false,
+    bool preserveContent = false,
+  }) async {
+    if (_usesPreviewData ||
+        (loadMore && (_loadingMore || _pageNum >= _pages))) {
+      return false;
+    }
+
+    final version = loadMore ? _requestVersion : ++_requestVersion;
+    final pageNum = loadMore ? _pageNum + 1 : 1;
+    if (mounted) {
+      setState(() {
+        if (loadMore) {
+          _loadingMore = true;
+          _loadMoreFailed = false;
+        } else if (!preserveContent) {
+          _initialLoading = true;
+          _loadFailed = false;
+          _loadMoreFailed = false;
+          _visibleMonthIndex = 0;
+          _pageNum = 0;
+          _pages = 0;
+        } else {
+          _loadFailed = false;
+          _loadMoreFailed = false;
+        }
+      });
+    }
+
+    final range = _requestDateRange();
+    final params = TransactionBillQuery.build(
+      pageNum: pageNum,
+      filter: _advancedFilter,
+      beginTime: range.beginTime,
+      endTime: range.endTime,
+    );
+
+    try {
+      final page = await (widget.billLoader ?? loadTransactionBillPage)(params);
+      if (!mounted || version != _requestVersion) return false;
+      final entries = loadMore ? [..._entries, ...page.entries] : page.entries;
+      final sections = _sectionsFrom(entries);
+      setState(() {
+        _entries = entries;
+        _sections = sections;
+        _pageNum = pageNum;
+        _pages = entries.length >= page.total ? pageNum : page.pages;
+        _initialLoading = false;
+        _loadingMore = false;
+        _loadFailed = false;
+        _loadMoreFailed = false;
+        _filterResult = _hasActiveFilter
+            ? TransactionFilterResult(
+                toolbarLabel: _activeToolbarLabel,
+                count: page.total,
+                income: page.incomeTotal,
+                expense: page.expensesTotal,
+                records: entries.map((entry) => entry.record).toList(
+                      growable: false,
+                    ),
+                selection: _lastDateSelection,
+                quickRange: _quickRange,
+                showSummary: entries.isNotEmpty,
+              )
+            : null;
+      });
+      if (!loadMore) _jumpToStartAfterLoad();
+      return true;
+    } catch (_) {
+      if (!mounted || version != _requestVersion) return false;
+      setState(() {
+        _initialLoading = false;
+        _loadingMore = false;
+        if (loadMore) {
+          _loadMoreFailed = true;
+        } else if (!preserveContent) {
+          _loadFailed = true;
+        }
+      });
+      return false;
+    }
+  }
+
+  Future<void> _refreshTransactions(RefreshController controller) async {
+    final succeeded = _usesPreviewData
+        ? await _refreshPreviewData()
+        : await _loadTransactions(preserveContent: true);
+    if (!mounted) return;
+    if (succeeded) {
+      controller.refreshCompleted(resetFooterState: true);
+    } else {
+      controller.refreshFailed();
+    }
+  }
+
+  Future<bool> _refreshPreviewData() async {
+    await Future<void>.delayed(const Duration(milliseconds: 650));
+    if (!mounted) return false;
+    setState(() {
+      _sections = transactionDetailMockSections;
+      _visibleMonthIndex = 0;
+    });
+    _jumpToStartAfterLoad();
+    return true;
+  }
+
+  Future<void> _loadMoreTransactions(RefreshController controller) async {
+    if (_usesPreviewData || _pageNum >= _pages) {
+      controller.loadNoData();
+      return;
+    }
+    final succeeded = await _loadTransactions(loadMore: true);
+    if (!mounted) return;
+    if (!succeeded) {
+      controller.loadFailed();
+    } else if (_pageNum >= _pages) {
+      controller.loadNoData();
+    } else {
+      controller.loadComplete();
+    }
+  }
+
+  Widget _withRefresh({
+    required Widget child,
+    required RefreshController controller,
+  }) {
+    return RefreshConfiguration(
+      headerTriggerDistance: 62.w,
+      maxOverScrollExtent: 86.w,
+      child: SmartRefresher(
+        controller: controller,
+        enablePullDown: true,
+        enablePullUp: _loadingMore || _loadMoreFailed || _pageNum < _pages,
+        header: CustomHeader(
+          height: 74.w,
+          completeDuration: const Duration(milliseconds: 120),
+          builder: (_, mode) => _TransactionPullRefreshHeader(mode: mode),
+        ),
+        footer: CustomFooter(
+          height: 70.w,
+          loadStyle: LoadStyle.ShowWhenLoading,
+          builder: (_, mode) => mode == LoadStatus.loading
+              ? const _TransactionLoadMoreWave()
+              : const SizedBox.shrink(),
+        ),
+        onRefresh: () => _refreshTransactions(controller),
+        onLoading: () => _loadMoreTransactions(controller),
+        child: child,
+      ),
+    );
+  }
+
+  String get _activeToolbarLabel =>
+      _lastDateSelection?.toolbarLabel ?? _quickRange?.label ?? '本月';
+
+  ({DateTime? beginTime, DateTime? endTime}) _requestDateRange() {
+    final today = DateTime(_today.year, _today.month, _today.day);
+    final selection = _lastDateSelection;
+    if (selection != null) {
+      return switch (selection.mode) {
+        TransactionDateFilterMode.month => (
+            beginTime: DateTime(
+              selection.month!.year,
+              selection.month!.month,
+              1,
+            ),
+            endTime: _notAfterToday(
+              DateTime(
+                selection.month!.year,
+                selection.month!.month + 1,
+                0,
+              ),
+              today,
+            ),
+          ),
+        TransactionDateFilterMode.year => (
+            beginTime: DateTime(selection.year!, 1, 1),
+            endTime: _notAfterToday(DateTime(selection.year!, 12, 31), today),
+          ),
+        TransactionDateFilterMode.custom => (
+            beginTime: selection.startDate,
+            endTime: selection.endDate,
+          ),
+      };
+    }
+
+    return switch (_quickRange) {
+      TransactionQuickRange.currentMonth => (
+          beginTime: DateTime(today.year, today.month, 1),
+          endTime: today,
+        ),
+      TransactionQuickRange.recentWeek => (
+          beginTime: today.subtract(const Duration(days: 6)),
+          endTime: today,
+        ),
+      TransactionQuickRange.recentMonth => (
+          beginTime: today.subtract(const Duration(days: 29)),
+          endTime: today,
+        ),
+      TransactionQuickRange.recentThreeMonths => (
+          beginTime: today.subtract(const Duration(days: 89)),
+          endTime: today,
+        ),
+      TransactionQuickRange.recentYear => (
+          beginTime: today.subtract(const Duration(days: 364)),
+          endTime: today,
+        ),
+      _ => (beginTime: null, endTime: null),
+    };
+  }
+
+  DateTime _notAfterToday(DateTime value, DateTime today) =>
+      value.isAfter(today) ? today : value;
+
+  List<TransactionMonthSection> _sectionsFrom(
+    List<TransactionBillEntry> entries,
+  ) {
+    final sections = <TransactionMonthSection>[];
+    for (final entry in entries) {
+      final record = entry.record;
+      if (sections.isNotEmpty &&
+          sections.last.year == record.occurredAt.year &&
+          sections.last.month == record.occurredAt.month) {
+        final current = sections.last;
+        sections[sections.length - 1] = TransactionMonthSection(
+          year: current.year,
+          month: current.month,
+          records: [...current.records, record],
+          serverIncome: current.serverIncome ?? entry.monthIncomeTotal,
+          serverExpense: current.serverExpense ?? entry.monthExpensesTotal,
+        );
+      } else {
+        sections.add(
+          TransactionMonthSection(
+            year: record.occurredAt.year,
+            month: record.occurredAt.month,
+            records: [record],
+            serverIncome: entry.monthIncomeTotal,
+            serverExpense: entry.monthExpensesTotal,
+          ),
+        );
+      }
+    }
+    return sections;
+  }
+
+  void _jumpToStartAfterLoad() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.jumpTo(0);
+    });
+  }
+
   @override
   void dispose() {
+    _listRefreshController.dispose();
+    _filteredRefreshController.dispose();
     _scrollController
       ..removeListener(_handleScroll)
       ..dispose();
@@ -348,8 +717,9 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final monthText = _filterResult?.toolbarLabel ??
-        (_visibleMonthIndex == 0 ? '本月' : _visibleSection.monthKey);
+    final monthText = _monthToolbarLabel;
+    final hasRecords =
+        _filterResult?.records.isNotEmpty ?? _sections.isNotEmpty;
     final mediaQuery = MediaQuery.of(context);
     final filterOverlayTop = mediaQuery.padding.top + 134.w;
     final advancedAvailableHeight = mediaQuery.size.height -
@@ -379,50 +749,86 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                   _FilterBar(
                     monthText: monthText,
                     expanded: _showQuickFilter,
-                    highlighted: _filterResult?.selection != null ||
-                        _filterResult?.quickRange != null,
+                    highlighted: _hasActiveDateFilter,
                     filterActive:
                         _showAdvancedFilter || !_advancedFilter.isEmpty,
                     onMonthTap: _toggleQuickFilter,
                     onFilterTap: _toggleAdvancedFilter,
                   ),
                   Expanded(
-                    child: Stack(
-                      children: [
-                        if (_filterResult == null)
-                          ListViewObserver(
-                            controller: _observerController,
-                            onObserve: _handleObserve,
-                            child: ListView.builder(
-                              key: const ValueKey('transaction_detail_list'),
+                    child: ColoredBox(
+                      color: const Color(0xFFF7F7F7),
+                      child: Stack(
+                        children: [
+                          if (_initialLoading)
+                            const _TransactionLoadingState()
+                          else if (_loadFailed)
+                            _TransactionLoadError(
+                              onRetry: () => _loadTransactions(),
+                            )
+                          else if (_filterResult == null && _sections.isEmpty)
+                            const _EmptyFilterResult()
+                          else if (_filterResult == null)
+                            _withRefresh(
+                              controller: _listRefreshController,
+                              child: ListView.builder(
+                                key: const ValueKey('transaction_detail_list'),
+                                controller: _scrollController,
+                                padding: EdgeInsets.zero,
+                                physics: const ClampingScrollPhysics(),
+                                itemCount: _sections.length +
+                                    (_loadMoreFailed ? 1 : 0),
+                                itemBuilder: (_, index) {
+                                  if (index == _sections.length) {
+                                    return _LoadMoreFooter(
+                                      failed: true,
+                                      onRetry: () => _loadMoreTransactions(
+                                        _listRefreshController,
+                                      ),
+                                    );
+                                  }
+                                  return _MonthSection(
+                                    section: _sections[index],
+                                    onRecordTap: _openBillDetail,
+                                  );
+                                },
+                              ),
+                            )
+                          else
+                            _FilteredResultList(
+                              result: _filterResult!,
                               controller: _scrollController,
-                              padding: EdgeInsets.zero,
-                              physics: const ClampingScrollPhysics(),
-                              itemCount: transactionDetailMockSections.length,
-                              itemBuilder: (_, index) => _MonthSection(
-                                section: transactionDetailMockSections[index],
+                              loadMoreFailed: _loadMoreFailed,
+                              onRetryLoadMore: () => _loadMoreTransactions(
+                                _filteredRefreshController,
+                              ),
+                              onRecordTap: _openBillDetail,
+                              wrapList: ({required child}) => _withRefresh(
+                                child: child,
+                                controller: _filteredRefreshController,
                               ),
                             ),
-                          )
-                        else
-                          _FilteredResultList(result: _filterResult!),
-                        if (_filterResult == null)
-                          Positioned(
-                            right: 20.w,
-                            bottom: 18.w,
-                            child: AnimatedScale(
-                              duration: const Duration(milliseconds: 150),
-                              scale: _showScrollToTop ? 1 : 0,
-                              child: _ScrollToTopButton(onTap: _scrollToTop),
+                          if (!_initialLoading &&
+                              !_loadFailed &&
+                              _filterResult == null &&
+                              _sections.isNotEmpty)
+                            Positioned(
+                              right: 20.w,
+                              bottom: 18.w,
+                              child: AnimatedScale(
+                                duration: const Duration(milliseconds: 150),
+                                scale: _showScrollToTop ? 1 : 0,
+                                child: _ScrollToTopButton(onTap: _scrollToTop),
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            bottomNavigationBar: _filterResult?.records.isEmpty == true
+            bottomNavigationBar: _initialLoading || _loadFailed || !hasRecords
                 ? null
                 : _ExportBar(onTap: widget.onExportTap),
           ),
@@ -725,9 +1131,21 @@ class _FilterBar extends StatelessWidget {
 }
 
 class _FilteredResultList extends StatelessWidget {
-  const _FilteredResultList({required this.result});
+  const _FilteredResultList({
+    required this.result,
+    required this.controller,
+    required this.loadMoreFailed,
+    required this.onRetryLoadMore,
+    required this.onRecordTap,
+    required this.wrapList,
+  });
 
   final TransactionFilterResult result;
+  final ScrollController controller;
+  final bool loadMoreFailed;
+  final VoidCallback onRetryLoadMore;
+  final ValueChanged<TransactionRecord> onRecordTap;
+  final Widget Function({required Widget child}) wrapList;
 
   static final NumberFormat _amountFormat = NumberFormat('#,##0.00');
 
@@ -775,34 +1193,220 @@ class _FilteredResultList extends StatelessWidget {
           Expanded(
             child: result.records.isEmpty
                 ? const _EmptyFilterResult()
-                : ListView(
-                    key: const ValueKey('transaction_filtered_list'),
-                    padding: EdgeInsets.zero,
-                    physics: const ClampingScrollPhysics(),
-                    children: [
-                      Container(
-                        margin: EdgeInsets.fromLTRB(14.w, 0, 14.w, 12.w),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(11.w),
+                : wrapList(
+                    child: ListView(
+                      key: const ValueKey('transaction_filtered_list'),
+                      controller: controller,
+                      padding: EdgeInsets.zero,
+                      physics: const ClampingScrollPhysics(),
+                      children: [
+                        Container(
+                          margin: EdgeInsets.fromLTRB(14.w, 0, 14.w, 12.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(11.w),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Column(
+                            children: [
+                              for (var index = 0;
+                                  index < result.records.length;
+                                  index++)
+                                _TransactionRow(
+                                  record: result.records[index],
+                                  showDivider:
+                                      index != result.records.length - 1,
+                                  onTap: () =>
+                                      onRecordTap(result.records[index]),
+                                ),
+                            ],
+                          ),
                         ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          children: [
-                            for (var index = 0;
-                                index < result.records.length;
-                                index++)
-                              _TransactionRow(
-                                record: result.records[index],
-                                showDivider: index != result.records.length - 1,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
+                        if (loadMoreFailed)
+                          _LoadMoreFooter(
+                            failed: true,
+                            onRetry: onRetryLoadMore,
+                          ),
+                      ],
+                    ),
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TransactionLoadingState extends StatelessWidget {
+  const _TransactionLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: 24.w,
+        height: 24.w,
+        child: const CircularProgressIndicator(strokeWidth: 2.2),
+      ),
+    );
+  }
+}
+
+class _TransactionLoadError extends StatelessWidget {
+  const _TransactionLoadError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: TextButton(
+        key: const ValueKey('transaction_load_retry'),
+        onPressed: onRetry,
+        child: Text(
+          '加载失败，点击重试',
+          style: TextStyle(
+            color: const Color(0xFF777777),
+            fontSize: 14.sp,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadMoreFooter extends StatelessWidget {
+  const _LoadMoreFooter({
+    required this.failed,
+    required this.onRetry,
+  });
+
+  final bool failed;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48.w,
+      child: Center(
+        child: failed
+            ? TextButton(
+                key: const ValueKey('transaction_load_more_retry'),
+                onPressed: onRetry,
+                child: Text(
+                  '加载失败，点击重试',
+                  style: TextStyle(
+                    color: const Color(0xFF777777),
+                    fontSize: 13.sp,
+                  ),
+                ),
+              )
+            : SizedBox(
+                width: 20.w,
+                height: 20.w,
+                child: const CircularProgressIndicator(strokeWidth: 2),
+              ),
+      ),
+    );
+  }
+}
+
+class _TransactionPullRefreshHeader extends StatelessWidget {
+  const _TransactionPullRefreshHeader({required this.mode});
+
+  final RefreshStatus? mode;
+
+  @override
+  Widget build(BuildContext context) {
+    final refreshing = mode == RefreshStatus.refreshing;
+    return Center(
+      child: SizedBox.square(
+        key: const ValueKey('transaction_pull_refresh_indicator'),
+        dimension: 22.w,
+        child: refreshing
+            ? BocomArcLoadingIndicator(
+                dimension: 22.w,
+                color: const Color(0xFF555555),
+                strokeWidth: 2.7.w,
+              )
+            : CircularProgressIndicator(
+                value: 0.72,
+                color: const Color(0xFF555555),
+                strokeWidth: 2.7.w,
+                strokeCap: StrokeCap.round,
+              ),
+      ),
+    );
+  }
+}
+
+class _TransactionLoadMoreWave extends StatefulWidget {
+  const _TransactionLoadMoreWave();
+
+  @override
+  State<_TransactionLoadMoreWave> createState() =>
+      _TransactionLoadMoreWaveState();
+}
+
+class _TransactionLoadMoreWaveState extends State<_TransactionLoadMoreWave>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 920),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: '正在加载更多交易明细',
+      child: Center(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (_, __) => Row(
+            key: const ValueKey('transaction_load_more_wave'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var index = 0; index < 3; index++) ...[
+                if (index > 0) SizedBox(width: 9.w),
+                _buildDot(index),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDot(int index) {
+    final phase = _controller.value * math.pi * 2 - index * 0.9;
+    final wave = (math.sin(phase) + 1) / 2;
+    final scale = 0.62 + wave * 0.48;
+    return Transform.scale(
+      key: ValueKey('transaction_load_more_dot_$index'),
+      scale: scale,
+      child: Container(
+        width: 8.w,
+        height: 8.w,
+        decoration: BoxDecoration(
+          color: Color.lerp(
+            const Color(0xFF9DCEF4),
+            const Color(0xFF258FE8),
+            wave,
+          ),
+          shape: BoxShape.circle,
+        ),
       ),
     );
   }
@@ -841,9 +1445,13 @@ class _EmptyFilterResult extends StatelessWidget {
 }
 
 class _MonthSection extends StatelessWidget {
-  const _MonthSection({required this.section});
+  const _MonthSection({
+    required this.section,
+    required this.onRecordTap,
+  });
 
   final TransactionMonthSection section;
+  final ValueChanged<TransactionRecord> onRecordTap;
 
   static final NumberFormat _amountFormat = NumberFormat('#,##0.00');
 
@@ -899,6 +1507,7 @@ class _MonthSection extends StatelessWidget {
                   _TransactionRow(
                     record: section.records[index],
                     showDivider: index != section.records.length - 1,
+                    onTap: () => onRecordTap(section.records[index]),
                   ),
               ],
             ),
@@ -948,10 +1557,12 @@ class _TransactionRow extends StatelessWidget {
   const _TransactionRow({
     required this.record,
     required this.showDivider,
+    this.onTap,
   });
 
   final TransactionRecord record;
   final bool showDivider;
+  final VoidCallback? onTap;
 
   static final DateFormat _dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
   static final NumberFormat _amountFormat = NumberFormat('#,##0.00');
@@ -964,95 +1575,134 @@ class _TransactionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      button: onTap != null,
+      onTap: onTap,
       label:
           '${record.title}，${record.channel}，$_amountText，${_dateFormat.format(record.occurredAt)}',
-      child: SizedBox(
-        key: ValueKey('transaction_row_${record.title}'),
-        // 参考图 1080px 宽：相邻分隔线间距约 270px，即 94w。
-        height: 94.w,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 105.w,
-                top: 10.w,
-                child: Text(
-                  record.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: const Color(0xFF1D1D1D),
-                    fontSize: 16.sp,
-                    height: 1.05,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                top: 35.w,
-                child: Text(
-                  record.channel,
-                  style: TextStyle(
-                    color: const Color(0xFF969696),
-                    fontSize: 14.sp,
-                    height: 1,
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                top: 57.w,
-                child: Text(
-                  _dateFormat.format(record.occurredAt),
-                  style: TextStyle(
-                    color: const Color(0xFF969696),
-                    fontSize: 14.sp,
-                    height: 1,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                top: 9.w,
-                child: Text(
-                  _amountText,
-                  style: TextStyle(
-                    color: record.isIncome
-                        ? const Color(0xFFFF5C5C)
-                        : const Color(0xFF333333),
-                    fontSize: 16.sp,
-                    height: 1.05,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                top: 35.w,
-                child: Text(
-                  '余额${_amountFormat.format(record.balance)}',
-                  style: TextStyle(
-                    color: const Color(0xFF616161),
-                    fontSize: 14.sp,
-                    height: 1,
-                  ),
-                ),
-              ),
-              if (showDivider)
+      child: _NonBlockingTap(
+        onTap: onTap,
+        child: SizedBox(
+          key: ValueKey('transaction_row_${record.title}'),
+          // 参考图 1080px 宽：相邻分隔线间距约 270px，即 94w。
+          height: 94.w,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Stack(
+              children: [
                 Positioned(
                   left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    height: 0.5.w,
-                    color: const Color(0xFFE9E9E9),
+                  right: 105.w,
+                  top: 10.w,
+                  child: Text(
+                    record.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: const Color(0xFF1D1D1D),
+                      fontSize: 16.sp,
+                      height: 1.05,
+                    ),
                   ),
                 ),
-            ],
+                Positioned(
+                  left: 0,
+                  top: 35.w,
+                  child: Text(
+                    record.channel,
+                    style: TextStyle(
+                      color: const Color(0xFF969696),
+                      fontSize: 14.sp,
+                      height: 1,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  top: 57.w,
+                  child: Text(
+                    _dateFormat.format(record.occurredAt),
+                    style: TextStyle(
+                      color: const Color(0xFF969696),
+                      fontSize: 14.sp,
+                      height: 1,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  top: 9.w,
+                  child: Text(
+                    _amountText,
+                    style: TextStyle(
+                      color: record.isIncome
+                          ? const Color(0xFFFF5C5C)
+                          : const Color(0xFF333333),
+                      fontSize: 16.sp,
+                      height: 1.05,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  top: 35.w,
+                  child: Text(
+                    '余额${_amountFormat.format(record.balance)}',
+                    style: TextStyle(
+                      color: const Color(0xFF616161),
+                      fontSize: 14.sp,
+                      height: 1,
+                    ),
+                  ),
+                ),
+                if (showDivider)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      height: 0.5.w,
+                      color: const Color(0xFFE9E9E9),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _NonBlockingTap extends StatefulWidget {
+  const _NonBlockingTap({required this.child, this.onTap});
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  State<_NonBlockingTap> createState() => _NonBlockingTapState();
+}
+
+class _NonBlockingTapState extends State<_NonBlockingTap> {
+  Offset? _pointerDownPosition;
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (event) => _pointerDownPosition = event.position,
+      onPointerMove: (event) {
+        final origin = _pointerDownPosition;
+        if (origin != null && (event.position - origin).distance > 12.w) {
+          _pointerDownPosition = null;
+        }
+      },
+      onPointerCancel: (_) => _pointerDownPosition = null,
+      onPointerUp: (_) {
+        if (_pointerDownPosition != null) widget.onTap?.call();
+        _pointerDownPosition = null;
+      },
+      child: widget.child,
     );
   }
 }

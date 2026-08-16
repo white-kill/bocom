@@ -36,6 +36,7 @@ void main() {
         );
 
     expect(selectedMonth().data, '本月');
+    expect(selectedMonth().style?.color, const Color(0xFF303030));
 
     await tester.drag(
       find.byKey(const ValueKey('transaction_detail_list')),
@@ -44,6 +45,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(selectedMonth().data, '2026-07');
+    expect(selectedMonth().style?.color, const Color(0xFF303030));
     expect(find.bySemanticsLabel('返回顶部'), findsOneWidget);
   });
 
@@ -84,5 +86,50 @@ void main() {
           .height,
       94,
     );
+  });
+
+  testWidgets('下拉刷新固定日期栏并让列表内容下移显示灰色圆弧', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(375, 750);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 750),
+        builder: (_, child) => GetMaterialApp(home: child),
+        child: const TransactionDetailPage(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final toolbar = find.byKey(
+      const ValueKey('transaction_detail_selected_month'),
+    );
+    final monthSummary = find.text('2026-08');
+    final toolbarY = tester.getCenter(toolbar).dy;
+    final summaryY = tester.getCenter(monthSummary).dy;
+
+    final pullGesture = await tester.startGesture(
+      tester.getCenter(
+        find.byKey(const ValueKey('transaction_detail_list')),
+      ),
+    );
+    for (var step = 0; step < 4; step++) {
+      await pullGesture.moveBy(const Offset(0, 60));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
+    expect(
+      find.byKey(const ValueKey('transaction_pull_refresh_indicator')),
+      findsOneWidget,
+    );
+    expect(find.text('上海华莱士贸易有限公司'), findsOneWidget);
+    expect(tester.getCenter(toolbar).dy, toolbarY);
+    expect(tester.getCenter(monthSummary).dy, greaterThan(summaryY + 50));
+
+    await pullGesture.up();
+    await tester.pumpAndSettle();
+    expect(tester.getCenter(monthSummary).dy, closeTo(summaryY, 0.01));
   });
 }

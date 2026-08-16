@@ -1,4 +1,6 @@
 import 'package:bocom/pages/tabs/home/transaction_detail/transaction_detail_view.dart';
+import 'package:bocom/pages/tabs/home/transaction_detail/filter/transaction_advanced_filter_model.dart';
+import 'package:bocom/pages/tabs/home/transaction_detail/filter/transaction_advanced_filter_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -85,6 +87,121 @@ void main() {
       (choice('生活缴费').decoration as BoxDecoration).color,
       const Color(0xFFFAFAFA),
     );
+  });
+
+  testWidgets('自定义金额显示双列金额输入并保留参考图字号', (tester) async {
+    await pumpPage(tester);
+
+    final amountSection = find.byKey(
+      const ValueKey('advanced_filter_section_金额'),
+    );
+    await tester.tap(
+      find.descendant(of: amountSection, matching: find.text('自定义')),
+    );
+    await tester.pumpAndSettle();
+
+    final minField = find.byKey(
+      const ValueKey('advanced_filter_min_amount'),
+    );
+    final maxField = find.byKey(
+      const ValueKey('advanced_filter_max_amount'),
+    );
+    expect(minField, findsOneWidget);
+    expect(maxField, findsOneWidget);
+    expect(tester.widget<TextField>(minField).style?.fontSize, 16);
+    expect(tester.widget<TextField>(maxField).style?.fontSize, 16);
+    expect(
+      tester.widget<TextField>(minField).decoration?.hintText,
+      '最小金额',
+    );
+    expect(
+      tester.widget<TextField>(maxField).decoration?.hintText,
+      '最大金额',
+    );
+    expect(find.text('¥ '), findsNWidgets(2));
+    final separator = find.byKey(
+      const ValueKey('advanced_filter_amount_separator'),
+    );
+    expect(find.text('至'), findsOneWidget);
+    expect(tester.widget<Text>(separator).style?.fontSize, 14);
+    expect(
+      tester.getRect(separator).left,
+      greaterThan(tester.getRect(minField).right),
+    );
+    expect(
+      tester.getRect(separator).right,
+      lessThan(tester.getRect(maxField).left),
+    );
+    expect(
+      tester.getSize(minField).width,
+      lessThan(tester.getSize(maxField).width),
+    );
+    expect(
+      tester
+          .getSize(
+            find.byKey(
+              const ValueKey('advanced_filter_custom_amount_fields'),
+            ),
+          )
+          .height,
+      48,
+    );
+  });
+
+  testWidgets('自定义开户行显示整行输入并把两个自定义值回传', (tester) async {
+    TransactionAdvancedFilterValue? completed;
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(375, 812);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 750),
+        builder: (_, child) => GetMaterialApp(home: child),
+        child: Scaffold(
+          body: SizedBox(
+            height: 527,
+            child: TransactionAdvancedFilterPanel(
+              initialValue: const TransactionAdvancedFilterValue(
+                amountRange: '自定义',
+                bank: '自定义',
+              ),
+              onComplete: (value) => completed = value,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final scrollView = find.byKey(
+      const ValueKey('transaction_advanced_filter_scroll'),
+    );
+    final minField = find.byKey(
+      const ValueKey('advanced_filter_min_amount'),
+    );
+    await tester.enterText(minField, '100.00');
+    await tester.enterText(
+      find.byKey(const ValueKey('advanced_filter_max_amount')),
+      '300',
+    );
+
+    final bankField = find.byKey(
+      const ValueKey('advanced_filter_custom_bank'),
+    );
+    await tester.drag(scrollView, const Offset(0, -900));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(bankField).height, 34);
+    expect(tester.widget<TextField>(bankField).style?.fontSize, 14);
+    await tester.enterText(bankField, '测试银行');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('完成'));
+
+    expect(completed?.minAmount, '100.00');
+    expect(completed?.maxAmount, '300');
+    expect(completed?.customBankName, '测试银行');
   });
 
   testWidgets('键盘弹出后面板缩短且操作栏停在键盘上方', (tester) async {
