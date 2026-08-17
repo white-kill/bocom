@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bocom/config/model/contacts_model.dart';
 import 'package:bocom/pages/tabs/home/transfer/home_transfer_view.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +23,7 @@ void main() {
     expect(find.bySemanticsLabel('返回'), findsOneWidget);
     expect(find.bySemanticsLabel('客服'), findsOneWidget);
     expect(find.bySemanticsLabel('账号转账'), findsOneWidget);
+    expect(find.bySemanticsLabel('转账记录'), findsOneWidget);
   });
 
   testWidgets('常用收款人使用接口数据渲染', (tester) async {

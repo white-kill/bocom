@@ -48,6 +48,7 @@ class HomeAccountTransferPage extends StatefulWidget {
   const HomeAccountTransferPage({
     super.key,
     this.initialRecipient,
+    this.initialAmount,
     this.contactsLoader,
     this.bankLoader,
     this.passwordVerificationLauncher,
@@ -58,6 +59,7 @@ class HomeAccountTransferPage extends StatefulWidget {
   });
 
   final ContactsModel? initialRecipient;
+  final double? initialAmount;
   final Future<List<ContactsModel>> Function()? contactsLoader;
   final Future<List<RecipientBank>> Function()? bankLoader;
   final PasswordVerificationLauncher? passwordVerificationLauncher;
@@ -120,6 +122,12 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   void initState() {
     super.initState();
     _fillRecipient(widget.initialRecipient);
+    final initialAmount = widget.initialAmount;
+    if (initialAmount != null && initialAmount.abs() >= 0.01) {
+      _amountController.text = _displayAmount(
+        initialAmount.abs().toStringAsFixed(2),
+      );
+    }
     for (final controller in _requiredControllers) {
       controller.addListener(_refresh);
     }
