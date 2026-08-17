@@ -67,6 +67,8 @@ class LedgerOverviewTab extends StatelessWidget {
               final overview = logic.bookOverview.value;
               return LedgerTrendChart(
                 title: logic.periodMode.value == 1 ? '近一年收支' : '近一月收支',
+                isYearMode: logic.periodMode.value == 1,
+                year: logic.selectedPeriod.value.year,
                 incomeValues: overview.trendList
                     .map((item) => double.tryParse(item.incomeTotal) ?? 0)
                     .toList(),

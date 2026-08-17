@@ -12,12 +12,16 @@ class LedgerTrendChart extends StatefulWidget {
     this.expenseValues = const [],
     this.dateValues = const [],
     this.title = '近一月收支',
+    this.isYearMode = false,
+    this.year,
   });
 
   final List<double> incomeValues;
   final List<double> expenseValues;
   final List<String> dateValues;
   final String title;
+  final bool isYearMode;
+  final int? year;
 
   @override
   State<LedgerTrendChart> createState() => _LedgerTrendChartState();
@@ -27,6 +31,11 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
   static const _incomeColor = Color(0xFF5B9FF2);
   static const _expenseColor = Color(0xFFFF914D);
   late int _selectedIndex;
+  bool _showCalendar = false;
+  int _selectedCalendarIndex = 11;
+
+  bool get _isCurrentYear =>
+      widget.isYearMode && widget.year == DateTime.now().year;
 
   int get _pointCount => math.max(
         2,
@@ -50,6 +59,8 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         oldWidget.expenseValues.length != widget.expenseValues.length) {
       _selectedIndex = _pointCount - 1;
     }
+    if (oldWidget.year != widget.year) _selectedCalendarIndex = 11;
+    if (!widget.isYearMode) _showCalendar = false;
   }
 
   List<double> _values(List<double> source) {
@@ -75,18 +86,29 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         children: [
           Row(
             children: [
-              BaseText(text: widget.title, fontSize: 13, color: const Color(0xFF333333)),
+              if (!_showCalendar || _isCurrentYear)
+                BaseText(text: widget.title, fontSize: 13, color: const Color(0xFF333333)),
               const Spacer(),
               _buildSwitch(),
             ],
           ),
           SizedBox(height: 20.w),
-          SizedBox(
-            height: 170.w,
-            child: LayoutBuilder(
-              builder: (context, constraints) =>
-                  _buildChart(constraints.maxWidth),
-            ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: _showCalendar && widget.isYearMode
+                ? SizedBox(
+                    key: const ValueKey('year-calendar'),
+                    height: _isCurrentYear ? 240.w : 240.w,
+                    child: _buildYearCalendar(),
+                  )
+                : SizedBox(
+                    key: const ValueKey('trend-chart'),
+                    height: 170.w,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) =>
+                          _buildChart(constraints.maxWidth),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -225,19 +247,260 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
-              alignment: Alignment.center,
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18.w)),
-              child: const BaseText(text: '看走势', fontSize: 12, color: Color(0xFF1677FF)),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _showCalendar = false),
+              child: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: !_showCalendar ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(18.w),
+                ),
+                child: BaseText(
+                  text: '看走势',
+                  fontSize: 12,
+                  color: !_showCalendar
+                      ? const Color(0xFF1677FF)
+                      : const Color(0xFF555555),
+                ),
+              ),
             ),
           ),
-          const Expanded(
-            child: Center(child: BaseText(text: '看日历', fontSize: 12, color: Color(0xFF555555))),
+          Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.isYearMode
+                  ? () => setState(() => _showCalendar = true)
+                  : null,
+              child: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: _showCalendar ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(18.w),
+                ),
+                child: BaseText(
+                  text: '看日历',
+                  fontSize: 12,
+                  color: _showCalendar
+                      ? const Color(0xFF1677FF)
+                      : const Color(0xFF555555),
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildYearCalendar() {
+    final months = _calendarMonths();
+    final valuesByMonth = <String, _CalendarMonthData>{};
+    final dataCount = math.min(
+      12,
+      math.max(
+        widget.dateValues.length,
+        math.max(widget.incomeValues.length, widget.expenseValues.length),
+      ),
+    );
+    for (var index = 0; index < dataCount; index++) {
+      final date = index < widget.dateValues.length ? widget.dateValues[index] : '';
+      final target = _yearMonthFromDate(date) ?? months[index];
+      valuesByMonth[_monthKey(target)] = _CalendarMonthData(
+        date: target,
+        income: index < widget.incomeValues.length ? widget.incomeValues[index] : 0,
+        expense: index < widget.expenseValues.length ? widget.expenseValues[index] : 0,
+      );
+    }
+    final entries = months
+        .map(
+          (date) => valuesByMonth[_monthKey(date)] ??
+              _CalendarMonthData(date: date, income: 0, expense: 0),
+        )
+        .toList();
+    final selected = entries[_selectedCalendarIndex.clamp(0, 11).toInt()];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!_isCurrentYear)
+          Padding(
+            padding: EdgeInsets.only(left: 8.w),
+            child: BaseText(
+              text: '${widget.year ?? DateTime.now().year}年',
+              fontSize: 13,
+              color: const Color(0xFF333333),
+            ),
+          ),
+        SizedBox(
+          height: 160.w,
+          child: GridView.builder(
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 12,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 6,
+              mainAxisSpacing: 3.w,
+              crossAxisSpacing: 0.w,
+              childAspectRatio: 0.70,
+            ),
+            itemBuilder: (_, index) => _buildCalendarMonth(
+              index: index,
+              data: entries[index],
+            ),
+          ),
+        ),
+        const Spacer(),
+        _buildCalendarDescription(selected),
+      ],
+    );
+  }
+
+  List<DateTime> _calendarMonths() {
+    if (_isCurrentYear) {
+      final now = DateTime.now();
+      return List<DateTime>.generate(
+        12,
+        (index) => DateTime(now.year, now.month - 11 + index),
+      );
+    }
+    final year = widget.year ?? DateTime.now().year;
+    return List<DateTime>.generate(12, (index) => DateTime(year, index + 1));
+  }
+
+  DateTime? _yearMonthFromDate(String value) {
+    final parsed = DateTime.tryParse(value);
+    if (parsed != null) return DateTime(parsed.year, parsed.month);
+    final match = RegExp(r'(\d{4})[-/年](\d{1,2})').firstMatch(value);
+    final year = int.tryParse(match?.group(1) ?? '');
+    final month = int.tryParse(match?.group(2) ?? '');
+    if (year == null || month == null || month < 1 || month > 12) return null;
+    return DateTime(year, month);
+  }
+
+  String _monthKey(DateTime value) =>
+      '${value.year}-${value.month.toString().padLeft(2, '0')}';
+
+  Widget _buildCalendarMonth({
+    required int index,
+    required _CalendarMonthData data,
+  }) {
+    final selected = index == _selectedCalendarIndex;
+    final hasData = data.income > 0 || data.expense > 0;
+    final incomeWins = data.income > data.expense;
+    final background = selected
+        ? const Color(0xFF0877F9)
+        : hasData
+            ? incomeWins
+                ? const Color(0xFFE6F2FF)
+                : const Color(0xFFFFF0E7)
+            : Colors.transparent;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _selectedCalendarIndex = index),
+      child: Column(
+        children: [
+          if (_isCurrentYear)
+            SizedBox(
+              height: 18.w,
+              child: data.date.month == 1
+                  ? Padding(
+                      padding: EdgeInsets.only(top: 1.w, bottom: 5.w),
+                      child: BaseText(
+                        text: '${data.date.year}年',
+                        fontSize: 10,
+                        color: const Color(0xFF666666),
+                      ),
+                    )
+                  : null,
+            ),
+          Container(
+            width: 32.w,
+            height: 32.w,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(6.w),
+            ),
+            child: BaseText(
+              text: '${data.date.month}月',
+              fontSize: 13,
+              color: selected ? Colors.white : const Color(0xFF555555),
+            ),
+          ),
+          if (hasData) ...[
+            SizedBox(height: 2.w),
+            if (data.expense > 0)
+              BaseText(
+                text: _calendarAmount(data.expense),
+                fontSize: 10,
+                color: const Color(0xFFFF7A18),
+                maxLines: 1,
+              ),
+            if (data.income > 0)
+              BaseText(
+                text: _calendarAmount(data.income),
+                fontSize: 10,
+                color: const Color(0xFF5B9FF2),
+                maxLines: 1,
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _calendarAmount(double value) {
+    if (value == value.roundToDouble()) return value.toStringAsFixed(2);
+    return value.toStringAsFixed(2);
+  }
+
+  Widget _buildCalendarDescription(_CalendarMonthData data) => Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.w),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F7F7),
+          borderRadius: BorderRadius.circular(8.w),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BaseText(
+              text: _monthKey(data.date),
+              fontSize: 13,
+              color: const Color(0xFF666666),
+            ),
+            SizedBox(height: 8.w),
+            Row(
+              children: [
+                _calendarLegend(const Color(0xFFFF914D), '支出', data.expense),
+                SizedBox(width: 15.w),
+                _calendarLegend(const Color(0xFF5B9FF2), '收入', data.income),
+              ],
+            ),
+          ],
+        ),
+      );
+
+  Widget _calendarLegend(Color color, String label, double value) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8.w,
+            height: 8.w,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          SizedBox(width: 4.w),
+          BaseText(text: label, fontSize: 13, color: const Color(0xFF999999)),
+          SizedBox(width: 5.w),
+          BaseText(
+            text: value.toStringAsFixed(2),
+            fontSize: 13,
+            color: const Color(0xFF333333),
+          ),
+        ],
+      );
 
   Widget _buildTooltip() {
     final income = _values(widget.incomeValues)[_selectedIndex];
@@ -348,6 +611,18 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         dotData: const FlDotData(show: false),
         belowBarData: BarAreaData(show: false),
       );
+}
+
+class _CalendarMonthData {
+  const _CalendarMonthData({
+    required this.date,
+    required this.income,
+    required this.expense,
+  });
+
+  final DateTime date;
+  final double income;
+  final double expense;
 }
 
 class _SelectedDashPainter extends CustomPainter {
