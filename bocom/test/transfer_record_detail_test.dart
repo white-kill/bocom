@@ -15,7 +15,7 @@ void main() {
     recipientAccount: '6217 0016 3007 6962 353',
     recipientBank: '中国建设银行',
     transferredAt: DateTime(2026, 8, 12, 11, 43, 23),
-    sourceAccount: '交通银行 II类账户(**2910)',
+    sourceAccount: '交通银行 借记卡(**2910)',
     transferRoute: '超级网银快速汇款',
     fee: 0,
     channel: '手机银行',
@@ -56,7 +56,13 @@ void main() {
 
   testWidgets('点击转账记录进入对应详情', (tester) async {
     await tester.pumpWidget(
-      const GetMaterialApp(home: TransferRecordPage()),
+      GetMaterialApp(
+        home: TransferRecordPage(
+          records: TransferRecordPage.previewRecords,
+          today: DateTime(2026, 8, 17),
+          detailLoader: (_) async => null,
+        ),
+      ),
     );
 
     await tester.tap(find.text('沈光德(**2353)').first);
@@ -67,6 +73,47 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('2026-08-12 11:43:23'), findsOneWidget);
+  });
+
+  testWidgets('详情页按billId请求接口并保留本人卡号', (tester) async {
+    int? requestedBillId;
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: TransferRecordDetailPage(
+          data: detail.copyWith(billId: 10020),
+          detailLoader: (billId) async {
+            requestedBillId = billId;
+            return {
+              'data': {
+                'id': billId,
+                'amount': -8.88,
+                'merchantBranch': '手机银行',
+                'billDetail': {
+                  'bankName': '交通银行',
+                  'bankCard': '6222***5678',
+                  'transactionTime': '2026-08-12 12:01:02',
+                  'oppositeAccount': '6217001630076962353',
+                  'oppositeBankName': '中国建设银行',
+                  'transactionLogno': 'DETAIL20260812120102',
+                  'remark': '测试附言',
+                },
+              },
+            };
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(requestedBillId, 10020);
+    expect(find.text('-8.88'), findsOneWidget);
+    expect(find.text('2026-08-12 12:01:02'), findsOneWidget);
+    expect(find.text('交通银行 借记卡(**2910)'), findsOneWidget);
+    expect(find.text('超级网银快速汇款'), findsOneWidget);
+    expect(find.text('0.00'), findsOneWidget);
+    expect(find.text('预计实时到账'), findsOneWidget);
+    expect(find.text('DETAIL20260812120102'), findsOneWidget);
+    expect(find.text('测试附言'), findsOneWidget);
   });
 
   testWidgets('查看回执打开动态回执页', (tester) async {

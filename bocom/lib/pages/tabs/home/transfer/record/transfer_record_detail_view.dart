@@ -3,13 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/extension/string_extension.dart';
 
+import '../../../../../config/dio/network.dart';
 import '../../../../../config/model/contacts_model.dart';
+import '../../../../../config/net_config/apis.dart';
 import '../account_transfer/account_transfer_result_pages.dart';
 import '../account_transfer/home_account_transfer_view.dart';
 
 const _detailBlue = Color(0xFF2C68E1);
 const _detailMuted = Color(0xFF929DAD);
 const _detailBackground = Color(0xFFF7F7F7);
+
+typedef TransferRecordDetailLoader = Future<dynamic> Function(int billId);
 
 class TransferRecordDetailData {
   const TransferRecordDetailData({
@@ -49,33 +53,161 @@ class TransferRecordDetailData {
   final String payerName;
   final String payerAccount;
   final String payerBank;
+
+  TransferRecordDetailData copyWith({
+    double? amount,
+    String? status,
+    String? recipientName,
+    String? recipientAccount,
+    String? recipientBank,
+    DateTime? transferredAt,
+    String? sourceAccount,
+    String? transferRoute,
+    double? fee,
+    String? channel,
+    String? arrivalTime,
+    String? serialNumber,
+    String? postscript,
+    int? billId,
+    String? payerName,
+    String? payerAccount,
+    String? payerBank,
+  }) {
+    return TransferRecordDetailData(
+      amount: amount ?? this.amount,
+      status: status ?? this.status,
+      recipientName: recipientName ?? this.recipientName,
+      recipientAccount: recipientAccount ?? this.recipientAccount,
+      recipientBank: recipientBank ?? this.recipientBank,
+      transferredAt: transferredAt ?? this.transferredAt,
+      sourceAccount: sourceAccount ?? this.sourceAccount,
+      transferRoute: transferRoute ?? this.transferRoute,
+      fee: fee ?? this.fee,
+      channel: channel ?? this.channel,
+      arrivalTime: arrivalTime ?? this.arrivalTime,
+      serialNumber: serialNumber ?? this.serialNumber,
+      postscript: postscript ?? this.postscript,
+      billId: billId ?? this.billId,
+      payerName: payerName ?? this.payerName,
+      payerAccount: payerAccount ?? this.payerAccount,
+      payerBank: payerBank ?? this.payerBank,
+    );
+  }
 }
 
 // 转账记录详情页
 // 说明：当前页面参照用户提供的完整截图由 Flutter 原生绘制，两张详情卡片中的 key/value 均为动态数据。
-class TransferRecordDetailPage extends StatelessWidget {
+class TransferRecordDetailPage extends StatefulWidget {
   const TransferRecordDetailPage({
     super.key,
     required this.data,
+    this.detailLoader,
     this.onReceiptTap,
     this.onTransferAgainTap,
   });
 
   final TransferRecordDetailData data;
+  final TransferRecordDetailLoader? detailLoader;
   final VoidCallback? onReceiptTap;
   final VoidCallback? onTransferAgainTap;
 
-  String get _amountText => data.amount.toStringAsFixed(2);
+  @override
+  State<TransferRecordDetailPage> createState() =>
+      _TransferRecordDetailPageState();
+}
+
+class _TransferRecordDetailPageState extends State<TransferRecordDetailPage> {
+  late TransferRecordDetailData _data = widget.data;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    if (_data.billId <= 0 && widget.detailLoader == null) return;
+    try {
+      final response = await (widget.detailLoader?.call(_data.billId) ??
+          Http.post(
+            '${Apis.billDetail}/${_data.billId}',
+            isLoading: false,
+          ));
+      if (!mounted || response is! Map) return;
+      final root = Map<String, dynamic>.from(response);
+      final rawData = root['data'];
+      final source = rawData is Map ? Map<String, dynamic>.from(rawData) : root;
+      final rawDetail = source['billDetail'];
+      final detail = rawDetail is Map
+          ? Map<String, dynamic>.from(rawDetail)
+          : const <String, dynamic>{};
+
+      final ownBankCard = _firstText([
+        _data.payerAccount,
+        detail['bankCard'],
+        source['bankCard'],
+      ]);
+      final ownBankName = _firstText([
+        detail['bankName'],
+        source['bankName'],
+        _data.payerBank,
+      ], fallback: '交通银行');
+      final lastFour = _lastFourDigits(ownBankCard);
+      final amount = _number(source['amount']) ??
+          _number(detail['amount']) ??
+          _data.amount;
+      final transactionTime = _dateTime(
+        detail['transactionTime'] ?? source['transactionTime'] ?? source['day'],
+      );
+
+      setState(() {
+        _data = _data.copyWith(
+          amount: amount,
+          status: '转账成功',
+          recipientAccount: _data.recipientAccount.isNotEmpty
+              ? _data.recipientAccount
+              : _firstText([detail['oppositeAccount']]),
+          recipientBank: _data.recipientBank.isNotEmpty
+              ? _data.recipientBank
+              : _firstText([detail['oppositeBankName']]),
+          transferredAt: transactionTime,
+          sourceAccount: '$ownBankName 借记卡(**$lastFour)',
+          transferRoute: '超级网银快速汇款',
+          fee: 0,
+          channel: _firstText([
+            detail['merchantBranch'],
+            source['merchantBranch'],
+            detail['transactionAccount'],
+          ], fallback: _data.channel),
+          arrivalTime: '预计实时到账',
+          serialNumber: _firstText([
+            detail['transactionLogno'],
+            source['transactionLogno'],
+          ], fallback: _data.serialNumber),
+          postscript: _firstText([
+            detail['remark'],
+            source['remark'],
+          ], fallback: _data.postscript),
+          payerAccount: ownBankCard,
+          payerBank: ownBankName,
+        );
+      });
+    } catch (error, stackTrace) {
+      debugPrint('加载转账记录详情失败: $error\n$stackTrace');
+    }
+  }
+
+  String get _amountText => _data.amount.toStringAsFixed(2);
 
   String get _timeText {
-    final value = data.transferredAt;
+    final value = _data.transferredAt;
     String two(int number) => number.toString().padLeft(2, '0');
     return '${value.year}-${two(value.month)}-${two(value.day)} '
         '${two(value.hour)}:${two(value.minute)}:${two(value.second)}';
   }
 
   void _openReceipt() {
-    final callback = onReceiptTap;
+    final callback = widget.onReceiptTap;
     if (callback != null) {
       callback();
       return;
@@ -83,37 +215,37 @@ class TransferRecordDetailPage extends StatelessWidget {
     Get.to<void>(
       () => AccountTransferReceiptPage(
         data: AccountTransferResultData(
-          billId: data.billId,
-          recipientName: data.recipientName,
-          recipientAccount: data.recipientAccount,
-          recipientBank: data.recipientBank,
-          amount: data.amount.abs(),
-          payerName: data.payerName,
-          payerAccount: data.payerAccount,
-          payerBank: data.payerBank,
-          transactionTime: data.transferredAt,
-          arrivalText: data.arrivalTime,
-          purpose: data.postscript,
-          serialNumber: data.serialNumber,
+          billId: _data.billId,
+          recipientName: _data.recipientName,
+          recipientAccount: _data.recipientAccount,
+          recipientBank: _data.recipientBank,
+          amount: _data.amount.abs(),
+          payerName: _data.payerName,
+          payerAccount: _data.payerAccount,
+          payerBank: _data.payerBank,
+          transactionTime: _data.transferredAt,
+          arrivalText: _data.arrivalTime,
+          purpose: _data.postscript,
+          serialNumber: _data.serialNumber,
         ),
       ),
     );
   }
 
   void _transferAgain() {
-    final callback = onTransferAgainTap;
+    final callback = widget.onTransferAgainTap;
     if (callback != null) {
       callback();
       return;
     }
     final recipient = ContactsModel()
-      ..name = data.recipientName
-      ..bankName = data.recipientBank
-      ..bankCard = data.recipientAccount.replaceAll(' ', '');
+      ..name = _data.recipientName
+      ..bankName = _data.recipientBank
+      ..bankCard = _data.recipientAccount.replaceAll(' ', '');
     Get.to<void>(
       () => HomeAccountTransferPage(
         initialRecipient: recipient,
-        initialAmount: data.amount.abs(),
+        initialAmount: _data.amount.abs(),
       ),
     );
   }
@@ -154,11 +286,11 @@ class TransferRecordDetailPage extends StatelessWidget {
                           _TransferOverviewCard(
                             unit: unit,
                             amount: _amountText,
-                            status: data.status,
+                            status: _data.status,
                             rows: [
-                              _DetailRowData('收款人户名', data.recipientName),
-                              _DetailRowData('收款人账号', data.recipientAccount),
-                              _DetailRowData('收款人银行', data.recipientBank),
+                              _DetailRowData('收款人户名', _data.recipientName),
+                              _DetailRowData('收款人账号', _data.recipientAccount),
+                              _DetailRowData('收款人银行', _data.recipientBank),
                             ],
                           ),
                           SizedBox(height: 12 * unit),
@@ -166,18 +298,18 @@ class TransferRecordDetailPage extends StatelessWidget {
                             unit: unit,
                             rows: [
                               _DetailRowData('转账时间', _timeText),
-                              _DetailRowData('转出账号', data.sourceAccount),
-                              _DetailRowData('转账路径', data.transferRoute),
+                              _DetailRowData('转出账号', _data.sourceAccount),
+                              _DetailRowData('转账路径', _data.transferRoute),
                               _DetailRowData(
-                                  '手续费', data.fee.toStringAsFixed(2)),
-                              _DetailRowData('转账渠道', data.channel),
-                              _DetailRowData('到账时间', data.arrivalTime),
+                                  '手续费', _data.fee.toStringAsFixed(2)),
+                              _DetailRowData('转账渠道', _data.channel),
+                              _DetailRowData('到账时间', _data.arrivalTime),
                               _DetailRowData(
                                 '流水号',
-                                data.serialNumber,
+                                _data.serialNumber,
                                 copyable: true,
                               ),
-                              _DetailRowData('转账附言', data.postscript),
+                              _DetailRowData('转账附言', _data.postscript),
                             ],
                           ),
                         ],
@@ -551,4 +683,30 @@ class _BottomActionButton extends StatelessWidget {
       ),
     );
   }
+}
+
+String _firstText(Iterable<dynamic> values, {String fallback = ''}) {
+  for (final value in values) {
+    final text = value?.toString().trim() ?? '';
+    if (text.isNotEmpty) return text;
+  }
+  return fallback;
+}
+
+double? _number(dynamic value) => switch (value) {
+      num number => number.toDouble(),
+      String text => double.tryParse(text.replaceAll(',', '').trim()),
+      _ => null,
+    };
+
+DateTime? _dateTime(dynamic value) {
+  final text = value?.toString().trim() ?? '';
+  if (text.isEmpty) return null;
+  return DateTime.tryParse(text.replaceFirst(' ', 'T'));
+}
+
+String _lastFourDigits(String value) {
+  final digits = value.replaceAll(RegExp(r'\D'), '');
+  if (digits.length <= 4) return digits;
+  return digits.substring(digits.length - 4);
 }

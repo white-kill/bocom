@@ -1,9 +1,14 @@
+import 'dart:async';
+
+import 'package:bocom/config/abc_config/boc_logic.dart';
+import 'package:bocom/config/model/member_info_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'transfer_record_detail_view.dart';
+import 'transfer_record_repository.dart';
 
 enum TransferRecordRange {
   recentWeek('近7天'),
@@ -25,7 +30,9 @@ class TransferRecordItem {
     required this.amount,
     this.recipientAccount = '6217 0016 3007 6962 353',
     this.recipientBank = '中国建设银行',
-    this.sourceAccount = '交通银行 II类账户(**2910)',
+    this.bankAsset =
+        'assets/images/account_transfer/banks/bank_construction.jpg',
+    this.sourceAccount = '交通银行 借记卡(**2910)',
     this.transferRoute = '超级网银快速汇款',
     this.fee = 0,
     this.channel = '手机银行',
@@ -44,6 +51,7 @@ class TransferRecordItem {
   final double amount;
   final String recipientAccount;
   final String recipientBank;
+  final String bankAsset;
   final String sourceAccount;
   final String transferRoute;
   final double fee;
@@ -87,53 +95,64 @@ class TransferRecordPage extends StatefulWidget {
     super.key,
     this.today,
     this.records,
+    this.pageLoader,
+    this.detailLoader,
   });
 
   final DateTime? today;
   final List<TransferRecordItem>? records;
+  final TransferRecordPageLoader? pageLoader;
+  final TransferRecordDetailLoader? detailLoader;
 
-  DateTime get effectiveToday => today ?? DateTime(2026, 8, 17);
+  DateTime get effectiveToday => today ?? DateTime.now();
 
-  List<TransferRecordItem> get effectiveRecords => records ?? _previewRecords;
+  List<TransferRecordItem> get effectiveRecords => records ?? const [];
 
-  static final List<TransferRecordItem> _previewRecords = [
+  static final List<TransferRecordItem> previewRecords = [
     TransferRecordItem(
+      billId: 10020,
       name: '沈光德',
       cardSuffix: '2353',
       occurredAt: DateTime(2026, 8, 12, 11, 43, 23),
       amount: -1,
     ),
     TransferRecordItem(
+      billId: 10019,
       name: '沈光德',
       cardSuffix: '2353',
       occurredAt: DateTime(2026, 8, 12, 11, 37),
       amount: -0.77,
     ),
     TransferRecordItem(
+      billId: 10018,
       name: '沈光德',
       cardSuffix: '2353',
       occurredAt: DateTime(2026, 8, 12, 11, 29),
       amount: -1,
     ),
     TransferRecordItem(
+      billId: 10017,
       name: '沈光德',
       cardSuffix: '2353',
       occurredAt: DateTime(2026, 8, 12, 11, 29),
       amount: -1,
     ),
     TransferRecordItem(
+      billId: 10016,
       name: '沈光德',
       cardSuffix: '2353',
       occurredAt: DateTime(2026, 8, 12, 11, 21),
       amount: -1,
     ),
     TransferRecordItem(
+      billId: 10015,
       name: '沈光德',
       cardSuffix: '2353',
       occurredAt: DateTime(2026, 7, 14, 18, 5),
       amount: -1,
     ),
     TransferRecordItem(
+      billId: 10014,
       name: '沈光德',
       cardSuffix: '2353',
       occurredAt: DateTime(2026, 7, 14, 18, 4),
@@ -148,6 +167,17 @@ class TransferRecordPage extends StatefulWidget {
 class _TransferRecordPageState extends State<TransferRecordPage> {
   final _searchController = TextEditingController();
   final _scrollController = ScrollController();
+  Timer? _searchDebounce;
+
+  List<TransferRecordItem> _liveRecords = const [];
+  int _pageNum = 1;
+  int _pages = 0;
+  int _total = 0;
+  double _expensesTotal = 0;
+  bool _initialLoading = false;
+  bool _loadingMore = false;
+  bool _loadFailed = false;
+  int _requestVersion = 0;
 
   bool _showAccountPanel = false;
   bool _showRangePanel = false;
@@ -161,6 +191,33 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
   DateTime? _appliedEndDate;
 
   bool get _custom => _range == TransferRecordRange.custom;
+  bool get _usesInjectedRecords => widget.records != null;
+
+  MemberInfoBankList? get _selectedBank {
+    if (!Get.isRegistered<BocLogic>()) return null;
+    final banks = Get.find<BocLogic>().memberInfo.bankList;
+    if (banks.isEmpty) return null;
+    return banks.first;
+  }
+
+  String get _selectedBankCard {
+    final memberCard = _selectedBank?.bankCard.trim() ?? '';
+    if (memberCard.isNotEmpty) return memberCard;
+    final records = widget.records ?? _liveRecords;
+    return records.isEmpty ? '' : records.first.payerAccount;
+  }
+
+  String get _selectedBankName {
+    final name = _selectedBank?.bankName.trim() ?? '';
+    if (name.isNotEmpty) return name;
+    final records = widget.records ?? _liveRecords;
+    return records.isEmpty ? '交通银行' : records.first.payerBank;
+  }
+
+  String get _selectedCardSuffix {
+    final suffix = _lastFourDigits(_selectedBankCard);
+    return suffix.isEmpty ? '----' : suffix;
+  }
 
   String get _rangeLabel {
     if (_appliedRange == TransferRecordRange.custom &&
@@ -173,10 +230,183 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_handleScroll);
+    if (_usesInjectedRecords) {
+      final records = widget.records!;
+      _total = records.length;
+      _expensesTotal = records.fold<double>(
+        0,
+        (sum, item) => sum + (item.amount < 0 ? item.amount.abs() : 0),
+      );
+    } else {
+      _loadFirstPage();
+    }
+  }
+
+  @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _scrollController.removeListener(_handleScroll);
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _handleScroll() {
+    if (_usesInjectedRecords ||
+        _loadingMore ||
+        _initialLoading ||
+        _pageNum >= _pages ||
+        !_scrollController.hasClients) {
+      return;
+    }
+    if (_scrollController.position.extentAfter < 260) {
+      _loadPage(reset: false);
+    }
+  }
+
+  Future<void> _loadFirstPage() => _loadPage(reset: true);
+
+  Future<void> _loadPage({required bool reset}) async {
+    if (_usesInjectedRecords) {
+      if (mounted) setState(() {});
+      return;
+    }
+    if (!reset && (_loadingMore || _pageNum >= _pages)) return;
+    final targetPage = reset ? 1 : _pageNum + 1;
+    final version = reset ? ++_requestVersion : _requestVersion;
+    setState(() {
+      if (reset) {
+        _initialLoading = _liveRecords.isEmpty;
+        _loadFailed = false;
+      } else {
+        _loadingMore = true;
+      }
+    });
+    try {
+      final response = await (widget.pageLoader?.call(
+            _buildQuery(targetPage),
+          ) ??
+          loadTransferRecordPage(_buildQuery(targetPage)));
+      if (!mounted || version != _requestVersion) return;
+      final items =
+          response.records.map(_itemFromEntry).toList(growable: false);
+      setState(() {
+        _liveRecords = reset ? items : [..._liveRecords, ...items];
+        _pageNum = targetPage;
+        _pages = response.pages;
+        _total = response.total;
+        _expensesTotal = response.expensesTotal;
+        _initialLoading = false;
+        _loadingMore = false;
+        _loadFailed = false;
+      });
+      if (reset) _jumpToTop();
+    } catch (error, stackTrace) {
+      debugPrint('加载转账记录失败: $error\n$stackTrace');
+      if (!mounted || version != _requestVersion) return;
+      setState(() {
+        _initialLoading = false;
+        _loadingMore = false;
+        _loadFailed = reset && _liveRecords.isEmpty;
+      });
+    }
+  }
+
+  Map<String, dynamic> _buildQuery(int pageNum) {
+    final (begin, end) = _queryDateRange;
+    final params = <String, dynamic>{
+      'pageNum': pageNum,
+      'pageSize': 10,
+      'beginTime': _dashDate(begin),
+      'endTime': _dashDate(end),
+    };
+    final bankCard = _selectedBankCard.trim();
+    final keyword = _searchController.text.trim();
+    if (bankCard.isNotEmpty) params['bankCard'] = bankCard;
+    if (keyword.isNotEmpty) params['keyword'] = keyword;
+    return params;
+  }
+
+  (DateTime, DateTime) get _queryDateRange {
+    final end = DateTime(
+      widget.effectiveToday.year,
+      widget.effectiveToday.month,
+      widget.effectiveToday.day,
+    );
+    if (_appliedRange == TransferRecordRange.custom &&
+        _appliedStartDate != null &&
+        _appliedEndDate != null) {
+      return (_appliedStartDate!, _appliedEndDate!);
+    }
+    final days = switch (_appliedRange) {
+      TransferRecordRange.recentWeek => 6,
+      TransferRecordRange.recentMonth => 30,
+      TransferRecordRange.recentThreeMonths => 92,
+      TransferRecordRange.recentHalfYear => 183,
+      TransferRecordRange.custom => 30,
+    };
+    return (end.subtract(Duration(days: days)), end);
+  }
+
+  TransferRecordItem _itemFromEntry(TransferRecordEntry entry) {
+    final memberBank = _memberBankFor(entry.bankCard);
+    final payerAccount = entry.bankCard.isNotEmpty
+        ? entry.bankCard
+        : (memberBank?.bankCard ?? _selectedBankCard);
+    final payerBank = memberBank?.bankName.trim().isNotEmpty == true
+        ? memberBank!.bankName.trim()
+        : _selectedBankName;
+    final member =
+        Get.isRegistered<BocLogic>() ? Get.find<BocLogic>().memberInfo : null;
+    final payerName = memberBank?.realName.trim().isNotEmpty == true
+        ? memberBank!.realName.trim()
+        : (member?.realName.trim() ?? '');
+    final recipientSuffix = _lastFourDigits(entry.oppositeAccount);
+    return TransferRecordItem(
+      billId: entry.id,
+      name: entry.oppositeName,
+      cardSuffix: recipientSuffix,
+      occurredAt: entry.transactionTime,
+      amount: entry.amount,
+      recipientAccount: _formatAccount(entry.oppositeAccount),
+      recipientBank: entry.oppositeBankName,
+      bankAsset: _bankAssetFor(entry.oppositeBankName),
+      sourceAccount: '$payerBank 借记卡(**${_lastFourDigits(payerAccount)})',
+      transferRoute: '超级网银快速汇款',
+      fee: 0,
+      channel: '手机银行',
+      arrivalTime: '预计实时到账',
+      serialNumber: '',
+      postscript: '',
+      payerName: payerName,
+      payerAccount: payerAccount,
+      payerBank: payerBank,
+    );
+  }
+
+  MemberInfoBankList? _memberBankFor(String bankCard) {
+    if (!Get.isRegistered<BocLogic>()) return null;
+    final banks = Get.find<BocLogic>().memberInfo.bankList;
+    if (banks.isEmpty) return null;
+    final digits = _digitsOnly(bankCard);
+    for (final bank in banks) {
+      if (_digitsOnly(bank.bankCard) == digits && digits.isNotEmpty) {
+        return bank;
+      }
+    }
+    return banks.first;
+  }
+
+  void _onSearchChanged(String _) {
+    if (_usesInjectedRecords) {
+      setState(() {});
+      return;
+    }
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), _loadFirstPage);
   }
 
   void _toggleAccountPanel() {
@@ -192,6 +422,7 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
       _accountApplied = true;
       _showAccountPanel = false;
     });
+    _loadFirstPage();
   }
 
   void _toggleRangePanel() {
@@ -225,7 +456,7 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
       _appliedEndDate = null;
       _showRangePanel = false;
     });
-    _jumpToTop();
+    _loadFirstPage();
   }
 
   Future<void> _pickCustomDate(bool editingStart) async {
@@ -262,7 +493,7 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
       _appliedEndDate = _endDate;
       _showRangePanel = false;
     });
-    _jumpToTop();
+    _loadFirstPage();
   }
 
   Future<void> _showInvalidRangeDialog() {
@@ -284,12 +515,19 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
   }
 
   void _openRecord(TransferRecordItem record) {
-    Get.to<void>(() => TransferRecordDetailPage(data: record.toDetailData()));
+    Get.to<void>(
+      () => TransferRecordDetailPage(
+        data: record.toDetailData(),
+        detailLoader: widget.detailLoader,
+      ),
+    );
   }
 
   List<TransferRecordItem> get _filteredRecords {
+    final source = widget.records ?? _liveRecords;
+    if (!_usesInjectedRecords) return source;
     final query = _searchController.text.trim();
-    return widget.effectiveRecords.where((record) {
+    return source.where((record) {
       if (query.isNotEmpty &&
           !record.name.contains(query) &&
           !record.cardSuffix.contains(query)) {
@@ -328,6 +566,13 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
   @override
   Widget build(BuildContext context) {
     final records = _filteredRecords;
+    final summaryCount = _usesInjectedRecords ? records.length : _total;
+    final summaryAmount = _usesInjectedRecords
+        ? records.fold<double>(
+            0,
+            (sum, item) => sum + (item.amount < 0 ? item.amount.abs() : 0),
+          )
+        : _expensesTotal;
     final customPanel = _showRangePanel && _custom;
     final media = MediaQuery.of(context);
 
@@ -362,21 +607,32 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
                         rangeHighlighted: _showRangePanel || _rangeApplied,
                         rangeExpanded: _showRangePanel,
                         accountExpanded: _showAccountPanel,
+                        accountLabel: '借记卡(**$_selectedCardSuffix)',
                         rangeLabel: _rangeLabel,
                         onAccountTap: _toggleAccountPanel,
                         onRangeTap: _toggleRangePanel,
-                        onSearchChanged: (_) => setState(() {}),
+                        onSearchChanged: _onSearchChanged,
                       ),
                       Expanded(
-                        child: records.isEmpty
-                            ? _TransferEmptyState(unit: unit)
-                            : _TransferRecordList(
-                                unit: unit,
-                                records: records,
-                                controller: _scrollController,
-                                showSummary: true,
-                                onRecordTap: _openRecord,
-                              ),
+                        child: _initialLoading
+                            ? _TransferLoadingState(unit: unit)
+                            : _loadFailed
+                                ? _TransferLoadFailedState(
+                                    unit: unit,
+                                    onRetry: _loadFirstPage,
+                                  )
+                                : records.isEmpty
+                                    ? _TransferEmptyState(unit: unit)
+                                    : _TransferRecordList(
+                                        unit: unit,
+                                        records: records,
+                                        controller: _scrollController,
+                                        showSummary: true,
+                                        summaryCount: summaryCount,
+                                        summaryAmount: summaryAmount,
+                                        loadingMore: _loadingMore,
+                                        onRecordTap: _openRecord,
+                                      ),
                       ),
                     ],
                   ),
@@ -408,6 +664,8 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
                   height: 61 * unit,
                   child: _AccountPanel(
                     unit: unit,
+                    bankName: _selectedBankName,
+                    cardSuffix: _selectedCardSuffix,
                     onSelected: _selectAccount,
                   ),
                 ),
@@ -443,6 +701,7 @@ class _TransferRecordHeader extends StatelessWidget {
     required this.rangeHighlighted,
     required this.rangeExpanded,
     required this.accountExpanded,
+    required this.accountLabel,
     required this.rangeLabel,
     required this.onAccountTap,
     required this.onRangeTap,
@@ -455,6 +714,7 @@ class _TransferRecordHeader extends StatelessWidget {
   final bool rangeHighlighted;
   final bool rangeExpanded;
   final bool accountExpanded;
+  final String accountLabel;
   final String rangeLabel;
   final VoidCallback onAccountTap;
   final VoidCallback onRangeTap;
@@ -602,7 +862,7 @@ class _TransferRecordHeader extends StatelessWidget {
                     width: 174 * scale,
                     child: _HeaderFilterButton(
                       semanticLabel: '选择付款账户',
-                      text: 'II类账户(**2910)',
+                      text: accountLabel,
                       highlighted: accountHighlighted,
                       expanded: accountExpanded,
                       onTap: onAccountTap,
@@ -698,9 +958,16 @@ class _HeaderFilterButton extends StatelessWidget {
 }
 
 class _AccountPanel extends StatelessWidget {
-  const _AccountPanel({required this.unit, required this.onSelected});
+  const _AccountPanel({
+    required this.unit,
+    required this.bankName,
+    required this.cardSuffix,
+    required this.onSelected,
+  });
 
   final double unit;
+  final String bankName;
+  final String cardSuffix;
   final VoidCallback onSelected;
 
   @override
@@ -709,7 +976,7 @@ class _AccountPanel extends StatelessWidget {
       color: Colors.white,
       child: Semantics(
         button: true,
-        label: '交通银行II类账户2910，已选中',
+        label: '$bankName借记卡$cardSuffix，已选中',
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: onSelected,
@@ -728,7 +995,7 @@ class _AccountPanel extends StatelessWidget {
               Transform.translate(
                 offset: Offset(0, -7.5 * unit),
                 child: Text(
-                  '交通银行 II类账户(**2910)',
+                  '$bankName 借记卡(**$cardSuffix)',
                   style: TextStyle(
                     color: _blue,
                     fontSize: 15 * unit,
@@ -962,6 +1229,9 @@ class _TransferRecordList extends StatelessWidget {
     required this.records,
     required this.controller,
     required this.showSummary,
+    required this.summaryCount,
+    required this.summaryAmount,
+    required this.loadingMore,
     required this.onRecordTap,
   });
 
@@ -969,6 +1239,9 @@ class _TransferRecordList extends StatelessWidget {
   final List<TransferRecordItem> records;
   final ScrollController controller;
   final bool showSummary;
+  final int summaryCount;
+  final double summaryAmount;
+  final bool loadingMore;
   final ValueChanged<TransferRecordItem> onRecordTap;
 
   @override
@@ -979,8 +1252,6 @@ class _TransferRecordList extends StatelessWidget {
           '${record.occurredAt.year}-${record.occurredAt.month.toString().padLeft(2, '0')}';
       sections.putIfAbsent(key, () => []).add(record);
     }
-    final total =
-        records.fold<double>(0, (sum, item) => sum + item.amount.abs());
     return ColoredBox(
       color: _pageGray,
       child: ListView(
@@ -997,7 +1268,7 @@ class _TransferRecordList extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    '成功  ${records.length} 笔',
+                    '成功  $summaryCount 笔',
                     style: TextStyle(
                       color: const Color(0xFF333333),
                       fontSize: 15.5 * unit,
@@ -1005,7 +1276,7 @@ class _TransferRecordList extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '共  ${total.toStringAsFixed(2)} 元',
+                    '共  ${summaryAmount.toStringAsFixed(2)} 元',
                     style: TextStyle(
                       color: const Color(0xFF333333),
                       fontSize: 15.5 * unit,
@@ -1056,6 +1327,17 @@ class _TransferRecordList extends StatelessWidget {
               ),
             ),
           ],
+          if (loadingMore)
+            SizedBox(
+              height: 42 * unit,
+              child: Center(
+                child: SizedBox(
+                  width: 18 * unit,
+                  height: 18 * unit,
+                  child: const CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
           _WarmTips(unit: unit),
         ],
       ),
@@ -1091,7 +1373,7 @@ class _TransferRecordRow extends StatelessWidget {
             children: [
               SizedBox(width: 15 * unit),
               Image.asset(
-                'assets/images/account_transfer/banks/bank_construction.jpg',
+                record.bankAsset,
                 width: 23 * unit,
                 height: 23 * unit,
               ),
@@ -1242,6 +1524,65 @@ class _TransferEmptyState extends StatelessWidget {
           SizedBox(height: 32 * unit),
           _WarmTips(unit: unit),
         ],
+      ),
+    );
+  }
+}
+
+class _TransferLoadingState extends StatelessWidget {
+  const _TransferLoadingState({required this.unit});
+
+  final double unit;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      key: const ValueKey('transfer_record_loading'),
+      color: _pageGray,
+      child: Center(
+        child: SizedBox(
+          width: 24 * unit,
+          height: 24 * unit,
+          child: const CircularProgressIndicator(strokeWidth: 2.4),
+        ),
+      ),
+    );
+  }
+}
+
+class _TransferLoadFailedState extends StatelessWidget {
+  const _TransferLoadFailedState({
+    required this.unit,
+    required this.onRetry,
+  });
+
+  final double unit;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      key: const ValueKey('transfer_record_load_failed'),
+      color: _pageGray,
+      child: Center(
+        child: Semantics(
+          button: true,
+          label: '重新加载转账记录',
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onRetry,
+            child: Padding(
+              padding: EdgeInsets.all(24 * unit),
+              child: Text(
+                '加载失败，点击重试',
+                style: TextStyle(
+                  color: _muted,
+                  fontSize: 14 * unit,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1561,3 +1902,48 @@ String _dashDate(DateTime date) =>
 
 String _slashDate(DateTime date) =>
     '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
+
+String _digitsOnly(String value) => value.replaceAll(RegExp(r'\D'), '');
+
+String _lastFourDigits(String value) {
+  final digits = _digitsOnly(value);
+  if (digits.length <= 4) return digits;
+  return digits.substring(digits.length - 4);
+}
+
+String _formatAccount(String value) {
+  final digits = _digitsOnly(value);
+  if (digits.length <= 11 ||
+      digits.length != value.replaceAll(' ', '').length) {
+    return value;
+  }
+  final groups = <String>[];
+  for (var index = 0; index < digits.length; index += 4) {
+    final end = index + 4 < digits.length ? index + 4 : digits.length;
+    groups.add(digits.substring(index, end));
+  }
+  return groups.join(' ');
+}
+
+String _bankAssetFor(String bankName) {
+  const root = 'assets/images/account_transfer/banks';
+  if (bankName.contains('工商')) return '$root/bank_icbc.jpg';
+  if (bankName.contains('农业')) return '$root/bank_agricultural.jpg';
+  if (bankName.contains('建设')) return '$root/bank_construction.jpg';
+  if (bankName.contains('交通')) return '$root/bank_communications.jpg';
+  if (bankName.contains('招商')) return '$root/bank_merchants.jpg';
+  if (bankName.contains('中信')) return '$root/bank_citic.jpg';
+  if (bankName.contains('邮政') || bankName.contains('邮储')) {
+    return '$root/bank_postal.jpg';
+  }
+  if (bankName.contains('浦发')) return '$root/bank_spdb.jpg';
+  if (bankName.contains('华夏')) return '$root/bank_huaxia.jpg';
+  if (bankName.contains('民生')) return '$root/bank_minsheng.jpg';
+  if (bankName.contains('平安')) return '$root/bank_pingan.jpg';
+  if (bankName.contains('兴业')) return '$root/bank_industrial.jpg';
+  if (bankName.contains('光大')) return '$root/bank_everbright.jpg';
+  if (bankName == '中国银行' || bankName.contains('中国银行')) {
+    return '$root/bank_china.jpg';
+  }
+  return '$root/bank_construction.jpg';
+}

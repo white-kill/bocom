@@ -12,7 +12,12 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
     await tester.pumpWidget(
-      const GetMaterialApp(home: TransferRecordPage()),
+      GetMaterialApp(
+        home: TransferRecordPage(
+          records: TransferRecordPage.previewRecords,
+          today: DateTime(2026, 8, 17),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -30,11 +35,11 @@ void main() {
   testWidgets('账户与时间面板互斥且保留选中态', (tester) async {
     await pumpPage(tester);
 
-    await tester.tap(find.text('II类账户(**2910)'));
+    await tester.tap(find.text('借记卡(**2910)'));
     await tester.pumpAndSettle();
-    expect(find.text('交通银行 II类账户(**2910)'), findsOneWidget);
+    expect(find.text('交通银行 借记卡(**2910)'), findsOneWidget);
     final accountTextCenter = tester.getCenter(
-      find.text('交通银行 II类账户(**2910)'),
+      find.text('交通银行 借记卡(**2910)'),
     );
     final accountCheckCenter = tester.getCenter(
       find.byKey(const ValueKey('transfer_record_account_check')),
@@ -45,7 +50,7 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('交通银行 II类账户(**2910)'));
+    await tester.tap(find.text('交通银行 借记卡(**2910)'));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey('transfer_record_range_button')),
@@ -55,7 +60,7 @@ void main() {
     for (final label in ['近7天', '近一个月', '近三个月', '近半年', '自定义']) {
       expect(find.text(label), findsWidgets);
     }
-    expect(find.text('交通银行 II类账户(**2910)'), findsNothing);
+    expect(find.text('交通银行 借记卡(**2910)'), findsNothing);
   });
 
   testWidgets('自定义当天范围应用后进入空状态', (tester) async {
