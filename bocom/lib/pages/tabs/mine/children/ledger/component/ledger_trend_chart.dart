@@ -14,6 +14,7 @@ class LedgerTrendChart extends StatefulWidget {
     this.title = '近一月收支',
     this.isYearMode = false,
     this.year,
+    this.month,
   });
 
   final List<double> incomeValues;
@@ -22,6 +23,7 @@ class LedgerTrendChart extends StatefulWidget {
   final String title;
   final bool isYearMode;
   final int? year;
+  final int? month;
 
   @override
   State<LedgerTrendChart> createState() => _LedgerTrendChartState();
@@ -33,6 +35,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
   late int _selectedIndex;
   bool _showCalendar = false;
   int _selectedCalendarIndex = 11;
+  DateTime? _selectedCalendarDate;
 
   bool get _isCurrentYear =>
       widget.isYearMode && widget.year == DateTime.now().year;
@@ -60,7 +63,9 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
       _selectedIndex = _pointCount - 1;
     }
     if (oldWidget.year != widget.year) _selectedCalendarIndex = 11;
-    if (!widget.isYearMode) _showCalendar = false;
+    if (oldWidget.year != widget.year || oldWidget.month != widget.month) {
+      _selectedCalendarDate = null;
+    }
   }
 
   List<double> _values(List<double> source) {
@@ -86,7 +91,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         children: [
           Row(
             children: [
-              if (!_showCalendar || _isCurrentYear)
+              if (!_showCalendar || !widget.isYearMode || _isCurrentYear)
                 BaseText(text: widget.title, fontSize: 13, color: const Color(0xFF333333)),
               const Spacer(),
               _buildSwitch(),
@@ -95,11 +100,15 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
           SizedBox(height: 20.w),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 220),
-            child: _showCalendar && widget.isYearMode
+            child: _showCalendar
                 ? SizedBox(
-                    key: const ValueKey('year-calendar'),
-                    height: _isCurrentYear ? 240.w : 240.w,
-                    child: _buildYearCalendar(),
+                    key: ValueKey(
+                      widget.isYearMode ? 'year-calendar' : 'month-calendar',
+                    ),
+                    height: widget.isYearMode ? 240.w : _monthCalendarHeight(),
+                    child: widget.isYearMode
+                        ? _buildYearCalendar()
+                        : _buildMonthCalendar(),
                   )
                 : SizedBox(
                     key: const ValueKey('trend-chart'),
@@ -269,9 +278,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: widget.isYearMode
-                  ? () => setState(() => _showCalendar = true)
-                  : null,
+              onTap: () => setState(() => _showCalendar = true),
               child: Container(
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
@@ -292,6 +299,229 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
       ),
     );
   }
+
+  bool get _isCurrentMonth {
+    final now = DateTime.now();
+    return !widget.isYearMode &&
+        widget.year == now.year &&
+        widget.month == now.month;
+  }
+
+  List<DateTime> _monthCalendarDates() {
+    final now = DateTime.now();
+    if (_isCurrentMonth) {
+      final previousMonth = DateTime(now.year, now.month - 1);
+      final maxPreviousDay =
+          DateTime(previousMonth.year, previousMonth.month + 1, 0).day;
+      final start = DateTime(
+        previousMonth.year,
+        previousMonth.month,
+        math.min(now.day, maxPreviousDay),
+      );
+      final count = now.difference(start).inDays + 1;
+      return List<DateTime>.generate(
+        count,
+        (index) => start.add(Duration(days: index)),
+      );
+    }
+    final year = widget.year ?? now.year;
+    final month = widget.month ?? now.month;
+    final dayCount = DateTime(year, month + 1, 0).day;
+    return List<DateTime>.generate(
+      dayCount,
+      (index) => DateTime(year, month, index + 1),
+    );
+  }
+
+  int _monthCalendarRowCount() {
+    final dates = _monthCalendarDates();
+    final leading = dates.first.weekday % 7;
+    return ((leading + dates.length) / 7).ceil();
+  }
+
+  double _monthCalendarHeight() =>
+      (28 + _monthCalendarRowCount() * 60 + 70).w;
+
+  Widget _buildMonthCalendar() {
+    final dates = _monthCalendarDates();
+    final valuesByDay = <String, _CalendarDayData>{};
+    final dataCount = math.min(
+      dates.length,
+      math.max(
+        widget.dateValues.length,
+        math.max(widget.incomeValues.length, widget.expenseValues.length),
+      ),
+    );
+    for (var index = 0; index < dataCount; index++) {
+      final rawDate = index < widget.dateValues.length ? widget.dateValues[index] : '';
+      final date = _dateFromValue(rawDate) ?? dates[index];
+      valuesByDay[_dayKey(date)] = _CalendarDayData(
+        date: date,
+        income: index < widget.incomeValues.length ? widget.incomeValues[index] : 0,
+        expense: index < widget.expenseValues.length ? widget.expenseValues[index] : 0,
+      );
+    }
+    final entries = dates
+        .map(
+          (date) => valuesByDay[_dayKey(date)] ??
+              _CalendarDayData(date: date, income: 0, expense: 0),
+        )
+        .toList();
+    final selectedDate = _selectedCalendarDate ?? entries.last.date;
+    final selected = entries.firstWhere(
+      (entry) => DateUtils.isSameDay(entry.date, selectedDate),
+      orElse: () => entries.last,
+    );
+    final leading = dates.first.weekday % 7;
+    final slots = <_CalendarDayData?>[
+      ...List<_CalendarDayData?>.filled(leading, null),
+      ...entries,
+    ];
+
+    return Column(
+      children: [
+        Row(
+          children: const ['日', '一', '二', '三', '四', '五', '六']
+              .map(
+                (text) => Expanded(
+                  child: Center(
+                    child: BaseText(
+                      text: text,
+                      fontSize: 13,
+                      color: const Color(0xFF999999),
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+        SizedBox(height: 8.w),
+        SizedBox(
+          height: (_monthCalendarRowCount() * 60).w,
+          child: GridView.builder(
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: slots.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisExtent: 60.w,
+              crossAxisSpacing: 0,
+              mainAxisSpacing: 0,
+            ),
+            itemBuilder: (_, index) {
+              final entry = slots[index];
+              return entry == null
+                  ? const SizedBox.shrink()
+                  : _buildCalendarDay(entry);
+            },
+          ),
+        ),
+        const Spacer(),
+        _buildDayDescription(selected),
+      ],
+    );
+  }
+
+  DateTime? _dateFromValue(String value) {
+    final parsed = DateTime.tryParse(value);
+    if (parsed != null) return DateTime(parsed.year, parsed.month, parsed.day);
+    final match = RegExp(r'(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})')
+        .firstMatch(value);
+    final year = int.tryParse(match?.group(1) ?? '');
+    final month = int.tryParse(match?.group(2) ?? '');
+    final day = int.tryParse(match?.group(3) ?? '');
+    if (year == null || month == null || day == null) return null;
+    return DateTime(year, month, day);
+  }
+
+  String _dayKey(DateTime value) =>
+      '${_monthKey(value)}-${value.day.toString().padLeft(2, '0')}';
+
+  Widget _buildCalendarDay(_CalendarDayData data) {
+    final selected = DateUtils.isSameDay(
+      data.date,
+      _selectedCalendarDate ?? _monthCalendarDates().last,
+    );
+    final hasData = data.income > 0 || data.expense > 0;
+    final background = selected
+        ? const Color(0xFF0877F9)
+        : hasData
+            ? data.income > data.expense
+                ? const Color(0xFFE6F2FF)
+                : const Color(0xFFFFF0E7)
+            : Colors.transparent;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _selectedCalendarDate = data.date),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 12.w,
+            child: data.date.day == 1
+                ? BaseText(
+                    text: '${data.date.month}月',
+                    fontSize: 9,
+                    color: const Color(0xFF444444),
+                  )
+                : null,
+          ),
+          Container(
+            width: 30.w,
+            height: 30.w,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(6.w),
+            ),
+            child: BaseText(
+              text: '${data.date.day}',
+              fontSize: 13,
+              color: selected ? Colors.white : const Color(0xFF555555),
+            ),
+          ),
+          if (hasData)
+            BaseText(
+              text: _calendarAmount(
+                data.expense > data.income ? data.expense : data.income,
+              ),
+              fontSize: 9,
+              color: data.expense > data.income
+                  ? const Color(0xFFFF7A18)
+                  : const Color(0xFF5B9FF2),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDayDescription(_CalendarDayData data) => Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.w),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F7F7),
+          borderRadius: BorderRadius.circular(8.w),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BaseText(
+              text: _dayKey(data.date),
+              fontSize: 13,
+              color: const Color(0xFF666666),
+            ),
+            SizedBox(height: 8.w),
+            Row(
+              children: [
+                _calendarLegend(const Color(0xFFFF914D), '支出', data.expense),
+                SizedBox(width: 15.w),
+                _calendarLegend(const Color(0xFF5B9FF2), '收入', data.income),
+              ],
+            ),
+          ],
+        ),
+      );
 
   Widget _buildYearCalendar() {
     final months = _calendarMonths();
@@ -615,6 +845,18 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
 
 class _CalendarMonthData {
   const _CalendarMonthData({
+    required this.date,
+    required this.income,
+    required this.expense,
+  });
+
+  final DateTime date;
+  final double income;
+  final double expense;
+}
+
+class _CalendarDayData {
+  const _CalendarDayData({
     required this.date,
     required this.income,
     required this.expense,
