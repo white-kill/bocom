@@ -495,14 +495,13 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
         final digits = bank.bankCard.replaceAll(RegExp(r'\D'), '');
         final suffix =
             digits.length > 4 ? digits.substring(digits.length - 4) : digits;
-        final cardType = bank.cardType.isEmpty ? 'II类账户' : bank.cardType;
         return _PayerCard(
           bankName: bank.bankName,
-          title: '${bank.bankName} $cardType(**$suffix)',
+          title: '${bank.bankName} 借记卡(**$suffix)',
           balance: '可用余额 ${bank.accountBalance.bankBalance}元',
           onTap: () => _showPayerAccountSheet(
             bankName: bank.bankName,
-            title: '${bank.bankName} $cardType (**$suffix)',
+            title: '${bank.bankName} 借记卡 (**$suffix)',
             balance: '可用余额${bank.accountBalance.bankBalance}元',
           ),
         );

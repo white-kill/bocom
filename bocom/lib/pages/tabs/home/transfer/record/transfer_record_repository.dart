@@ -53,6 +53,7 @@ class TransferRecordEntry {
     required this.oppositeName,
     required this.oppositeAccount,
     required this.oppositeBankName,
+    this.icon = '',
     required this.excerpt,
     required this.transactionDescription,
     required this.type,
@@ -66,6 +67,7 @@ class TransferRecordEntry {
   final String oppositeName;
   final String oppositeAccount;
   final String oppositeBankName;
+  final String icon;
   final String excerpt;
   final String transactionDescription;
   final int type;
@@ -86,6 +88,7 @@ class TransferRecordEntry {
       oppositeName: _text(json['oppositeName']),
       oppositeAccount: _text(json['oppositeAccount']),
       oppositeBankName: _text(json['oppositeBankName']),
+      icon: _text(json['icon']),
       excerpt: _text(json['excerpt']),
       transactionDescription: _text(json['transactionDescription']),
       type: type,

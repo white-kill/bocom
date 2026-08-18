@@ -53,6 +53,7 @@ void main() {
             'oppositeName': '沈光德',
             'oppositeAccount': '6217001630076962353',
             'oppositeBankName': '中国建设银行',
+            'icon': 'http://img.chinajianse.com/bank/icon/CCB.png',
             'excerpt': '跨行汇款',
             'transactionDescription': '转账汇款',
             'type': 2,
@@ -71,6 +72,10 @@ void main() {
     expect(page.expensesTotal, 1);
     expect(page.records.single.id, 10020);
     expect(page.records.single.amount, -1);
+    expect(
+      page.records.single.icon,
+      'http://img.chinajianse.com/bank/icon/CCB.png',
+    );
     expect(
         page.records.single.transactionTime, DateTime(2026, 8, 12, 11, 43, 23));
   });

@@ -30,6 +30,7 @@ class TransferRecordItem {
     required this.amount,
     this.recipientAccount = '6217 0016 3007 6962 353',
     this.recipientBank = '中国建设银行',
+    this.iconUrl = '',
     this.bankAsset =
         'assets/images/account_transfer/banks/bank_construction.jpg',
     this.sourceAccount = '交通银行 借记卡(**2910)',
@@ -51,6 +52,7 @@ class TransferRecordItem {
   final double amount;
   final String recipientAccount;
   final String recipientBank;
+  final String iconUrl;
   final String bankAsset;
   final String sourceAccount;
   final String transferRoute;
@@ -373,6 +375,7 @@ class _TransferRecordPageState extends State<TransferRecordPage> {
       amount: entry.amount,
       recipientAccount: _formatAccount(entry.oppositeAccount),
       recipientBank: entry.oppositeBankName,
+      iconUrl: entry.icon,
       bankAsset: _bankAssetFor(entry.oppositeBankName),
       sourceAccount: '$payerBank 借记卡(**${_lastFourDigits(payerAccount)})',
       transferRoute: '超级网银快速汇款',
@@ -1372,10 +1375,11 @@ class _TransferRecordRow extends StatelessWidget {
           child: Row(
             children: [
               SizedBox(width: 15 * unit),
-              Image.asset(
-                record.bankAsset,
-                width: 23 * unit,
-                height: 23 * unit,
+              _TransferBankIcon(
+                key: ValueKey('transfer_record_bank_icon_${record.billId}'),
+                iconUrl: record.iconUrl,
+                fallbackAsset: record.bankAsset,
+                size: 23 * unit,
               ),
               SizedBox(width: 9 * unit),
               Expanded(
@@ -1439,6 +1443,37 @@ class _TransferRecordRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TransferBankIcon extends StatelessWidget {
+  const _TransferBankIcon({
+    required this.iconUrl,
+    required this.fallbackAsset,
+    required this.size,
+    super.key,
+  });
+
+  final String iconUrl;
+  final String fallbackAsset;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget fallback() => Image.asset(
+          fallbackAsset,
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+        );
+    if (iconUrl.isEmpty) return fallback();
+    return Image.network(
+      iconUrl,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => fallback(),
     );
   }
 }

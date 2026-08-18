@@ -336,11 +336,15 @@ void main() {
       const GetMaterialApp(home: HomeAccountTransferPage()),
     );
 
+    expect(find.text('交通银行 借记卡(**2353)'), findsOneWidget);
+    expect(find.textContaining('II类账户'), findsNothing);
+
     await tester.tap(find.byKey(const Key('payer-account-card')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('payer-account-sheet')), findsOneWidget);
     expect(find.text('选择付款账户'), findsOneWidget);
     expect(find.text('添加付款账户'), findsOneWidget);
+    expect(find.text('交通银行 借记卡 (**2353)'), findsOneWidget);
     final payerOption = find.byKey(const Key('payer-account-option'));
     final viewportWidth = MediaQuery.sizeOf(tester.element(payerOption)).width;
     expect(
