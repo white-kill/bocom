@@ -128,7 +128,7 @@ class _ScalePointWidgetState extends State<ScalePointWidget> {
                             left: 2.w,
                             right: 8.w,
                           ),
-                          BaseText(
+                          const BaseText(
                             text: '扫一扫',
                             color: Colors.black,
                           ),
@@ -136,6 +136,7 @@ class _ScalePointWidgetState extends State<ScalePointWidget> {
                       ).withContainer(
                         onTap: () {
                           SmartDialog.dismiss();
+                          Get.toNamed(Routes.scan);
                         },
                         height: 39.w,
                         alignment: Alignment.centerLeft,
@@ -143,7 +144,7 @@ class _ScalePointWidgetState extends State<ScalePointWidget> {
                       Container(
                         width: 110.w,
                         height: 0.5.w,
-                        color: Color(0xffdedede),
+                        color: const Color(0xffdedede),
                       ),
                       Row(
                         children: [
@@ -155,7 +156,7 @@ class _ScalePointWidgetState extends State<ScalePointWidget> {
                             left: 2.w,
                             right: 8.w,
                           ),
-                          BaseText(
+                          const BaseText(
                             text: '收款',
                             color: Colors.black,
                           ),
@@ -170,7 +171,7 @@ class _ScalePointWidgetState extends State<ScalePointWidget> {
                       Container(
                         width: 110.w,
                         height: 0.5.w,
-                        color: Color(0xffdedede),
+                        color: const Color(0xffdedede),
                       ),
                       Row(
                         children: [
@@ -182,7 +183,7 @@ class _ScalePointWidgetState extends State<ScalePointWidget> {
                             left: 2.w,
                             right: 8.w,
                           ),
-                          BaseText(
+                          const BaseText(
                             text: '付款',
                             color: Colors.black,
                           ),
@@ -197,7 +198,7 @@ class _ScalePointWidgetState extends State<ScalePointWidget> {
                       Container(
                         width: 110.w,
                         height: 0.5.w,
-                        color: Color(0xffdedede),
+                        color: const Color(0xffdedede),
                       ),
                       Row(
                         children: [
@@ -209,7 +210,7 @@ class _ScalePointWidgetState extends State<ScalePointWidget> {
                             left: 2.w,
                             right: 8.w,
                           ),
-                          BaseText(
+                          const BaseText(
                             text: '版本切换',
                             color: Colors.black,
                           ),
@@ -219,7 +220,6 @@ class _ScalePointWidgetState extends State<ScalePointWidget> {
                     ],
                   ).withPadding(left: 10.w).withOnTap(onTap: () {
                     SmartDialog.dismiss();
-
                   }),
             ),
           ]),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+
+import '../../../../../routes/app_pages.dart';
 
 // 交易明细未来日期错误面板
 // 说明：自定义日期允许先滚动选择，确认时若晚于今日则使用该面板反馈，与原页面交互顺序保持一致。
@@ -86,30 +89,41 @@ class TransactionFutureDateDialog extends StatelessWidget {
                         color: const Color(0xFFFAFAFA),
                         borderRadius: BorderRadius.circular(8.w),
                       ),
-                      child: Row(
-                        children: [
-                          Text(
-                            'NAC00029F⌄',
-                            style: TextStyle(
-                              color: const Color(0xFFC7CBD2),
-                              fontSize: 13.sp,
-                            ),
+                      child: Semantics(
+                        button: true,
+                        label: '在线客服',
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            Get.toNamed(Routes.customerService);
+                          },
+                          child: Row(
+                            children: [
+                              Text(
+                                'NAC00029F⌄',
+                                style: TextStyle(
+                                  color: const Color(0xFFC7CBD2),
+                                  fontSize: 13.sp,
+                                ),
+                              ),
+                              const Spacer(),
+                              Image.asset(
+                                'assets/images/transaction_detail/future_date_service.png',
+                                width: 22.w,
+                                height: 22.w,
+                              ),
+                              SizedBox(width: 7.w),
+                              Text(
+                                '在线客服',
+                                style: TextStyle(
+                                  color: const Color(0xFF0077DF),
+                                  fontSize: 13.sp,
+                                ),
+                              ),
+                            ],
                           ),
-                          const Spacer(),
-                          Image.asset(
-                            'assets/images/transaction_detail/future_date_service.png',
-                            width: 22.w,
-                            height: 22.w,
-                          ),
-                          SizedBox(width: 7.w),
-                          Text(
-                            '在线客服',
-                            style: TextStyle(
-                              color: const Color(0xFF0077DF),
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ],

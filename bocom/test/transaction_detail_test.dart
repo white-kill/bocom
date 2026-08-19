@@ -1,3 +1,5 @@
+import 'package:bocom/config/abc_config/boc_logic.dart';
+import 'package:bocom/config/model/member_info_model.dart';
 import 'package:bocom/pages/tabs/home/transaction_detail/transaction_detail_mock_data.dart';
 import 'package:bocom/pages/tabs/home/transaction_detail/transaction_detail_view.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +56,12 @@ void main() {
     tester.view.physicalSize = const Size(375, 750);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(Get.reset);
+
+    final memberLogic = Get.put<BocLogic>(_TestBocLogic());
+    memberLogic.memberInfo.bankList = [
+      MemberInfoBankList()..bankCard = '6222621234564321',
+    ];
 
     await tester.pumpWidget(
       ScreenUtilInit(
@@ -67,7 +75,7 @@ void main() {
     Text text(String value) => tester.widget<Text>(find.text(value).first);
 
     expect(text('交易明细').style?.fontSize, 17);
-    expect(text('交通银行 II类账户 (**2910)').style?.fontSize, 16);
+    expect(text('交通银行 借记卡 (**4321)').style?.fontSize, 16);
     expect(text('本月').style?.fontSize, 14);
     expect(text('2026-08').style?.fontSize, 14);
     expect(text('上海华莱士贸易有限公司').style?.fontSize, 16);
@@ -132,4 +140,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getCenter(monthSummary).dy, closeTo(summaryY, 0.01));
   });
+}
+
+class _TestBocLogic extends BocLogic {
+  @override
+  Future<void> memberInfoData() async {}
 }

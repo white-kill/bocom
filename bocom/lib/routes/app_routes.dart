@@ -11,6 +11,10 @@ class Routes {
 
   static const search = '/search';
 
+  static const scan = '/scan';
+
+  static const customerService = '/customerService';
+
   static const transactionDetail = '/transactionDetail';
 
   static const homeCreditCard = '/homeCreditCard';

@@ -189,7 +189,9 @@ class _CommunityNavButton extends StatelessWidget {
       label: semanticLabel,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () {},
+        onTap: semanticLabel == '客服'
+            ? () => Get.toNamed(Routes.customerService)
+            : () {},
         child: SizedBox(
           width: 37.w,
           height: 44.w,

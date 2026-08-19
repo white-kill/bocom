@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import '../../../../../routes/app_pages.dart';
 import 'transfer_record_detail_view.dart';
 import 'transfer_record_repository.dart';
 
@@ -781,13 +782,17 @@ class _TransferRecordHeader extends StatelessWidget {
                     child: Semantics(
                       button: true,
                       label: '在线客服',
-                      child: Transform.translate(
-                        offset: Offset(0, 9 * scale),
-                        child: Center(
-                          child: Image.asset(
-                            'assets/images/nav_right_kf.png',
-                            width: 18 * scale,
-                            height: 18 * scale,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => Get.toNamed(Routes.customerService),
+                        child: Transform.translate(
+                          offset: Offset(0, 9 * scale),
+                          child: Center(
+                            child: Image.asset(
+                              'assets/images/nav_right_kf.png',
+                              width: 18 * scale,
+                              height: 18 * scale,
+                            ),
                           ),
                         ),
                       ),

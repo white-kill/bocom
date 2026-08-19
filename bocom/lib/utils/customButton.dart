@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../pages/other/fixed_nav/fixed_nav_view.dart';
+
+import '../routes/app_pages.dart';
 
 class CustomButton {
   static Widget rightServiceButton({
@@ -10,33 +11,25 @@ class CustomButton {
     Color color = const Color(0xFF333333),
     double size = 24,
     double paddingRight = 8,
-    VoidCallback? onPressed, required IconData icon,
+    VoidCallback? onPressed,
+    required IconData icon,
   }) {
     return Padding(
         padding: EdgeInsets.only(right: paddingRight),
         child: IconButton(
           icon: Icon(icon, color: color, size: size.w),
-          onPressed: () {
-            Get.to(() => FixedNavPage(),
-                arguments: {
-                  'image': targetImage,
-                  'title': targetTitle,
-                  'navColor': Colors.white,
-                  'titleColor': color,
-                },
-                preventDuplicates: false);
-          },
+          onPressed: onPressed ?? () => Get.toNamed(Routes.customerService),
           padding: EdgeInsets.zero,
           constraints: BoxConstraints.tightFor(width: size.w, height: size.w),
-        )
-    );
+        ));
   }
 
   static Widget rightSearchButton({
     Color color = const Color(0xFF333333),
     double size = 24,
     double paddingRight = 12,
-    VoidCallback? onPressed, required IconData icon,
+    VoidCallback? onPressed,
+    required IconData icon,
   }) {
     return Padding(
       padding: EdgeInsets.only(right: paddingRight),
@@ -61,13 +54,14 @@ class CustomButton {
       child: IconButton(
         icon: Icon(Icons.more_horiz, color: color, size: size.w),
         onPressed: onPressed ??
-                () {
+            () {
               Get.dialog(AlertDialog(
                 title: const Text("更多操作"),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextButton(onPressed: () => Get.back(), child: const Text("取消")),
+                    TextButton(
+                        onPressed: () => Get.back(), child: const Text("取消")),
                   ],
                 ),
               ));

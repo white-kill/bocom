@@ -12,6 +12,7 @@ import 'package:wb_base_widget/extension/double_extension.dart';
 import '../../../../component/auth_sm.dart';
 import '../../../../component/indicator_loading.dart';
 import '../../../../component/password_keyboard_sheet.dart';
+import '../../../../../routes/app_pages.dart';
 import 'account_transfer_support_pages.dart';
 import 'account_transfer_result_pages.dart';
 
@@ -412,7 +413,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
               button: true,
               label: '客服',
               child: IconButton(
-                onPressed: () {},
+                onPressed: () => Get.toNamed(Routes.customerService),
                 icon: Container(
                   width: 40,
                   height: 40,

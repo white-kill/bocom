@@ -81,6 +81,9 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/scan/
+    - assets/images/customer_service/
+    - assets/images/search/
     - assets/images/account_transfer/icons/
     - assets/images/account_transfer/banks/
     - assets/images/account_transfer/limit_sheet/

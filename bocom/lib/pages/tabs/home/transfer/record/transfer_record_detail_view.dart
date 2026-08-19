@@ -6,6 +6,7 @@ import 'package:wb_base_widget/extension/string_extension.dart';
 import '../../../../../config/dio/network.dart';
 import '../../../../../config/model/contacts_model.dart';
 import '../../../../../config/net_config/apis.dart';
+import '../../../../../routes/app_pages.dart';
 import '../account_transfer/account_transfer_result_pages.dart';
 import '../account_transfer/home_account_transfer_view.dart';
 
@@ -387,19 +388,27 @@ class _TransferDetailNavigation extends StatelessWidget {
             right: 15 * unit,
             top: 0,
             bottom: 0,
-            child: Center(
-              child: Container(
-                width: 30 * unit,
-                height: 30 * unit,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(11 * unit),
-                ),
-                child: Image.asset(
-                  'assets/images/nav_right_kf.png',
-                  width: 18 * unit,
-                  height: 18 * unit,
+            child: Semantics(
+              button: true,
+              label: '客服',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Get.toNamed(Routes.customerService),
+                child: Center(
+                  child: Container(
+                    width: 30 * unit,
+                    height: 30 * unit,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(11 * unit),
+                    ),
+                    child: Image.asset(
+                      'assets/images/nav_right_kf.png',
+                      width: 18 * unit,
+                      height: 18 * unit,
+                    ),
+                  ),
                 ),
               ),
             ),

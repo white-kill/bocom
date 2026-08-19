@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import '../../../../routes/app_pages.dart';
+
 // 付款码开通页
 // 说明：当前页面使用仅裁掉系统状态栏、保留页面导航的完整参考图。
 class HomePaymentCodePage extends StatelessWidget {
@@ -302,7 +304,7 @@ class _HomeReferencePageState extends State<_HomeReferencePage> {
                     top: widget.serviceTop * scale,
                     width: widget.serviceWidth * scale,
                     height: widget.serviceHeight * scale,
-                    onTap: () {},
+                    onTap: () => Get.toNamed(Routes.customerService),
                   ),
                 ],
               ),

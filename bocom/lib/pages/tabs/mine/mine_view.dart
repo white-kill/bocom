@@ -56,10 +56,16 @@ class MinePage extends BaseStateless {
 
   @override
   List<Widget>? get rightAction => [
-        Image(
-          image: 'nav_right_kf'.png,
-          width: 22.w,
-          height: 22.w,
+        Semantics(
+          button: true,
+          label: '客服',
+          child: Image(
+            image: 'nav_right_kf'.png,
+            width: 22.w,
+            height: 22.w,
+          ).withOnTap(
+            onTap: () => Get.toNamed(Routes.customerService),
+          ),
         ),
         SizedBox(
           width: 15.w,
@@ -451,7 +457,7 @@ class MinePage extends BaseStateless {
               image: 'bg_mine_4'.png3x,
               width: 1.sw,
               fit: BoxFit.fitWidth,
-            ).withOnTap(onTap: (){
+            ).withOnTap(onTap: () {
               Get.to(() => LedgerPage());
             }),
             Positioned(
