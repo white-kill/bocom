@@ -1,132 +1,173 @@
-import 'package:bocom/pages/other/search/search_info/search_info_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:wb_base_widget/wb_base_widget.dart';
 
-import '../change_nav/change_nav_view.dart';
-import 'search_logic.dart';
-import 'search_state.dart';
+import 'search_results_view.dart';
+import 'search_shared_header.dart';
 
-class SearchPage extends BaseStateless {
-  SearchPage({Key? key}) : super(key: key);
-
-  final SearchLogic logic = Get.put(SearchLogic());
-  final SearchState state = Get.find<SearchLogic>().state;
+// 搜索页
+// 说明：页面使用不含状态栏和搜索导航的内容切图，顶部定位、搜索输入框和取消按钮由 Flutter 原生绘制。
+class SearchPage extends StatefulWidget {
+  const SearchPage({super.key});
 
   @override
-  Widget? get titleWidget => Container(
-        width: 1.sw,
-        height: 32.w,
-        margin: EdgeInsets.only(right: 15.w),
-        decoration: BoxDecoration(
-            border: Border.all(width: 0.5.w, color: Color(0xffdfdfdf)),
-            borderRadius: BorderRadius.all(Radius.circular(4.w))),
-        child: Row(
-          children: [
-            Image(
-              image: 'home_search_left'.png3x,
-              width: 18.w,
-              height: 18.w,
-            ).withPadding(left: 10.w, right: 6.w),
-            Container(width: 0.5, height: 18.w, color: Color(0xffdfdfdf)),
-            SizedBox(
-              width: 6.w,
-            ),
-            TextFieldWidget(
-              hintText: '输入搜索词',
-              controller: state.searchController,
-              onSubmitted: (v){
-                if(v == ''){
-                  '请输入搜索内容'.showToast;
-                  return;
-                }
-                Get.to(() => SearchInfoPage(),arguments: {
-                  'title':v
-                });
-              },
-            ).expanded(),
-            SizedBox(
-              width: 8.w,
-            ),
-            Container(
-              width: 42.w,
-              height: 26.w,
-              margin: EdgeInsets.only(right: 2.w),
-              decoration: BoxDecoration(
-                color: Color(0xffdfdfdf),
-                borderRadius: BorderRadius.all(Radius.circular(4.w)),
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
+  static const double _sourceWidth = 1080;
+  static const double _sourceHeight = 2134;
+
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submitSearch() {
+    final query = _controller.text.trim();
+    if (query.isEmpty) {
+      return;
+    }
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    Get.to<void>(() => SearchResultsPage(query: query));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFFF7F7F7),
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: Color(0xFFF7F7F7),
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        key: const Key('search-page'),
+        backgroundColor: const Color(0xFFF7F7F7),
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              SearchSharedHeader(
+                controller: _controller,
+                onSubmitted: (_) => _submitSearch(),
+                onCancel: Get.back,
+                cancelKey: const Key('search-page-cancel'),
               ),
-              alignment: Alignment.center,
-              child: BaseText(text: '搜索'),
-            ).withOnTap(onTap: (){
-              if(state.searchController.text == ''){
-                '请输入搜索内容'.showToast;
-                return;
-              }
-              Get.to(() => SearchInfoPage(),arguments: {
-                'title':state.searchController.text
-              });
-            })
-          ],
-        ),
-      );
-
-  @override
-  Color? get background => Colors.white;
-
-  @override
-  Widget initBody(BuildContext context) {
-    return ListView(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            BaseText(
-              text: '历史记录',
-              style: TextStyle(
-                fontWeight: FontWeight.bold
-              ),
-            ),
-            SizedBox(height: 12.w,),
-            Wrap(
-              direction: Axis.horizontal,
-              spacing: 12.w,
-              runSpacing: 12.w,
-              children: state.nameList.map((e) {
-                return Container(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 4.w, horizontal: 10.w),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(15.w),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.zero,
+                  child: LayoutBuilder(
+                    builder: (_, constraints) {
+                      final scale = constraints.maxWidth / _sourceWidth;
+                      return SizedBox(
+                        width: constraints.maxWidth,
+                        height: _sourceHeight * scale,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Image.asset(
+                                'assets/images/search/search_landing_body.png',
+                                fit: BoxFit.fill,
+                                gaplessPlayback: true,
+                              ),
+                            ),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              top: 0,
+                              height: 200 * scale,
+                              child: const ColoredBox(
+                                color: Color(0xFFF7F7F7),
+                              ),
+                            ),
+                            Positioned(
+                              left: 39 * scale,
+                              top: 0,
+                              height: 55 * scale,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '历史搜索',
+                                  style: TextStyle(
+                                    color: const Color(0xFF333333),
+                                    fontSize: 40 * scale,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              right: 38 * scale,
+                              top: 0,
+                              width: 60 * scale,
+                              height: 60 * scale,
+                              child: Icon(
+                                Icons.delete_outline,
+                                color: const Color(0xFF333333),
+                                size: 46 * scale,
+                              ),
+                            ),
+                            Positioned(
+                              key: const Key('search-history-flow-print'),
+                              left: 38 * scale,
+                              top: 80 * scale,
+                              width: 228 * scale,
+                              height: 80 * scale,
+                              child: Container(
+                                alignment: Alignment.centerLeft,
+                                padding: EdgeInsets.only(left: 28 * scale),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(
+                                    40 * scale,
+                                  ),
+                                ),
+                                child: Text(
+                                  '流水打印',
+                                  style: TextStyle(
+                                    color: const Color(0xFF333333),
+                                    fontSize: 38 * scale,
+                                    height: 1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: 38 * scale,
+                              top: 80 * scale,
+                              width: 228 * scale,
+                              height: 80 * scale,
+                              child: Semantics(
+                                button: true,
+                                label: '历史搜索：流水打印',
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () => Get.to<void>(
+                                    () => const SearchResultsPage(
+                                      query: '流水打印',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                  child: Text(
-                    e,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                    ),
-                  ).withOnTap(onTap: () {
-                    Get.to(() => SearchInfoPage(),arguments: {
-                      'title':e
-                    });
-                  }),
-                );
-              }).toList(),
-            ).withPadding(left: 8.w),
-          ],
-        ).withContainer(
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.all(Radius.circular(8.w))),
-            padding: EdgeInsets.only(
-              bottom: 8.w,
-              left: 12.w,right: 12.w,
-              top: 20.w,
-            )),
-
-        Image(image: 'search_bottom'.png3x),
-      ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

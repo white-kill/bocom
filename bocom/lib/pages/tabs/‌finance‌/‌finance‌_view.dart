@@ -193,7 +193,9 @@ class _FinanceNavButton extends StatelessWidget {
       label: semanticLabel,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () {},
+        onTap: semanticLabel == '客服'
+            ? () => Get.toNamed(Routes.customerService)
+            : () {},
         child: SizedBox(
           width: 34.w,
           height: 44.w,
@@ -267,7 +269,7 @@ class _FinanceCategoryBar extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 11.w),
                   child: Column(
                     children: [
-                    SizedBox(height: 21.w),
+                      SizedBox(height: 21.w),
                       Text(
                         _categories[index],
                         style: TextStyle(

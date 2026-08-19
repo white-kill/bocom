@@ -194,7 +194,7 @@ class _LifeScanButton extends StatelessWidget {
       label: '扫一扫',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () {},
+        onTap: () => Get.toNamed(Routes.scan),
         child: SizedBox(
           width: 39.w,
           height: 44.w,

@@ -79,25 +79,31 @@ class AccountAssetPage extends BaseStateless {
   @override
   List<Widget>? get rightAction => [
         Obx(
-          () => SizedBox(
-            width: 36.w,
-            height: 36.w,
-            child: Center(
-              child: logic.navActionFlag.value
-                  ? Image(
-                      image: 'nav_kf_white'.png,
-                      width: 20.w,
-                      height: 20.w,
-                      fit: BoxFit.contain,
-                    )
-                  : Image(
-                      image: logic.bottomItemIndex.value == 0
-                          ? 'nav_kf_light_white'.png
-                          : 'nav_kf_light'.png,
-                      width: 36.w,
-                      height: 36.w,
-                      fit: BoxFit.contain,
-                    ),
+          () => Semantics(
+            button: true,
+            label: '客服',
+            child: SizedBox(
+              width: 36.w,
+              height: 36.w,
+              child: Center(
+                child: logic.navActionFlag.value
+                    ? Image(
+                        image: 'nav_kf_white'.png,
+                        width: 20.w,
+                        height: 20.w,
+                        fit: BoxFit.contain,
+                      )
+                    : Image(
+                        image: logic.bottomItemIndex.value == 0
+                            ? 'nav_kf_light_white'.png
+                            : 'nav_kf_light'.png,
+                        width: 36.w,
+                        height: 36.w,
+                        fit: BoxFit.contain,
+                      ),
+              ),
+            ).withOnTap(
+              onTap: () => Get.toNamed(Routes.customerService),
             ),
           ),
         ),

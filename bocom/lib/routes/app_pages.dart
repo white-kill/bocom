@@ -2,7 +2,9 @@ import 'package:get/get.dart';
 
 import '../pages/index/index_view.dart';
 import '../pages/login/login_view.dart';
+import '../pages/other/customer_service/customer_service_view.dart';
 import '../pages/other/search/search_view.dart';
+import '../pages/other/scan/scan_view.dart';
 import '../pages/splash/splash_view.dart';
 import '../pages/tabs/home/transaction_detail/transaction_detail_view.dart';
 import '../pages/tabs/home/feature_pages/home_feature_pages.dart';
@@ -31,7 +33,15 @@ class AppPages {
     ),
     GetPage(
       name: Routes.search,
-      page: () => SearchPage(),
+      page: () => const SearchPage(),
+    ),
+    GetPage(
+      name: Routes.scan,
+      page: () => const ScanPage(),
+    ),
+    GetPage(
+      name: Routes.customerService,
+      page: () => const CustomerServicePage(),
     ),
     GetPage(
       name: Routes.transactionDetail,

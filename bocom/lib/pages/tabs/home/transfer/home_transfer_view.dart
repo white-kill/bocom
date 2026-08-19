@@ -204,7 +204,10 @@ class _TransferPageBody extends StatelessWidget {
                   child: Semantics(
                     button: true,
                     label: '客服',
-                    child: const SizedBox.expand(),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Get.toNamed(Routes.customerService),
+                    ),
                   ),
                 ),
                 Positioned(

@@ -96,6 +96,7 @@ class HomePage extends BaseStateless {
             assetName: logic.isNavDark.value
                 ? 'home_nav_service_dark.png'
                 : 'home_nav_service_light.png',
+            onTap: () => Get.toNamed(Routes.customerService),
           ),
         ),
         Obx(
@@ -104,6 +105,7 @@ class HomePage extends BaseStateless {
             assetName: logic.isNavDark.value
                 ? 'home_nav_scan_dark.png'
                 : 'home_nav_scan_light.png',
+            onTap: () => Get.toNamed(Routes.scan),
           ),
         ),
         SizedBox(width: 5.w),
@@ -351,10 +353,12 @@ class _HomeNavButton extends StatelessWidget {
   const _HomeNavButton({
     required this.semanticLabel,
     required this.assetName,
+    this.onTap,
   });
 
   final String semanticLabel;
   final String assetName;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -363,7 +367,7 @@ class _HomeNavButton extends StatelessWidget {
       label: semanticLabel,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () {},
+        onTap: onTap ?? () {},
         child: SizedBox(
           width: 35.w,
           height: 44.w,

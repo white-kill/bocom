@@ -8,7 +8,9 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 
+import '../../../../config/abc_config/boc_logic.dart';
 import '../../../../pages/component/indicator_loading.dart';
+import '../../../../routes/app_pages.dart';
 import '../../../../utils/sp_util.dart';
 import 'filter/transaction_advanced_filter_model.dart';
 import 'filter/transaction_advanced_filter_panel.dart';
@@ -962,7 +964,7 @@ class _TransactionNavigationBar extends StatelessWidget {
                   label: '在线客服',
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () {},
+                    onTap: () => Get.toNamed(Routes.customerService),
                     child: SizedBox(
                       width: 30.w,
                       height: 44.w,
@@ -989,6 +991,35 @@ class _TransactionNavigationBar extends StatelessWidget {
 class _AccountHeader extends StatelessWidget {
   const _AccountHeader();
 
+  String _accountTitle(BocLogic? logic) {
+    if (logic == null || logic.memberInfo.bankList.isEmpty) {
+      return '交通银行 借记卡';
+    }
+
+    final cardNumber = logic.memberInfo.bankList.first.bankCard.trim();
+    if (cardNumber.isEmpty) {
+      return '交通银行 借记卡';
+    }
+    final lastFour = cardNumber.length <= 4
+        ? cardNumber
+        : cardNumber.substring(cardNumber.length - 4);
+    return '交通银行 借记卡 (**$lastFour)';
+  }
+
+  Widget _titleText(String title) {
+    return Text(
+      title,
+      key: const ValueKey('transaction-account-title'),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        color: const Color(0xFF252525),
+        fontSize: 16.sp,
+        fontWeight: FontWeight.w400,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -1003,16 +1034,12 @@ class _AccountHeader extends StatelessWidget {
           ),
           SizedBox(width: 2.w),
           Expanded(
-            child: Text(
-              '交通银行 II类账户 (**2910)',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: const Color(0xFF252525),
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
+            child: Get.isRegistered<BocLogic>()
+                ? GetBuilder<BocLogic>(
+                    id: 'updateCard',
+                    builder: (logic) => _titleText(_accountTitle(logic)),
+                  )
+                : _titleText(_accountTitle(null)),
           ),
           SizedBox(width: 14.w),
         ],

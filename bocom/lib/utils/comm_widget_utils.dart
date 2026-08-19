@@ -16,7 +16,7 @@ class CommWidgetUtils {
       width: 132.w,
       image: 'ic_nav_more',
       icSize: 18,
-      icColor:icColor?? const Color(0xFF5B6A80),
+      icColor: icColor ?? const Color(0xFF5B6A80),
       content: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -52,7 +52,7 @@ class CommWidgetUtils {
                 color: Colors.black,
               ),
             ).withOnTap(onTap: () {
-
+              Get.toNamed(Routes.scan);
             }),
             Container(
               margin: EdgeInsets.symmetric(horizontal: 16.w),
