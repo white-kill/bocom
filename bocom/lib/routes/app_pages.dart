@@ -8,6 +8,7 @@ import '../pages/tabs/home/transaction_detail/transaction_detail_view.dart';
 import '../pages/tabs/home/feature_pages/home_feature_pages.dart';
 import '../pages/tabs/home/transfer/home_transfer_view.dart';
 import '../pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
+import '../pages/tabs/home/transfer/record/transfer_record_view.dart';
 import '../config/model/contacts_model.dart';
 
 part 'app_routes.dart';
@@ -53,10 +54,15 @@ class AppPages {
       page: () => const HomeTransferPage(),
     ),
     GetPage(
+      name: Routes.homeTransferRecord,
+      page: () => const TransferRecordPage(),
+    ),
+    GetPage(
       name: Routes.homeAccountTransfer,
       page: () => HomeAccountTransferPage(
-        initialRecipient:
-            Get.arguments is ContactsModel ? Get.arguments as ContactsModel : null,
+        initialRecipient: Get.arguments is ContactsModel
+            ? Get.arguments as ContactsModel
+            : null,
       ),
     ),
   ];

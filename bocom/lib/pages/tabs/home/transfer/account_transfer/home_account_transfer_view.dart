@@ -48,6 +48,7 @@ class HomeAccountTransferPage extends StatefulWidget {
   const HomeAccountTransferPage({
     super.key,
     this.initialRecipient,
+    this.initialAmount,
     this.contactsLoader,
     this.bankLoader,
     this.passwordVerificationLauncher,
@@ -58,6 +59,7 @@ class HomeAccountTransferPage extends StatefulWidget {
   });
 
   final ContactsModel? initialRecipient;
+  final double? initialAmount;
   final Future<List<ContactsModel>> Function()? contactsLoader;
   final Future<List<RecipientBank>> Function()? bankLoader;
   final PasswordVerificationLauncher? passwordVerificationLauncher;
@@ -120,6 +122,12 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   void initState() {
     super.initState();
     _fillRecipient(widget.initialRecipient);
+    final initialAmount = widget.initialAmount;
+    if (initialAmount != null && initialAmount.abs() >= 0.01) {
+      _amountController.text = _displayAmount(
+        initialAmount.abs().toStringAsFixed(2),
+      );
+    }
     for (final controller in _requiredControllers) {
       controller.addListener(_refresh);
     }
@@ -487,14 +495,13 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
         final digits = bank.bankCard.replaceAll(RegExp(r'\D'), '');
         final suffix =
             digits.length > 4 ? digits.substring(digits.length - 4) : digits;
-        final cardType = bank.cardType.isEmpty ? 'II类账户' : bank.cardType;
         return _PayerCard(
           bankName: bank.bankName,
-          title: '${bank.bankName} $cardType(**$suffix)',
+          title: '${bank.bankName} 借记卡(**$suffix)',
           balance: '可用余额 ${bank.accountBalance.bankBalance}元',
           onTap: () => _showPayerAccountSheet(
             bankName: bank.bankName,
-            title: '${bank.bankName} $cardType (**$suffix)',
+            title: '${bank.bankName} 借记卡 (**$suffix)',
             balance: '可用余额${bank.accountBalance.bankBalance}元',
           ),
         );

@@ -21,6 +21,8 @@ class Routes {
 
   static const homeTransfer = '/homeTransfer';
 
+  static const homeTransferRecord = '/homeTransferRecord';
+
   static const homeAccountTransfer = '/homeAccountTransfer';
 
   static const searchHistoryPage = '/searchHistoryPage';

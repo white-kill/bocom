@@ -222,6 +222,20 @@ class _TransferPageBody extends StatelessWidget {
                   ),
                 ),
                 Positioned(
+                  left: 44 * scale,
+                  top: 790 * scale,
+                  width: 282 * scale,
+                  height: 210 * scale,
+                  child: Semantics(
+                    button: true,
+                    label: '转账记录',
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Get.toNamed(Routes.homeTransferRecord),
+                    ),
+                  ),
+                ),
+                Positioned(
                   left: 50 * scale,
                   right: 50 * scale,
                   top: 1180 * scale,
