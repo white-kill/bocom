@@ -26,7 +26,6 @@ class LedgerWaterTab extends StatelessWidget {
     deviceWidth: 1.sw,
   );
 
-
   @override
   Widget build(BuildContext context) {
     return SizedBox.expand(

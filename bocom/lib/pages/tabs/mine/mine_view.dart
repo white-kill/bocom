@@ -9,7 +9,7 @@ import '../../../routes/app_pages.dart';
 import '../../../utils/sp_util.dart';
 import 'children/account_asset/account_asset_view.dart';
 import 'children/comprehensive_bill/comprehensive_bill_view.dart';
-import '../home/print/print_bill_list/print_bill_list_view.dart';
+import '../home/print/print_view.dart';
 import 'children/ledger/ledger_view.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
@@ -525,7 +525,7 @@ class MinePage extends BaseStateless {
           width: 1.sw,
           fit: BoxFit.fitWidth,
         ).withOnTap(onTap: (){
-          Get.to(() => PrintBillListPage());
+          Get.to(() => PrintPage());
         }),
         Image(
           image: 'bg_mine_6'.png3x,

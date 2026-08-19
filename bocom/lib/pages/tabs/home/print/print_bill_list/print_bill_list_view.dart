@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:bocom/config/app_config.dart';
 import 'package:get/get.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
+import 'package:intl/intl.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
-
+import 'package:bocom/pages/component/indicator_loading.dart';
 import 'component/print_bill_custom_period_sheet.dart';
 import 'component/print_bill_advanced_filter_overlay.dart';
 import '../../transaction_detail/filter/transaction_advanced_filter_model.dart';
+import '../../transaction_detail/transaction_detail_repository.dart';
 import 'print_bill_list_logic.dart';
 import 'print_bill_list_state.dart';
 
@@ -53,8 +56,7 @@ class PrintBillListPage extends BaseStateless {
                         onFilterTap: () => _showAdvancedFilter(context),
                       ),
                     ),
-                    // 交易明细列表
-                    Expanded(child: Container()),
+                    Expanded(child: _buildTransactionList(context)),
                     SizedBox(
                       height: bottomInset,
                       width: 1.sw,
@@ -194,6 +196,171 @@ class PrintBillListPage extends BaseStateless {
   double get _periodPanelHeight => 95.w;
 
   double get _currencyPanelHeight => 175.w;
+
+
+
+  Widget _buildTransactionList(BuildContext context) {
+    return SizedBox.expand(
+      child: ColoredBox(
+        color: const Color(0xFFF7F7F7),
+        child: Obx(() {
+          final dataList = logic.entries;
+          return RefreshConfiguration.copyAncestor(
+            context: context,
+            hideFooterWhenNotFull: false,
+            child: SmartRefresher(
+              controller: state.refreshController,
+              enablePullDown: true,
+              enablePullUp: dataList.isNotEmpty,
+              header: _refreshHeader(),
+              footer: _loadFooter(),
+              onRefresh: () =>
+                  logic.refreshTransactions(state.refreshController),
+              onLoading: () =>
+                  logic.loadMoreTransactions(state.refreshController),
+              child: ListView.separated(
+                padding: EdgeInsets.only(top: 12.w),
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: dataList.isEmpty ? 1 : dataList.length,
+                separatorBuilder: (_, __) => const SizedBox.shrink(),
+                itemBuilder: (context, index) {
+                  if (dataList.isEmpty) {
+                    return SizedBox(
+                      height: 180.w,
+                      child: const Center(
+                        child: Text('无交易明细记录'),
+                      ),
+                    );
+                  }
+                  return Container(
+                    color: Colors.white,
+                    child: _buildTransactionRow(dataList[index], index),
+                  );
+                },
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTransactionRow(TransactionBillEntry entry, int index) {
+    final record = entry.record;
+    final amount = NumberFormat('#,##0.00').format(record.amount.abs());
+    return SizedBox(
+      height: 94.w,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              right: 105.w,
+              top: 10.w,
+              child: Text(
+                record.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 16.sp),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              top: 35.w,
+              child: Text(
+                record.channel,
+                style: TextStyle(
+                  color: const Color(0xFF969696),
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              top: 57.w,
+              child: Text(
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(record.occurredAt),
+                style: TextStyle(
+                  color: const Color(0xFF969696),
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              top: 9.w,
+              child: Text(
+                '${record.isIncome ? '+' : '-'}$amount',
+                style: TextStyle(
+                  color: record.isIncome
+                      ? const Color(0xFFB12D2D)
+                      : const Color(0xFF1D1D1D),
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              top: 35.w,
+              child: Text(
+                '余额: ${record.balance.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: const Color(0xFF969696),
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+            if (index != logic.entries.length - 1)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Divider(height: 0.5.w, thickness: 0.5.w),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _refreshHeader() => CustomHeader(
+        builder: (_, __) => Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BocomArcLoadingIndicator(dimension: 16.w, strokeWidth: 2.4.w),
+            ],
+          ).marginOnly(bottom: 10.w),
+        ),
+      );
+
+  Widget _loadFooter() => CustomFooter(
+        height: 60.w,
+        builder: (_, mode) {
+          if (mode == LoadStatus.noMore) {
+            return Center(
+              child: const BaseText(text: '—没有更多了—', fontSize: 14, color: Color(0xFF999999))
+                  .marginOnly(top: 10.w),
+            );
+          }
+          if (mode == LoadStatus.failed) {
+            return Center(
+              child: const BaseText(text: '加载失败，点击重试', fontSize: 14, color: Color(0xFF999999))
+                  .marginOnly(top: 10.w),
+            );
+          }
+          return Center(
+            child: Image(
+              image: 'global_loading'.gif,
+              width: 60.w,
+              height: 30.w,
+              fit: BoxFit.contain,
+            ),
+          );
+        },
+      );
 
   Widget _buildPeriodPanel(BuildContext context) {
     const periods = ['近1个月', '近3个月', '近半年', '近一年', '自定义'];

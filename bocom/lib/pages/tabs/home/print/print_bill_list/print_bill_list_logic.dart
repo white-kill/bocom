@@ -1,7 +1,10 @@
 import 'package:get/get.dart';
+import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 
 import 'print_bill_list_state.dart';
 import '../../transaction_detail/filter/transaction_advanced_filter_model.dart';
+import '../../transaction_detail/transaction_detail_model.dart';
+import '../../transaction_detail/transaction_detail_repository.dart';
 
 class PrintBillListLogic extends GetxController {
   final PrintBillListState state = PrintBillListState();
@@ -15,11 +18,106 @@ class PrintBillListLogic extends GetxController {
       const TransactionAdvancedFilterValue().obs;
   final Rxn<DateTime> beginTime = Rxn<DateTime>();
   final Rxn<DateTime> endTime = Rxn<DateTime>();
+  final entries = <TransactionBillEntry>[].obs;
+  final loading = true.obs;
+  final loadFailed = false.obs;
+  final loadingMore = false.obs;
+  final loadMoreFailed = false.obs;
+  final pageNum = 0.obs;
+  final pages = 0.obs;
+  int _requestVersion = 0;
+
+  @override
+  void onClose() {
+    state.dispose();
+    super.onClose();
+  }
 
   @override
   void onInit() {
     super.onInit();
     selectPeriod('近1个月', closeFilter: false);
+  }
+
+  Future<bool> loadTransactions({
+    bool loadMore = false,
+    bool preserveContent = false,
+  }) async {
+    if (loadMore &&
+        (loadingMore.value || pageNum.value >= pages.value)) {
+      return false;
+    }
+    final version = loadMore ? _requestVersion : ++_requestVersion;
+    final nextPage = loadMore ? pageNum.value + 1 : 1;
+    if (loadMore) {
+      loadingMore.value = true;
+      loadMoreFailed.value = false;
+    } else if (!preserveContent) {
+      loading.value = true;
+      loadFailed.value = false;
+      loadMoreFailed.value = false;
+      pageNum.value = 0;
+      pages.value = 0;
+    } else {
+      loadFailed.value = false;
+      loadMoreFailed.value = false;
+    }
+
+    final params = TransactionBillQuery.build(
+      pageNum: nextPage,
+      filter: advancedFilter.value,
+      beginTime: beginTime.value,
+      endTime: endTime.value,
+    );
+    try {
+      final page = await loadTransactionBillPage(params);
+      if (version != _requestVersion) return false;
+      entries.assignAll(loadMore
+          ? [...entries, ...page.entries]
+          : page.entries);
+      pageNum.value = nextPage;
+      pages.value = page.pages;
+      loading.value = false;
+      loadingMore.value = false;
+      loadFailed.value = false;
+      loadMoreFailed.value = false;
+      return true;
+    } catch (_) {
+      if (version != _requestVersion) return false;
+      loading.value = false;
+      loadingMore.value = false;
+      if (loadMore) {
+        loadMoreFailed.value = true;
+      } else if (!preserveContent) {
+        loadFailed.value = true;
+      }
+      return false;
+    }
+  }
+
+  Future<void> refreshTransactions(RefreshController controller) async {
+    try {
+      await loadTransactions(preserveContent: true);
+    } finally {
+      controller
+        ..resetNoData()
+        ..refreshCompleted();
+    }
+  }
+
+  Future<void> loadMoreTransactions(RefreshController controller) async {
+    if (pageNum.value >= pages.value) {
+      controller.loadNoData();
+      return;
+    }
+    final succeeded = await loadTransactions(loadMore: true);
+    if (!succeeded) {
+      controller.loadFailed();
+    } else if (pageNum.value >= pages.value) {
+      controller.loadNoData();
+    } else {
+      controller.loadComplete();
+    }
   }
 
   void togglePeriodFilter() {
@@ -52,6 +150,7 @@ class PrintBillListLogic extends GetxController {
   void completeAdvancedFilter(TransactionAdvancedFilterValue value) {
     advancedFilter.value = value;
     closeAdvancedFilter();
+    loadTransactions();
   }
 
   void selectPeriod(String label, {bool closeFilter = true}) {
@@ -70,6 +169,7 @@ class PrintBillListLogic extends GetxController {
     selectedPeriodLabel.value =
         label == '近一个月' || label == '近1个月' ? '近1个月' : label;
     if (closeFilter) closePeriodFilter();
+    loadTransactions();
   }
 
   void selectCustomPeriodSelection(DateTime begin, DateTime end) {
@@ -79,6 +179,7 @@ class PrintBillListLogic extends GetxController {
     endTime.value = finish;
     selectedPeriodLabel.value = '${_formatDate(start)}至${_formatDate(finish)}';
     closePeriodFilter();
+    loadTransactions();
   }
 
   DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
