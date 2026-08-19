@@ -1,0 +1,91 @@
+import 'package:get/get.dart';
+
+import 'print_bill_list_state.dart';
+import '../../transaction_detail/filter/transaction_advanced_filter_model.dart';
+
+class PrintBillListLogic extends GetxController {
+  final PrintBillListState state = PrintBillListState();
+
+  final periodFilterExpanded = false.obs;
+  final currencyFilterExpanded = false.obs;
+  final selectedPeriodLabel = '近1个月'.obs;
+  final selectedCurrencyLabel = '人民币CNY'.obs;
+  final advancedFilterExpanded = false.obs;
+  final advancedFilter =
+      const TransactionAdvancedFilterValue().obs;
+  final Rxn<DateTime> beginTime = Rxn<DateTime>();
+  final Rxn<DateTime> endTime = Rxn<DateTime>();
+
+  @override
+  void onInit() {
+    super.onInit();
+    selectPeriod('近1个月', closeFilter: false);
+  }
+
+  void togglePeriodFilter() {
+    if (!periodFilterExpanded.value) closeCurrencyFilter();
+    periodFilterExpanded.toggle();
+  }
+
+  void closePeriodFilter() => periodFilterExpanded.value = false;
+
+  void toggleCurrencyFilter() {
+    if (!currencyFilterExpanded.value) closePeriodFilter();
+    currencyFilterExpanded.toggle();
+  }
+
+  void closeCurrencyFilter() => currencyFilterExpanded.value = false;
+
+  void selectCurrency(String currency) {
+    selectedCurrencyLabel.value = currency;
+    closeCurrencyFilter();
+  }
+
+  void openAdvancedFilter() {
+    closePeriodFilter();
+    closeCurrencyFilter();
+    advancedFilterExpanded.value = true;
+  }
+
+  void closeAdvancedFilter() => advancedFilterExpanded.value = false;
+
+  void completeAdvancedFilter(TransactionAdvancedFilterValue value) {
+    advancedFilter.value = value;
+    closeAdvancedFilter();
+  }
+
+  void selectPeriod(String label, {bool closeFilter = true}) {
+    final now = _dateOnly(DateTime.now());
+    endTime.value = now;
+    beginTime.value = switch (label) {
+      '近7天' => now.subtract(const Duration(days: 7)),
+      '近1个月' => now.subtract(const Duration(days: 30)),
+      '近一个月' => now.subtract(const Duration(days: 30)),
+      '近三个月' => now.subtract(const Duration(days: 90)),
+      '近3个月' => now.subtract(const Duration(days: 90)),
+      '近半年' => now.subtract(const Duration(days: 180)),
+      '近一年' => now.subtract(const Duration(days: 365)),
+      _ => null,
+    };
+    selectedPeriodLabel.value =
+        label == '近一个月' || label == '近1个月' ? '近1个月' : label;
+    if (closeFilter) closePeriodFilter();
+  }
+
+  void selectCustomPeriodSelection(DateTime begin, DateTime end) {
+    final start = _dateOnly(begin);
+    final finish = _dateOnly(end);
+    beginTime.value = start;
+    endTime.value = finish;
+    selectedPeriodLabel.value = '${_formatDate(start)}至${_formatDate(finish)}';
+    closePeriodFilter();
+  }
+
+  DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+
+  String _formatDate(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
+}

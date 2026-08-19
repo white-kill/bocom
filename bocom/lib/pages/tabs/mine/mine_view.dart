@@ -8,6 +8,8 @@ import 'package:bocom/pages/other/change_nav/change_nav_view.dart';
 import '../../../routes/app_pages.dart';
 import '../../../utils/sp_util.dart';
 import 'children/account_asset/account_asset_view.dart';
+import 'children/comprehensive_bill/comprehensive_bill_view.dart';
+import '../home/print/print_bill_list/print_bill_list_view.dart';
 import 'children/ledger/ledger_view.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
@@ -457,9 +459,7 @@ class MinePage extends BaseStateless {
               image: 'bg_mine_4'.png3x,
               width: 1.sw,
               fit: BoxFit.fitWidth,
-            ).withOnTap(onTap: () {
-              Get.to(() => LedgerPage());
-            }),
+            ),
             Positioned(
               left: position4.getX(80),
               top: position4.getY(370),
@@ -504,13 +504,35 @@ class MinePage extends BaseStateless {
                 expense: AppConfig.config.abcLogic.memberInfo.expensesTotal,
               ),
             ),
+            Positioned(
+              left: 0,
+              top: 0,
+              child: SizedBox(
+                width: 1.sw,
+                height: position4.getHeight(135),
+              ).withOnTap(onTap: () {
+                Get.to(() => ComprehensiveBillPage());
+              }),
+            ),
+            Positioned(
+              left: 0,
+              top: position4.getHeight(135),
+              child: SizedBox(
+                width: 1.sw,
+                height: position4.getHeight(397),
+              ).withOnTap(onTap: () {
+                Get.to(() => LedgerPage());
+              }),
+            ),
           ],
         ),
         Image(
           image: 'bg_mine_5'.png3x,
           width: 1.sw,
           fit: BoxFit.fitWidth,
-        ),
+        ).withOnTap(onTap: () {
+          Get.to(() => PrintBillListPage());
+        }),
         Image(
           image: 'bg_mine_6'.png3x,
           width: 1.sw,

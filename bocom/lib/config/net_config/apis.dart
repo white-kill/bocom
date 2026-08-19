@@ -53,4 +53,12 @@ class Apis {
   // 账本分析分类流水详情
   static const bookAnalysisCategoryDetailPage =
       '/servicecomm/bill/book/analysis/categoryDetailPage';
+
+  /// 综合账单-资产概览
+  static const comprehensiveAssetOverview =
+      '/servicecomm/bill/comprehensive/assetOverview';
+
+  /// 综合账单-收支概览
+  static const comprehensiveIncomeExpenseOverview =
+      '/servicecomm/bill/comprehensive/incomeExpenseOverview';
 }

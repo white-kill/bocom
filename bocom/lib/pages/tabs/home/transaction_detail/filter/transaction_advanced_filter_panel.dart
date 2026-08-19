@@ -9,10 +9,12 @@ class TransactionAdvancedFilterPanel extends StatefulWidget {
     super.key,
     required this.initialValue,
     required this.onComplete,
+    this.actionsRequireChange = false,
   });
 
   final TransactionAdvancedFilterValue initialValue;
   final ValueChanged<TransactionAdvancedFilterValue> onComplete;
+  final bool actionsRequireChange;
 
   @override
   State<TransactionAdvancedFilterPanel> createState() =>
@@ -95,6 +97,7 @@ class _TransactionAdvancedFilterPanelState
   String? _amountRange;
   String? _channel;
   String? _bank;
+  bool _hasChanges = false;
 
   @override
   void initState() {
@@ -121,6 +124,17 @@ class _TransactionAdvancedFilterPanelState
     _accountNameFocus = _focusNodeFor(_accountNameKey);
     _accountNumberFocus = _focusNodeFor(_accountNumberKey);
     _summaryFocus = _focusNodeFor(_summaryKey);
+    _minAmountController.addListener(_markChanged);
+    _maxAmountController.addListener(_markChanged);
+    _customBankController.addListener(_markChanged);
+    _accountNameController.addListener(_markChanged);
+    _accountNumberController.addListener(_markChanged);
+    _summaryController.addListener(_markChanged);
+  }
+
+  void _markChanged() {
+    if (!widget.actionsRequireChange || _hasChanges || !mounted) return;
+    setState(() => _hasChanges = true);
   }
 
   FocusNode _focusNodeFor(GlobalKey key, {double alignment = 0.72}) {
@@ -178,6 +192,7 @@ class _TransactionAdvancedFilterPanelState
   void _reset() {
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
+      _hasChanges = true;
       _direction = null;
       _commonType = null;
       _amountRange = null;
@@ -468,6 +483,7 @@ class _TransactionAdvancedFilterPanelState
                     values: _directions,
                     selected: _direction,
                     onSelected: (value) => setState(() {
+                      _hasChanges = true;
                       _direction = _direction == value ? null : value;
                     }),
                   ),
@@ -477,6 +493,7 @@ class _TransactionAdvancedFilterPanelState
                     values: _commonTypes,
                     selected: _commonType,
                     onSelected: (value) => setState(() {
+                      _hasChanges = true;
                       _commonType = _commonType == value ? null : value;
                     }),
                   ),
@@ -486,6 +503,7 @@ class _TransactionAdvancedFilterPanelState
                     values: _amountRanges,
                     selected: _amountRange,
                     onSelected: (value) => setState(() {
+                      _hasChanges = true;
                       _amountRange = _amountRange == value ? null : value;
                     }),
                   ),
@@ -496,6 +514,7 @@ class _TransactionAdvancedFilterPanelState
                     values: _channels,
                     selected: _channel,
                     onSelected: (value) => setState(() {
+                      _hasChanges = true;
                       _channel = _channel == value ? null : value;
                     }),
                   ),
@@ -505,6 +524,7 @@ class _TransactionAdvancedFilterPanelState
                     values: _banks,
                     selected: _bank,
                     onSelected: (value) => setState(() {
+                      _hasChanges = true;
                       _bank = _bank == value ? null : value;
                     }),
                   ),
@@ -539,6 +559,7 @@ class _TransactionAdvancedFilterPanelState
             ),
           ),
           _AdvancedFilterActions(
+            enabled: !widget.actionsRequireChange || _hasChanges,
             onReset: _reset,
             onComplete: () {
               FocusManager.instance.primaryFocus?.unfocus();
@@ -613,10 +634,12 @@ class _FilterChoice extends StatelessWidget {
 
 class _AdvancedFilterActions extends StatelessWidget {
   const _AdvancedFilterActions({
+    required this.enabled,
     required this.onReset,
     required this.onComplete,
   });
 
+  final bool enabled;
   final VoidCallback onReset;
   final VoidCallback onComplete;
 
@@ -636,12 +659,14 @@ class _AdvancedFilterActions extends StatelessWidget {
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: onReset,
+              onTap: enabled ? onReset : null,
               child: Center(
                 child: Text(
                   '重置',
                   style: TextStyle(
-                    color: const Color(0xFF0077DF),
+                    color: enabled
+                        ? const Color(0xFF0077DF)
+                        : const Color(0xFFC8CDD5),
                     fontSize: 18.sp,
                   ),
                 ),
@@ -651,9 +676,11 @@ class _AdvancedFilterActions extends StatelessWidget {
           Expanded(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: onComplete,
+              onTap: enabled ? onComplete : null,
               child: ColoredBox(
-                color: const Color(0xFF0879E8),
+                color: enabled
+                    ? const Color(0xFF0879E8)
+                    : const Color(0xFFD0D5DD),
                 child: Center(
                   child: Text(
                     '完成',

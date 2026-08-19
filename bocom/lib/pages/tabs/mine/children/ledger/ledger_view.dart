@@ -18,7 +18,13 @@ import 'ledger_logic.dart';
 import 'ledger_state.dart';
 
 class LedgerPage extends BaseStateless {
-  LedgerPage({super.key});
+  LedgerPage({super.key, this.initialTabIndex = 0})
+      : assert(initialTabIndex >= 0 && initialTabIndex <= 3) {
+    logic.selectLedgerTab(initialTabIndex);
+  }
+
+  /// 0：总览，1：明细流水，2：分析，3：管理。
+  final int initialTabIndex;
 
   final LedgerLogic logic = Get.put(LedgerLogic());
   final LedgerState state = Get.find<LedgerLogic>().state;
@@ -229,6 +235,7 @@ class LedgerPage extends BaseStateless {
       }),
     );
   }
+  
 
   Widget _buildPeriodSelector(BuildContext context) {
     final isYearMode = logic.periodMode.value == 1;
