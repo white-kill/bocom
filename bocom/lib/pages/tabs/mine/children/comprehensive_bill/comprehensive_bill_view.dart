@@ -10,6 +10,7 @@ import 'comprehensive_bill_logic.dart';
 import 'comprehensive_bill_state.dart';
 import 'component/bill_switch_sheet.dart';
 import 'component/asset_overview_trend_chart.dart';
+import 'component/comprehensive_bill_note_sheet.dart';
 import '../ledger/component/ledger_period_picker_sheet.dart';
 import 'asset_bill_view.dart';
 import '../account_asset/account_asset_view.dart';
@@ -63,31 +64,70 @@ class ComprehensiveBillPage extends BaseStateless {
             physics: const ClampingScrollPhysics(),
             padding: EdgeInsets.only(bottom: 30.w),
             child: Column(children: [
-              _assetOverview(),
-              _investmentIncome(),
-              _cashFlow(),
-              Image(
-                image: 'bg_bill_model_4'.png3x,
+              _assetOverview(context),
+              _investmentIncome(context),
+              _cashFlow(context),
+              Container(
                 key: state.sectionKeys[3],
-                width: 1.sw,
-                fit: BoxFit.fitWidth,
-              ).withOnTap(onTap: (){
-                Get.to(() => ChangeNavPage(), arguments: {
-                  'image': 'bg_mine_xyk',
-                  'title': '',
-                  'hideRightAction': true,
-                  'isOffset': true,
-                  'navColor': Colors.white,
-                  'changeTitleColor': Colors.transparent,
-                  'defTitleColor': Colors.transparent,
-                  'showBackgroundColor': false,
-                });
-              }),
-              Image(
-                image: 'bg_bill_model_5'.png3x,
+                child: Stack(
+                  children: [
+                    Image(
+                      image: 'bg_bill_model_4'.png3x,
+                      width: 1.sw,
+                      fit: BoxFit.fitWidth,
+                    ),
+                    Positioned(
+                        top: 20.w,
+                        child: SizedBox(
+                          width: 100.w,
+                          height: 30.w,
+                        ).withOnTap(onTap: () => ComprehensiveBillNoteSheet.show(
+                          context,
+                          type: ComprehensiveBillNoteType.creditCard,
+                        ))
+                    ),
+                    Positioned(
+                      bottom: 20.w,
+                      child: SizedBox(
+                        width: 1.sw,
+                        height: 60.w,
+                      ).withOnTap(onTap: (){
+                          Get.to(() => ChangeNavPage(), arguments: {
+                            'image': 'bg_mine_xyk',
+                            'title': '',
+                            'hideRightAction': true,
+                            'isOffset': true,
+                            'navColor': Colors.white,
+                            'changeTitleColor': Colors.transparent,
+                            'defTitleColor': Colors.transparent,
+                            'showBackgroundColor': false,
+                          });
+                      })
+                    )
+                  ],
+                ),
+              ),
+              Container(
                 key: state.sectionKeys[4],
-                width: 1.sw,
-                fit: BoxFit.fitWidth,
+                child: Stack(
+                  children: [
+                    Image(
+                      image: 'bg_bill_model_5'.png3x,
+                      width: 1.sw,
+                      fit: BoxFit.fitWidth,
+                    ),
+                    Positioned(
+                        top: 20.w,
+                        child: SizedBox(
+                          width: 120.w,
+                          height: 30.w,
+                        ).withOnTap(onTap: () => ComprehensiveBillNoteSheet.show(
+                          context,
+                          type: ComprehensiveBillNoteType.coupon,
+                        ))
+                    ),
+                  ],
+                ),
               ),
               Image(
                 image: 'bg_bill_model_6'.png3x,
@@ -418,7 +458,7 @@ class ComprehensiveBillPage extends BaseStateless {
     logic.selectPeriod(year: result.year, month: result.month);
   }
 
-  Widget _assetOverview() => Container(
+  Widget _assetOverview(BuildContext context) => Container(
         width: double.infinity,
         key: state.sectionKeys[0],
         margin: EdgeInsets.only(
@@ -433,8 +473,15 @@ class ComprehensiveBillPage extends BaseStateless {
                 color: Color(0xFF181818),
                 fontWeight: FontWeight.w600),
             SizedBox(width: 7.w),
-            Icon(Icons.info_outline,
-                size: 18.w, color: const Color(0xFF8793A2)),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => ComprehensiveBillNoteSheet.show(
+                context,
+                type: ComprehensiveBillNoteType.assetOverview,
+              ),
+              child: Icon(Icons.info_outline,
+                  size: 18.w, color: const Color(0xFF8793A2)),
+            ),
             const Spacer(),
             const BaseText(
               text: '我的资产',
@@ -547,7 +594,7 @@ class ComprehensiveBillPage extends BaseStateless {
     return value;
   }
 
-  Widget _investmentIncome() => Container(
+  Widget _investmentIncome(BuildContext context) => Container(
         key: state.sectionKeys[1],
         width: double.infinity,
         margin: EdgeInsets.only(
@@ -566,8 +613,15 @@ class ComprehensiveBillPage extends BaseStateless {
                   color: Color(0xFF181818),
                   fontWeight: FontWeight.w600),
               SizedBox(width: 7.w),
-              Icon(Icons.info_outline,
-                  size: 18.w, color: const Color(0xFF8793A2)),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => ComprehensiveBillNoteSheet.show(
+                  context,
+                  type: ComprehensiveBillNoteType.investmentIncome,
+                ),
+                child: Icon(Icons.info_outline,
+                    size: 18.w, color: const Color(0xFF8793A2)),
+              ),
               const Spacer(),
               const BaseText(
                   text: '收益中心', color: Color(0xFF0875ED), fontSize: 14),
@@ -595,7 +649,7 @@ class ComprehensiveBillPage extends BaseStateless {
             fontWeight: FontWeight.w600),
       ]);
 
-  Widget _cashFlow() => Container(
+  Widget _cashFlow(BuildContext context) => Container(
         key: state.sectionKeys[2],
         width: double.infinity,
         margin: EdgeInsets.only(
@@ -633,8 +687,15 @@ class ComprehensiveBillPage extends BaseStateless {
                       color: Color(0xFF181818),
                       fontWeight: FontWeight.w600),
                   SizedBox(width: 7.w),
-                  Icon(Icons.info_outline,
-                      size: 18.w, color: const Color(0xFF8793A2)),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => ComprehensiveBillNoteSheet.show(
+                      context,
+                      type: ComprehensiveBillNoteType.cashFlow,
+                    ),
+                    child: Icon(Icons.info_outline,
+                        size: 18.w, color: const Color(0xFF8793A2)),
+                  ),
                   const Spacer(),
                   const BaseText(
                     text: '收支明细',

@@ -194,12 +194,11 @@ class AssetBillContent extends StatelessWidget {
     ]);
   }
 
-
   Widget _summary(double total) => Container(
         width: double.infinity,
         margin: EdgeInsets.fromLTRB(
             position4.getX(40), 0, position4.getX(40), 0),
-        padding: EdgeInsets.fromLTRB(17.w, 25.w, 17.w, 28.w),
+        padding: EdgeInsets.fromLTRB(17.w, 25.w, 17.w, 15.w),
         decoration: _summaryDecoration,
         child: Column(children: [
           Row(
@@ -239,19 +238,7 @@ class AssetBillContent extends StatelessWidget {
           SizedBox(height: 20.w),
           _assetTypeCard(total),
           SizedBox(height: 15.w),
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 18.w),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F7FF),
-              borderRadius: BorderRadius.circular(8.w),
-            ),
-            child: const BaseText(
-              text: '您的总资产超过了75%的同龄人',
-              fontSize: 15,
-              color: Color(0xFF53616D),
-            ),
-          ),
+          Image(image: 'asset_bill_tooltip'.png, width: double.infinity, fit: BoxFit.fitWidth,),
         ]),
       );
 
@@ -340,14 +327,14 @@ class AssetBillContent extends StatelessWidget {
       ),
       child: Row(children: [
         _trendMetric(
-          icon: Icons.show_chart,
+          icon: 'ic_asset_bill_left'.png,
           iconColor: const Color(0xFF78B5F7),
           label: logic.periodMode.value == 1 ? '本年资产变动' : '本月资产变动',
           value: _money(change),
         ),
         Container(width: 1, height: 25.w, color: const Color(0xFFDDE1E6)),
         _trendMetric(
-          icon: Icons.bar_chart_rounded,
+          icon: 'ic_asset_bill_right'.png,
           iconColor: const Color(0xFFFFCB71),
           label: '日均资产',
           value: _money(average),
@@ -357,7 +344,7 @@ class AssetBillContent extends StatelessWidget {
   }
 
   Widget _trendMetric({
-    required IconData icon,
+    required AssetImage icon,
     required Color iconColor,
     required String label,
     required String value,
@@ -365,16 +352,7 @@ class AssetBillContent extends StatelessWidget {
     return Expanded(
       child: Row(children: [
         SizedBox(width: 15.w),
-        Container(
-          width: 22.w,
-          height: 22.w,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: iconColor.withOpacity(.22),
-            borderRadius: BorderRadius.circular(6.w),
-          ),
-          child: Icon(icon, size: 18.w, color: iconColor),
-        ),
+        Image(image: icon, width: 22.w, fit: BoxFit.fitWidth,),
         SizedBox(width: 15.w),
         Expanded(
           child: Column(

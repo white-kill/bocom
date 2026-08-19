@@ -195,6 +195,7 @@ class IncomeBillContent extends StatelessWidget {
     ]);
   }
 
+
   Widget _metric(String title, String value, bool info, {String? suffix}) =>
       Column(
           mainAxisAlignment: MainAxisAlignment.start,

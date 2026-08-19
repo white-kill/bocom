@@ -235,6 +235,7 @@ class LedgerPage extends BaseStateless {
       }),
     );
   }
+  
 
   Widget _buildPeriodSelector(BuildContext context) {
     final isYearMode = logic.periodMode.value == 1;
