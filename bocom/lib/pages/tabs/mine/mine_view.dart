@@ -113,6 +113,13 @@ class MinePage extends BaseStateless {
 
   @override
   Widget initBody(BuildContext context) {
+    final statusBarHeight = MediaQuery.paddingOf(context).top;
+    // 背景稿按常见约 36px 的状态栏留白制作。系统状态栏更高时
+    // 只补超出的部分；其余高度从背景图顶部裁掉，避免首屏整体下移过多。
+    const referenceStatusBarHeight = 36.0;
+    final backgroundCropTop = statusBarHeight < referenceStatusBarHeight
+        ? statusBarHeight
+        : referenceStatusBarHeight;
     StackPosition position1 =
         StackPosition(designWidth: 1080, designHeight: 650, deviceWidth: 1.sw);
     StackPosition position3 =
@@ -123,16 +130,43 @@ class MinePage extends BaseStateless {
       padding: EdgeInsets.zero,
       physics: const ClampingScrollPhysics(),
       children: [
-        Stack(
-          children: [
-            Image(
-              image: 'bg_mine_1'.png3x,
-              width: 1.sw,
-              fit: BoxFit.fitWidth,
+        Container(
+          key: const Key('mine-status-bar-gradient-spacer'),
+          width: 1.sw,
+          height: statusBarHeight,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                Color(0xFFF2F4F1),
+                Color(0xFFF2F7FA),
+                Color(0xFFF7F7F5),
+                Color(0xFFE7F3FE),
+              ],
+              stops: [0, 0.34, 0.58, 1],
             ),
+          ),
+        ),
+        SizedBox(
+          height: position1.getHeight(650) - backgroundCropTop,
+          child: ClipRect(
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: -backgroundCropTop,
+                  height: position1.getHeight(650),
+                  child: Image(
+                    image: 'bg_mine_1'.png3x,
+                    width: 1.sw,
+                    fit: BoxFit.fill,
+                  ),
+                ),
             Positioned(
                 left: position1.getX(70),
-                top: position1.getY(255),
+                top: position1.getY(255) - backgroundCropTop,
                 child: Image(
                   image: 'mine_user_icon'.png,
                   width: position1.getWidth(130),
@@ -140,7 +174,7 @@ class MinePage extends BaseStateless {
                 )),
             Positioned(
                 left: position1.getX(250),
-                top: position1.getY(240),
+                top: position1.getY(240) - backgroundCropTop,
                 child: BaseText(
                   text: AppConfig.config.abcLogic.realName(),
                   style: const TextStyle(
@@ -151,7 +185,7 @@ class MinePage extends BaseStateless {
                 )),
             Positioned(
                 left: position1.getX(250),
-                top: position1.getY(330),
+                top: position1.getY(330) - backgroundCropTop,
                 child: const BaseText(
                   text: '开启财富管理之旅',
                   fontSize: 13,
@@ -229,7 +263,9 @@ class MinePage extends BaseStateless {
                     ],
                   ),
                 )),
-          ],
+              ],
+            ),
+          ),
         ),
         Stack(
           children: [
