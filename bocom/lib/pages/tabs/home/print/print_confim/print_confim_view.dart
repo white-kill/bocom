@@ -6,15 +6,30 @@ import 'package:get/get.dart';
 import 'package:wb_base_widget/extension/widget_extension.dart';
 import 'package:wb_base_widget/state_widget/state_less_widget.dart';
 import 'package:wb_base_widget/text_widget/bank_text.dart';
+import 'package:bocom/pages/component/password_keyboard_sheet.dart';
+import 'package:bocom/pages/component/indicator_loading.dart';
+import 'package:wb_base_widget/extension/string_extension.dart';
 
 import 'print_confim_logic.dart';
 import 'print_confim_state.dart';
+import 'print_export_repository.dart';
+import '../print_result/print_result_view.dart';
 
 class PrintConfimPage extends BaseStateless {
-  PrintConfimPage({Key? key}) : super(key: key, title: "开立交易明细");
+  PrintConfimPage({
+    Key? key,
+    required Map<String, dynamic> exportParams,
+    PrintExportSubmitter? exportSubmitter,
+  })  : logic = Get.put(
+          PrintConfimLogic(
+            exportParams: exportParams,
+            exportSubmitter: exportSubmitter,
+          ),
+        ),
+        super(key: key, title: "开立交易明细");
 
-  final PrintConfimLogic logic = Get.put(PrintConfimLogic());
-  final PrintConfimState state = Get.find<PrintConfimLogic>().state;
+  final PrintConfimLogic logic;
+  PrintConfimState get state => logic.state;
 
   @override
   Color? get navColor => Colors.white;
@@ -198,11 +213,33 @@ class PrintConfimPage extends BaseStateless {
   Widget _submitButton(BuildContext context) => GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
+          if (logic.submitting.value) return;
           FocusScope.of(context).unfocus();
           if (!logic.isEmailValid) {
             _showEmailErrorSheet(context);
             return;
           }
+          PasswordKeyboardSheet.show(
+            context,
+            onCompleted: () async {
+              try {
+                final result = await BocomLoading.run<PrintExportResult>(
+                  context,
+                  logic.submit,
+                );
+                Get.to(
+                  () => PrintResultPage(
+                    email: result.email.isEmpty
+                        ? state.emailController.text.trim()
+                        : result.email,
+                    code: result.code,
+                  ),
+                );
+              } catch (_) {
+                '申请提交失败，请稍后重试'.showToast;
+              }
+            },
+          );
         },
         child: Container(
           height: 45.w,

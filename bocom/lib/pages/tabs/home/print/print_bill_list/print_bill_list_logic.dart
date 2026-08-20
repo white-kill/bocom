@@ -182,6 +182,27 @@ class PrintBillListLogic extends GetxController {
     loadTransactions();
   }
 
+  Map<String, dynamic> buildPrintExportFilters() {
+    final params = TransactionBillQuery.build(
+      pageNum: 1,
+      filter: advancedFilter.value,
+      beginTime: beginTime.value,
+      endTime: endTime.value,
+    )
+      ..remove('pageNum')
+      ..remove('pageSize');
+    params
+      ..['orderSort'] = '2'
+      ..['currency'] = _currencyRequestValue(selectedCurrencyLabel.value);
+    return params;
+  }
+
+  String _currencyRequestValue(String label) {
+    final match = RegExp(r'^(.+?)([A-Z]{3})$').firstMatch(label.trim());
+    if (match == null) return label.trim();
+    return '${match.group(1)} ${match.group(2)}';
+  }
+
   DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
 
   String _formatDate(DateTime date) {

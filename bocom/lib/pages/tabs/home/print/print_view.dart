@@ -11,6 +11,7 @@ import 'package:wb_base_widget/state_widget/state_less_widget.dart';
 import 'print_logic.dart';
 import 'print_state.dart';
 import 'print_bill_list/print_bill_list_view.dart';
+import 'print_record/print_record_view.dart';
 
 // 社区页
 // 说明：当前页面使用不含导航栏和分类栏的推荐内容切图，顶部导航与横向分类栏由 Flutter 单独绘制。
@@ -67,7 +68,9 @@ class PrintPage extends BaseStateless {
                 child: Row(
                   children: [
                     // 申请记录
-                    Container().expanded(),
+                    Container().withOnTap(onTap: () {
+                      Get.to(() => PrintRecordPage());
+                    }).expanded(),
                     // 查看样例
                     Container().withOnTap(onTap: () {
                       logic.showIndex.value = 1;

@@ -82,6 +82,10 @@ void main() {
 
     expect(find.text('转给 沈光德 10.00'), findsOneWidget);
     expect(find.text('中国建设银行 6217 0016 3007 6962 353'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const Key('password-keyboard-sheet'))).height,
+      closeTo(1206 / 645 * 1008, 0.01),
+    );
     expect(find.byKey(const Key('password-dot-0')), findsNothing);
 
     await tester.tap(find.bySemanticsLabel('安全键盘6'));
@@ -92,6 +96,30 @@ void main() {
     expect(find.byKey(const Key('password-dot-1')), findsOneWidget);
     expect(find.text('6'), findsNothing);
     expect(find.text('7'), findsNothing);
+  });
+
+  testWidgets('我的账户场景使用紧凑高度', (tester) async {
+    tester.view.physicalSize = const Size(1206, 2622);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: PasswordKeyboardSheet(),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getSize(find.byKey(const Key('password-keyboard-sheet'))).height,
+      closeTo(1206 / 645 * 888, 0.01),
+    );
+    expect(find.textContaining('请输入银行账号'), findsOneWidget);
   });
 
   testWidgets('任意六位短信验证码输入完成后直接通过', (tester) async {

@@ -132,10 +132,12 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
     with SingleTickerProviderStateMixin {
   static const _passwordLength = 6;
   static const _designWidth = 645.0;
-  static const _designHeight = 1008.0;
+  static const _transactionDesignHeight = 1008.0;
+  static const _accountDesignHeight = 848.0;
   static const _keyboardSourceTop = 295.0;
   static const _keyboardHeight = 523.0;
-  static const _keyboardTop = 485.0;
+  static const _transactionKeyboardTop = 485.0;
+  static const _accountKeyboardTop = 325.0;
   static const _titleFontSize = 29.0;
   static const _primaryFontSize = 33.0;
   static const _secondaryFontSize = 30.0;
@@ -188,9 +190,16 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+    // 转账场景需要保留收款人和账户信息的纵向空间；“我的账户”
+    // 只显示一行提示，键盘整体上移，避免弹层遮挡过多页面内容。
+    final isTransaction = widget.transaction != null;
+    final designHeight =
+        isTransaction ? _transactionDesignHeight : _accountDesignHeight;
+    final keyboardTop =
+        isTransaction ? _transactionKeyboardTop : _accountKeyboardTop;
     final position = StackPosition(
       designWidth: _designWidth,
-      designHeight: _designHeight,
+      designHeight: designHeight,
       deviceWidth: width,
     );
     final transaction = widget.transaction;
@@ -198,7 +207,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
     return SizedBox(
       key: const Key('password-keyboard-sheet'),
       width: width,
-      height: position.getHeight(_designHeight),
+      height: position.getHeight(designHeight),
       child: Stack(
         children: [
           Positioned.fill(
@@ -214,7 +223,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
           Positioned(
             left: 0,
             right: 0,
-            top: position.getY(_keyboardTop),
+            top: position.getY(keyboardTop),
             height: position.getHeight(_keyboardHeight),
             child: ClipRect(
               child: OverflowBox(
@@ -238,7 +247,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
           Positioned(
             left: position.getX(80),
             right: position.getX(80),
-            top: position.getY(29),
+            top: position.getY(40),
             child: Text(
               '交易密码',
               textAlign: TextAlign.center,
@@ -314,24 +323,50 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
             ),
           ] else
             Positioned(
-              left: position.getX(40),
-              right: position.getX(40),
-              top: position.getY(145),
-              child: Text(
-                '请输入银行账号(**${AppConfig.config.abcLogic.cardFour()})的交易密码',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: const Color(0xFF242424),
-                  fontSize: position.getWidth(22),
-                  height: 1,
-                ),
-              ),
-            ),
+                left: position.getX(40),
+                right: position.getX(40),
+                top: position.getY(129),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '请输入银行账号',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: const Color(0xFF242424),
+                        fontSize: position.getWidth(22),
+                        height: 1,
+                      ),
+                    ),
+                    Text(
+                      '(**${AppConfig.config.abcLogic.cardFour()})',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.orangeAccent,
+                        fontSize: position.getWidth(22),
+                        height: 1,
+                      ),
+                    ),
+                    Text(
+                      '的交易密码',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: const Color(0xFF242424),
+                        fontSize: position.getWidth(22),
+                        height: 1,
+                      ),
+                    ),
+                  ],
+                )),
           Positioned(
             left: position.getX(98),
-            top: position.getY(224),
+            top: transaction != null ? position.getY(224) : position.getY(184),
             width: position.getWidth(449),
             height: position.getHeight(64),
             child: Row(
@@ -389,7 +424,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
           ])
             Positioned(
               left: position.getX(key.left),
-              top: position.getY(key.top),
+              top: transaction != null ? position.getY(key.top) :  position.getY(key.top - 160),
               width: position.getWidth(201),
               height: position.getHeight(80),
               child: Semantics(
@@ -403,7 +438,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
             ),
           Positioned(
             left: position.getX(475),
-            top: position.getY(765),
+            top: transaction != null ? position.getY(765) :  position.getY(765 - 160),
             width: position.getWidth(145),
             height: position.getHeight(90),
             child: Semantics(

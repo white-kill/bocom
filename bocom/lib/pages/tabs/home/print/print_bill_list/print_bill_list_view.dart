@@ -10,6 +10,7 @@ import 'package:bocom/utils/stack_position.dart';
 import 'component/print_bill_custom_period_sheet.dart';
 import 'component/print_bill_advanced_filter_overlay.dart';
 import '../../transaction_detail/filter/transaction_advanced_filter_model.dart';
+import '../../transaction_detail/transaction_bill_detail_view.dart';
 import '../../transaction_detail/transaction_detail_repository.dart';
 import '../print_confim/print_confim_view.dart';
 import 'print_bill_list_logic.dart';
@@ -80,7 +81,12 @@ class PrintBillListPage extends BaseStateless {
                             ).withOnTap(
                               onTap: logic.entries.isEmpty
                                   ? null
-                                  : () => Get.to(() => PrintConfimPage()),
+                                  : () => Get.to(
+                                        () => PrintConfimPage(
+                                          exportParams:
+                                              logic.buildPrintExportFilters(),
+                                        ),
+                                      ),
                             )
                           ],
                         ),
@@ -265,15 +271,29 @@ class PrintBillListPage extends BaseStateless {
                       ],
                     ).marginOnly(top: 30.w);
                   }
-                  return Container(
-                    color: Colors.white,
-                    child: _buildTransactionRow(dataList[index], index),
+                  final entry = dataList[index];
+                  return Semantics(
+                    button: true,
+                    label: '查看${entry.record.title}交易详情',
+                    child: Container(
+                      color: Colors.white,
+                      child: _buildTransactionRow(entry, index),
+                    ).withOnTap(onTap: () => _openBillDetail(entry)),
                   );
                 },
               ),
             ),
           );
         }),
+      ),
+    );
+  }
+
+  void _openBillDetail(TransactionBillEntry entry) {
+    Get.to<void>(
+      () => TransactionBillDetailPage(
+        billId: entry.id,
+        initialDetail: entry.detail,
       ),
     );
   }
