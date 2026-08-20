@@ -6,10 +6,12 @@ import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 import 'package:intl/intl.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
 import 'package:bocom/pages/component/indicator_loading.dart';
+import 'package:bocom/utils/stack_position.dart';
 import 'component/print_bill_custom_period_sheet.dart';
 import 'component/print_bill_advanced_filter_overlay.dart';
 import '../../transaction_detail/filter/transaction_advanced_filter_model.dart';
 import '../../transaction_detail/transaction_detail_repository.dart';
+import '../print_confim/print_confim_view.dart';
 import 'print_bill_list_logic.dart';
 import 'print_bill_list_state.dart';
 
@@ -37,7 +39,7 @@ class PrintBillListPage extends BaseStateless {
       padding: EdgeInsets.zero,
       child: Column(
         children: [
-          _AccountHeader(),
+          _AccountHeader(logic),
           Expanded(
             child: Stack(
               children: [
@@ -57,21 +59,32 @@ class PrintBillListPage extends BaseStateless {
                       ),
                     ),
                     Expanded(child: _buildTransactionList(context)),
-                    SizedBox(
-                      height: bottomInset,
-                      width: 1.sw,
-                      child: Column(
-                        children: [
-                          Container(
-                            height: 44.w,
-                            width: 1.sw,
-                            color: const Color(0xFF0075F6),
-                            child: Center(
-                              child: BaseText(text: '去开立', color: Colors.white, fontSize: 17),
-                            ),
-                          )
-                        ],
-                      ),
+                    Obx(
+                      () => SizedBox(
+                        height: bottomInset,
+                        width: 1.sw,
+                        child: Column(
+                          children: [
+                            Container(
+                              height: 44.w,
+                              width: 1.sw,
+                              color: logic.entries.isEmpty
+                                  ? const Color(0xFFC4C8D0)
+                                  : const Color(0xFF0075F6),
+                              child: const Center(
+                                child: BaseText(
+                                    text: '去开立',
+                                    color: Colors.white,
+                                    fontSize: 17),
+                              ),
+                            ).withOnTap(
+                              onTap: logic.entries.isEmpty
+                                  ? null
+                                  : () => Get.to(() => PrintConfimPage()),
+                            )
+                          ],
+                        ),
+                      )
                     )
                   ],
                 ),
@@ -197,8 +210,6 @@ class PrintBillListPage extends BaseStateless {
 
   double get _currencyPanelHeight => 175.w;
 
-
-
   Widget _buildTransactionList(BuildContext context) {
     return SizedBox.expand(
       child: ColoredBox(
@@ -225,12 +236,34 @@ class PrintBillListPage extends BaseStateless {
                 separatorBuilder: (_, __) => const SizedBox.shrink(),
                 itemBuilder: (context, index) {
                   if (dataList.isEmpty) {
-                    return SizedBox(
-                      height: 180.w,
-                      child: const Center(
-                        child: Text('无交易明细记录'),
-                      ),
-                    );
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Stack(
+                          children: [
+                            Image.asset(
+                              'assets/images/bg_lefger_water_empty.png',
+                              width: 110.w,
+                              fit: BoxFit.fitWidth,
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  BaseText(
+                                    text: '交易记录为空',
+                                    fontSize: 14,
+                                    color: Color(0xFF333333),
+                                  )
+                                ],
+                              ).withSizedBox(width: 110.w),
+                            )
+                          ],
+                        )
+                      ],
+                    ).marginOnly(top: 30.w);
                   }
                   return Container(
                     color: Colors.white,
@@ -341,13 +374,15 @@ class PrintBillListPage extends BaseStateless {
         builder: (_, mode) {
           if (mode == LoadStatus.noMore) {
             return Center(
-              child: const BaseText(text: '—没有更多了—', fontSize: 14, color: Color(0xFF999999))
+              child: const BaseText(
+                      text: '—没有更多了—', fontSize: 14, color: Color(0xFF999999))
                   .marginOnly(top: 10.w),
             );
           }
           if (mode == LoadStatus.failed) {
             return Center(
-              child: const BaseText(text: '加载失败，点击重试', fontSize: 14, color: Color(0xFF999999))
+              child: const BaseText(
+                      text: '加载失败，点击重试', fontSize: 14, color: Color(0xFF999999))
                   .marginOnly(top: 10.w),
             );
           }
@@ -493,7 +528,9 @@ class PrintBillListPage extends BaseStateless {
 }
 
 class _AccountHeader extends StatelessWidget {
-  const _AccountHeader();
+  _AccountHeader(this.logic);
+
+  PrintBillListLogic logic;
 
   @override
   Widget build(BuildContext context) {
@@ -551,7 +588,53 @@ class _AccountHeader extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).withOnTap(onTap: () {
+      logic.periodFilterExpanded.value = false;
+      logic.currencyFilterExpanded.value = false;
+      logic.closeAdvancedFilter();
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (BuildContext context) {
+          StackPosition position = StackPosition(
+              designWidth: 1080, designHeight: 1517, deviceWidth: 1.sw);
+          return SizedBox(
+            height: position.deviceHeight,
+            width: 1.sw,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image(
+                    image: 'bg_print_account'.png3x,
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                Positioned(
+                    left: position.getX(490),
+                    top: position.getY(245),
+                    child: BaseText(
+                      text: '(**${AppConfig.config.abcLogic.cardFour()})',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF252525),
+                    )),
+                Positioned(
+                    left: position.getX(350),
+                    top: position.getY(305),
+                    child: BaseText(
+                      text:
+                          '${AppConfig.config.abcLogic.memberInfo.accountBalance.bankBalance}元',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF777777),
+                    )),
+              ],
+            ),
+          );
+        },
+      );
+    });
   }
 }
 
