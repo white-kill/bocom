@@ -48,7 +48,7 @@ class MinePage extends BaseStateless {
             text: '退出',
             style: TextStyle(
               fontWeight: FontWeight.w400,
-              fontSize: 16,
+              fontSize: 15,
               color: Color(0xFF181818),
             ),
           ).withOnTap(onTap: () {
@@ -578,9 +578,7 @@ class MinePage extends BaseStateless {
           image: 'bg_mine_5'.png3x,
           width: 1.sw,
           fit: BoxFit.fitWidth,
-        ).withOnTap(onTap: (){
-          Get.to(() => PrintPage());
-        }),
+        ),
         Image(
           image: 'bg_mine_6'.png3x,
           width: 1.sw,

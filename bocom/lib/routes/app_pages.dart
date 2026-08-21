@@ -7,6 +7,7 @@ import '../pages/other/search/search_view.dart';
 import '../pages/other/scan/scan_view.dart';
 import '../pages/splash/splash_view.dart';
 import '../pages/tabs/home/transaction_detail/transaction_detail_view.dart';
+import '../pages/tabs/home/print/print_view.dart';
 import '../pages/tabs/home/feature_pages/home_feature_pages.dart';
 import '../pages/tabs/home/transfer/home_transfer_view.dart';
 import '../pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
@@ -66,6 +67,10 @@ class AppPages {
     GetPage(
       name: Routes.homeTransferRecord,
       page: () => const TransferRecordPage(),
+    ),
+    GetPage(
+      name: Routes.printPage,
+      page: () => PrintPage(),
     ),
     GetPage(
       name: Routes.homeAccountTransfer,

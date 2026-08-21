@@ -20,6 +20,10 @@ class SearchResultsPage extends StatelessWidget {
     Get.toNamed<void>(Routes.transactionDetail);
   }
 
+  void _openTransactionPrint() {
+    Get.toNamed<void>(Routes.printPage);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -72,7 +76,7 @@ class SearchResultsPage extends StatelessWidget {
                           label: '交易明细清单',
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
-                            onTap: _openTransactionDetails,
+                            onTap: _openTransactionPrint,
                           ),
                         ),
                       ),

@@ -34,6 +34,8 @@ class Routes {
   static const confirmInfoPage = '/confirmInfoPage';
 
   static const transResultPage = '/transResultPage';
+
+  static const printPage = '/printPage';
 }
 
 extension RoutesStringExtension on String {
