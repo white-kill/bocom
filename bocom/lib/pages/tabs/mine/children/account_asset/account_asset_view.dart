@@ -291,14 +291,58 @@ class _AssetContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusBarHeight = MediaQuery.paddingOf(context).top;
     StackPosition position1 =
-        StackPosition(designWidth: 1080, designHeight: 1416, deviceWidth: 1.sw);
+        StackPosition(designWidth: 1080, designHeight: 1349, deviceWidth: 1.sw);
+    // 新素材由原图顶部裁掉了 67 个设计像素，动态覆盖层同步上移。
+    final assetImageTopCrop = position1.getY(67);
     StackPosition position2 =
         StackPosition(designWidth: 1080, designHeight: 626, deviceWidth: 1.sw);
     return ListView(
       padding: EdgeInsets.zero,
       physics: const ClampingScrollPhysics(),
       children: [
+        Container(
+          key: const Key('asset-status-bar-gradient-spacer'),
+          width: 1.sw,
+          height: statusBarHeight,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [
+                Color(0xFF327EF4),
+                Color(0xFF337DF1),
+                Color(0xFF307BF1),
+                Color(0xFF317AF3),
+                Color(0xFF2F78F1),
+                Color(0xFF2F78F1),
+                Color(0xFF337AF3),
+                Color(0xFF347EF2),
+                Color(0xFF3B83F2),
+                Color(0xFF4B86F6),
+                Color(0xFF5B8AF9),
+                Color(0xFF638DF8),
+                Color(0xFF648EF9),
+              ],
+              stops: [
+                0,
+                0.0833,
+                0.1667,
+                0.25,
+                0.3333,
+                0.4167,
+                0.5,
+                0.5833,
+                0.6667,
+                0.75,
+                0.8333,
+                0.9167,
+                1,
+              ],
+            ),
+          ),
+        ),
         Stack(
           children: [
             Image(
@@ -308,7 +352,7 @@ class _AssetContent extends StatelessWidget {
             ),
             Positioned(
               right: position1.getX(70),
-              top: position1.getY(255),
+              top: position1.getY(255) - assetImageTopCrop,
               child: Obx(
                 () => Image(
                   image: (!logic.amountVisible.value
@@ -322,7 +366,7 @@ class _AssetContent extends StatelessWidget {
             ),
             Positioned(
                 left: position1.getX(45),
-                top: position1.getY(325),
+                top: position1.getY(325) - assetImageTopCrop,
                 child: Obx(
                   () => BaseText(
                     text: logic.amountVisible.value
@@ -336,7 +380,7 @@ class _AssetContent extends StatelessWidget {
                 )),
             Positioned(
               left: position1.getX(545),
-              top: position1.getY(325),
+              top: position1.getY(325) - assetImageTopCrop,
               child: Obx(
                 () => BaseText(
                   text: logic.amountVisible.value ? '0.00' : '****',
@@ -348,7 +392,7 @@ class _AssetContent extends StatelessWidget {
             ),
             Positioned(
               left: position1.getX(40),
-              top: position1.getY(420),
+              top: position1.getY(420) - assetImageTopCrop,
               child: BaseText(
                 text:
                     '${AppConfig.config.abcLogic.memberInfo.realName}交行资产更新至${logic.nowDate.value}',
@@ -359,7 +403,7 @@ class _AssetContent extends StatelessWidget {
             ),
             Positioned(
               left: position1.getX(77),
-              top: position1.getY(730),
+              top: position1.getY(730) - assetImageTopCrop,
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: 1),
                 duration: const Duration(milliseconds: 1200),
@@ -376,7 +420,7 @@ class _AssetContent extends StatelessWidget {
             ),
             Positioned(
                 right: position1.getX(70),
-                top: position1.getY(743),
+                top: position1.getY(743) - assetImageTopCrop,
                 child: Obx(
                   () => Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -400,7 +444,7 @@ class _AssetContent extends StatelessWidget {
                 )),
             Positioned(
                 right: position1.getX(70),
-                top: position1.getY(853),
+                top: position1.getY(853) - assetImageTopCrop,
                 child: Obx(
                   () => Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -421,7 +465,7 @@ class _AssetContent extends StatelessWidget {
                 )),
             Positioned(
                 right: position1.getX(70),
-                top: position1.getY(958),
+                top: position1.getY(958) - assetImageTopCrop,
                 child: Obx(
                   () => Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -442,7 +486,7 @@ class _AssetContent extends StatelessWidget {
                 )),
             Positioned(
               left: position1.getX(235),
-              top: position1.getY(1170),
+              top: position1.getY(1170) - assetImageTopCrop,
               child: Obx(
                 () => BaseText(
                   text: logic.amountVisible.value ? '--' : '****',

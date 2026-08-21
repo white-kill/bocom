@@ -14,11 +14,21 @@ import 'component/comprehensive_bill_note_sheet.dart';
 import '../ledger/component/ledger_period_picker_sheet.dart';
 import 'asset_bill_view.dart';
 import '../account_asset/account_asset_view.dart';
+import '../profit_center/profit_center_view.dart';
 import '../ledger/ledger_view.dart';
 import 'income_bill_view.dart';
 
 class ComprehensiveBillPage extends BaseStateless {
-  ComprehensiveBillPage({super.key}) : super(title: '');
+  ComprehensiveBillPage({
+    super.key,
+    this.initialBillType = 0,
+  })  : assert(initialBillType >= 0 && initialBillType <= 2),
+        super(title: '') {
+    logic.selectBillType(initialBillType);
+  }
+
+  /// 0：综合账单；1：资产账单；2：收益账单。
+  final int initialBillType;
 
   final ComprehensiveBillLogic logic = Get.put(ComprehensiveBillLogic());
   final ComprehensiveBillState state = Get.find<ComprehensiveBillLogic>().state;
@@ -548,13 +558,6 @@ class ComprehensiveBillPage extends BaseStateless {
               if (validTrend.isEmpty)
                 SizedBox(
                   height: 155.w,
-                  child: const Center(
-                    child: BaseText(
-                      text: '暂无资产趋势数据',
-                      fontSize: 13,
-                      color: Color(0xFF999999),
-                    ),
-                  ),
                 )
               else
                 AssetOverviewTrendChart(
@@ -623,8 +626,14 @@ class ComprehensiveBillPage extends BaseStateless {
                     size: 18.w, color: const Color(0xFF8793A2)),
               ),
               const Spacer(),
-              const BaseText(
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => {
+                  Get.to(() => ProfitCenterPage())
+                },
+                child: const BaseText(
                   text: '收益中心', color: Color(0xFF0875ED), fontSize: 14),
+              ),
             ]),
             SizedBox(height: 20.w),
             Obx(() {

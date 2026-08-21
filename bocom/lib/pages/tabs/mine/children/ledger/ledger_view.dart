@@ -18,16 +18,26 @@ import 'ledger_logic.dart';
 import 'ledger_state.dart';
 
 class LedgerPage extends BaseStateless {
-  LedgerPage({super.key, this.initialTabIndex = 0})
-      : assert(initialTabIndex >= 0 && initialTabIndex <= 3) {
+  LedgerPage({
+    super.key,
+    this.initialTabIndex = 0,
+    this.initialLedgerType = 0,
+  })  : assert(initialTabIndex >= 0 && initialTabIndex <= 3),
+        assert(initialLedgerType >= 0 && initialLedgerType <= 3),
+        logic = Get.put(
+          LedgerLogic(initialLedgerType: initialLedgerType),
+        ) {
     logic.selectLedgerTab(initialTabIndex);
   }
 
   /// 0：总览，1：明细流水，2：分析，3：管理。
   final int initialTabIndex;
 
-  final LedgerLogic logic = Get.put(LedgerLogic());
-  final LedgerState state = Get.find<LedgerLogic>().state;
+  /// 0：总账本，1：投资账本，2：消费账本，3：薪资账本。
+  final int initialLedgerType;
+
+  final LedgerLogic logic;
+  LedgerState get state => logic.state;
 
   @override
   bool get isShowAppBar => false;

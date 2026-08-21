@@ -12,6 +12,9 @@ import 'package:bocom/config/app_config.dart';
 import 'ledger_state.dart';
 
 class LedgerLogic extends GetxController {
+  LedgerLogic({int initialLedgerType = 0})
+      : ledgerType = initialLedgerType.obs;
+
   final LedgerState state = LedgerState();
 
   final ledgerTypeList = [
@@ -45,7 +48,7 @@ class LedgerLogic extends GetxController {
     },
   ];
 
-  final ledgerType = 0.obs;
+  final RxInt ledgerType;
   final ledgerTypeExpanded = false.obs;
   final ledgerTab = 0.obs;
   final suppressHeaderAnimation = false.obs;

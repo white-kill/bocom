@@ -11,6 +11,7 @@ import 'children/account_asset/account_asset_view.dart';
 import 'children/comprehensive_bill/comprehensive_bill_view.dart';
 import '../home/print/print_view.dart';
 import 'children/ledger/ledger_view.dart';
+import 'children/profit_center/profit_center_view.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
 
@@ -454,6 +455,17 @@ class MinePage extends BaseStateless {
               ).withOnTap(onTap: () {
                 // 跳转到我的资产tab
                 Get.to(() => AccountAssetPage(initialTabIndex: 1));
+              }),
+            ),
+            Positioned(
+              right: position3.getX(30),
+              top: position3.getY(30),
+              child: SizedBox(
+                width: position3.getWidth(510),
+                height: position3.getHeight(350),
+              ).withOnTap(onTap: () {
+                // 跳转到收益中心
+                Get.to(() => ProfitCenterPage());
               }),
             ),
             Positioned(
