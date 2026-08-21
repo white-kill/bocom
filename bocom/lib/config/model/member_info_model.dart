@@ -14,6 +14,7 @@ class MemberInfoModel {
 	String appAccount = '';
 	String idCard = '';
 	String chapterCode = '';
+	String branchBelongs = '';
 	String sex = '';
 	String city = '';
 	String openCity = '';

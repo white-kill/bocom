@@ -93,6 +93,13 @@ class BocLogic extends GetxController {
     return '--';
   }
 
+  String card2(){
+    if(memberInfo.bankList.isNotEmpty){
+      return '${memberInfo.bankList.first.bankCard.substring(0,6)}****${memberInfo.bankList.first.bankCard.getLastFourByList()}';
+    }
+    return '--';
+  }
+
   String cardFour(){
     if(memberInfo.bankList.isNotEmpty){
       return memberInfo.bankList.first.bankCard.getLastFourByList();
@@ -101,10 +108,7 @@ class BocLogic extends GetxController {
   }
 
   String branchBelongs(){
-    if(memberInfo.bankList.isNotEmpty){
-      return memberInfo.bankList.first.branchBelongs;
-    }
-    return '--';
+    return memberInfo.branchBelongs.isEmpty ? '--' : memberInfo.branchBelongs;
   }
 
   String phone(){

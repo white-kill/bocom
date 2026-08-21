@@ -58,7 +58,7 @@ abstract class BaseStateless extends StatelessWidget  with StateWidgetConfig {
           titleSpacing: 0,
           titleTextStyle: TextStyle(fontWeight: FontWeight.bold,fontSize: 18.sw),
           leadingWidth:lefItemWidth,
-          leading:  leftItem??(isBack()?const SizedBox.shrink():InkWell(
+          leading: leftItem??(isBack()?const SizedBox.shrink():InkWell(
               child: Icon(Icons.navigate_before,size: 30.h,color: backColor,),
               onTap: ()  => backCallBack == null ?_popThis(context): backCallBack?.call()
           )),

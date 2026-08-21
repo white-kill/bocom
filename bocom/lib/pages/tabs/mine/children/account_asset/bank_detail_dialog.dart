@@ -78,7 +78,7 @@ class BankDetailDialog extends StatelessWidget {
                 right: stackPosition.getX(50),
                 top: stackPosition.getY(330),
                 child: BaseText(
-                  text: AppConfig.config.abcLogic.openOutlets(),
+                  text: AppConfig.config.abcLogic.branchBelongs(),
                   fontSize: 15,
                   color: const Color(0xFF757575),
                 ),

@@ -36,6 +36,11 @@ MemberInfoModel $MemberInfoModelFromJson(Map<String, dynamic> json) {
   if (chapterCode != null) {
     memberInfoModel.chapterCode = chapterCode;
   }
+  final String? branchBelongs = jsonConvert.convert<String>(
+      json['branchBelongs']);
+  if (branchBelongs != null) {
+    memberInfoModel.branchBelongs = branchBelongs;
+  }
   final String? sex = jsonConvert.convert<String>(json['sex']);
   if (sex != null) {
     memberInfoModel.sex = sex;
@@ -134,6 +139,7 @@ Map<String, dynamic> $MemberInfoModelToJson(MemberInfoModel entity) {
   data['appAccount'] = entity.appAccount;
   data['idCard'] = entity.idCard;
   data['chapterCode'] = entity.chapterCode;
+  data['branchBelongs'] = entity.branchBelongs;
   data['sex'] = entity.sex;
   data['city'] = entity.city;
   data['openCity'] = entity.openCity;
@@ -166,6 +172,7 @@ extension MemberInfoModelExtension on MemberInfoModel {
     String? appAccount,
     String? idCard,
     String? chapterCode,
+    String? branchBelongs,
     String? sex,
     String? city,
     String? openCity,
@@ -195,6 +202,7 @@ extension MemberInfoModelExtension on MemberInfoModel {
       ..appAccount = appAccount ?? this.appAccount
       ..idCard = idCard ?? this.idCard
       ..chapterCode = chapterCode ?? this.chapterCode
+      ..branchBelongs = branchBelongs ?? this.branchBelongs
       ..sex = sex ?? this.sex
       ..city = city ?? this.city
       ..openCity = openCity ?? this.openCity
