@@ -39,7 +39,7 @@ class AccountAssetPage extends BaseStateless {
   @override
   Widget? get titleWidget => Obx(() => BaseText(
         text: logic.bottomItemIndex.value == 0 ? '我的账户' : '我的资产',
-        fontSize: 18,
+        fontSize: 17,
         color: logic.bottomItemIndex.value == 0
             ? Colors.black
             : logic.navActionColor.value,
@@ -53,23 +53,26 @@ class AccountAssetPage extends BaseStateless {
           ),
           Obx(
             () => SizedBox(
-              width: 35.w,
-              height: 35.w,
+              width: 30.w,
+              height: 30.w,
               child: Center(
                 child: logic.navActionFlag.value
                     ? Image(
                         image: 'nav_back_white'.png,
-                        height: 19.w,
+                        height: 15.w,
                         fit: BoxFit.contain,
                       )
-                    : Image(
-                        image: logic.bottomItemIndex.value == 0
-                            ? 'nav_back_light_white'.png
-                            : 'nav_back_light'.png,
-                        width: 35.w,
-                        height: 35.w,
-                        fit: BoxFit.contain,
-                      ),
+                    : (logic.bottomItemIndex.value == 0 ? Image(
+                  image: 'nav_back_light_white'.png,
+                  width: 29.5.w,
+                  height: 29.5.w,
+                  fit: BoxFit.contain,
+                ):Image(
+                  image: 'nav_back_light'.png,
+                  width: 26.w,
+                  height: 26.w,
+                  fit: BoxFit.contain,
+                )),
               ),
             ).withOnTap(onTap: () => Get.back()),
           ),
@@ -83,24 +86,27 @@ class AccountAssetPage extends BaseStateless {
             button: true,
             label: '客服',
             child: SizedBox(
-              width: 36.w,
-              height: 36.w,
+              width: 30.w,
+              height: 30.w,
               child: Center(
                 child: logic.navActionFlag.value
                     ? Image(
                         image: 'nav_kf_white'.png,
-                        width: 20.w,
-                        height: 20.w,
+                        width: 16.w,
+                        height: 16.w,
                         fit: BoxFit.contain,
                       )
-                    : Image(
-                        image: logic.bottomItemIndex.value == 0
-                            ? 'nav_kf_light_white'.png
-                            : 'nav_kf_light'.png,
-                        width: 36.w,
-                        height: 36.w,
-                        fit: BoxFit.contain,
-                      ),
+                    : (logic.bottomItemIndex.value == 0 ? Image(
+                  image: 'nav_kf_light_white'.png,
+                  width: 29.w,
+                  height: 29.w,
+                  fit: BoxFit.contain,
+                ):Image(
+                  image: 'nav_kf_light'.png,
+                  width: 27.w,
+                  height: 27.w,
+                  fit: BoxFit.contain,
+                )),
               ),
             ).withOnTap(
               onTap: () => Get.toNamed(Routes.customerService),

@@ -27,7 +27,7 @@ class ProfitCenterPage extends BaseStateless {
   @override
   Widget? get titleWidget => Obx(() => BaseText(
     text: '收益中心',
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: FontWeight.w500,
     color: logic.navActionColor.value,
   ));
@@ -40,19 +40,19 @@ class ProfitCenterPage extends BaseStateless {
           ),
           Obx(
             () => SizedBox(
-              width: 35.w,
-              height: 35.w,
+              width: 26.w,
+              height: 26.w,
               child: Center(
                 child: logic.navActionFlag.value
                     ? Image(
                         image: 'nav_back_white'.png,
-                        height: 19.w,
+                        height: 15.w,
                         fit: BoxFit.contain,
                       )
                     : Image(
                         image: 'nav_back_light'.png,
-                        width: 35.w,
-                        height: 35.w,
+                        width: 26.w,
+                        height: 26.w,
                         fit: BoxFit.contain,
                       ),
               ),
@@ -68,20 +68,20 @@ class ProfitCenterPage extends BaseStateless {
             button: true,
             label: '客服',
             child: SizedBox(
-              width: 36.w,
-              height: 36.w,
+              width: 27.w,
+              height: 27.w,
               child: Center(
                 child: logic.navActionFlag.value
                     ? Image(
                         image: 'nav_kf_white'.png,
-                        width: 20.w,
-                        height: 20.w,
+                        width: 16.w,
+                        height: 16.w,
                         fit: BoxFit.contain,
                       )
                     : Image(
                         image: 'nav_kf_light'.png,
-                        width: 36.w,
-                        height: 36.w,
+                        width: 27.w,
+                        height: 27.w,
                         fit: BoxFit.contain,
                       ),
               ),
