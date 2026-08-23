@@ -43,7 +43,7 @@
     </queries>
 
     <application
-        android:label="中国银行"
+        android:label="交通银行"
         android:name="${applicationName}"
         android:usesCleartextTraffic="true"
         android:hardwareAccelerated="false"
