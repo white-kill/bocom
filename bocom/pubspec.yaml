@@ -83,6 +83,7 @@ flutter:
     - assets/images/
     - assets/images/scan/
     - assets/images/customer_service/
+    - assets/images/all_services/
     - assets/images/search/
     - assets/images/account_transfer/icons/
     - assets/images/account_transfer/banks/

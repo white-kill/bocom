@@ -9,6 +9,8 @@ import '../pages/splash/splash_view.dart';
 import '../pages/tabs/home/transaction_detail/transaction_detail_view.dart';
 import '../pages/tabs/home/print/print_view.dart';
 import '../pages/tabs/home/feature_pages/home_feature_pages.dart';
+import '../pages/tabs/home/feature_pages/home_static_feature_pages.dart';
+import '../pages/tabs/home/all_services/all_services_view.dart';
 import '../pages/tabs/home/transfer/home_transfer_view.dart';
 import '../pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
 import '../pages/tabs/home/transfer/record/transfer_record_view.dart';
@@ -43,6 +45,34 @@ class AppPages {
     GetPage(
       name: Routes.customerService,
       page: () => const CustomerServicePage(),
+    ),
+    GetPage(
+      name: Routes.allServices,
+      page: () => const AllServicesPage(),
+    ),
+    GetPage(
+      name: Routes.homeConsumerLoan,
+      page: () => const HomeConsumerLoanPage(),
+    ),
+    GetPage(
+      name: Routes.homeDemandDepositPlus,
+      page: () => const HomeDemandDepositPlusPage(),
+    ),
+    GetPage(
+      name: Routes.homeCityZone,
+      page: () => const HomeCityZonePage(),
+    ),
+    GetPage(
+      name: Routes.homeNews,
+      page: () => const HomeNewsPage(),
+    ),
+    GetPage(
+      name: Routes.homeDeposit,
+      page: () => const HomeDepositPage(),
+    ),
+    GetPage(
+      name: Routes.homeCouponCenter,
+      page: () => const HomeCouponCenterPage(),
     ),
     GetPage(
       name: Routes.transactionDetail,

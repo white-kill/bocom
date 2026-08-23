@@ -1,4 +1,5 @@
 import 'package:bocom/routes/app_pages.dart';
+import 'package:bocom/config/abc_config/account_city_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -82,41 +83,46 @@ class _LifeCitySelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final foreground = isDark ? const Color(0xFF171717) : Colors.white;
 
-    return Semantics(
-      button: true,
-      label: '当前城市，上海',
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {},
-        child: Padding(
-          padding: EdgeInsets.only(left: 13.w),
-          child: Row(
-            children: [
-              Container(
-                width: 13.w,
-                height: 13.w,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFFF0F0F0)
-                      : Colors.white.withValues(alpha: 0.24),
-                  shape: BoxShape.circle,
+    return AccountCityBuilder(
+      builder: (_, city) => Semantics(
+        button: true,
+        label: '当前城市，$city',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {},
+          child: Padding(
+            padding: EdgeInsets.only(left: 13.w),
+            child: Row(
+              children: [
+                Container(
+                  width: 13.w,
+                  height: 13.w,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFFF0F0F0)
+                        : Colors.white.withValues(alpha: 0.24),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.arrow_drop_down_rounded,
+                    size: 13.w,
+                    color: foreground,
+                  ),
                 ),
-                child: Icon(
-                  Icons.arrow_drop_down_rounded,
-                  size: 13.w,
-                  color: foreground,
+                SizedBox(width: 3.w),
+                Text(
+                  city,
+                  key: const Key('life-city-label'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: foreground,
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
-              SizedBox(width: 3.w),
-              Text(
-                '上海',
-                style: TextStyle(
-                  color: foreground,
-                  fontSize: 17.sp,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

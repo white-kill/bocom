@@ -14,7 +14,14 @@ import 'home_state.dart';
 // 首页
 // 说明：当前页面使用 01—08 原始内容切图纵向拼接，顶部导航与二楼下拉交互由 Flutter 单独绘制。
 class HomePage extends BaseStateless {
-  HomePage({super.key});
+  HomePage({
+    this.onIncomeExpenseLedgerTap,
+    this.onBillTap,
+    super.key,
+  });
+
+  final VoidCallback? onIncomeExpenseLedgerTap;
+  final VoidCallback? onBillTap;
 
   static const List<String> _sectionAssets = [
     'assets/images/home_section_01.png',
@@ -154,7 +161,11 @@ class HomePage extends BaseStateless {
               );
             }
             if (index == 1) {
-              return _HomeTransferSection(assetPath: _sectionAssets[index]);
+              return _HomeTransferSection(
+                assetPath: _sectionAssets[index],
+                onIncomeExpenseLedgerTap: onIncomeExpenseLedgerTap,
+                onBillTap: onBillTap,
+              );
             }
             return Image.asset(
               _sectionAssets[index],
@@ -170,15 +181,62 @@ class HomePage extends BaseStateless {
 }
 
 class _HomeTransferSection extends StatelessWidget {
-  const _HomeTransferSection({required this.assetPath});
+  const _HomeTransferSection({
+    required this.assetPath,
+    this.onIncomeExpenseLedgerTap,
+    this.onBillTap,
+  });
 
   final String assetPath;
+  final VoidCallback? onIncomeExpenseLedgerTap;
+  final VoidCallback? onBillTap;
 
   static const double _sourceWidth = 1080;
-  static const double _sourceHeight = 358;
+  static const double _sourceHeight = 397;
 
   @override
   Widget build(BuildContext context) {
+    final featureDestinations = [
+      _HomeFeatureDestination(
+        semanticsLabel: '转账',
+        open: () => Get.toNamed(Routes.homeTransfer),
+      ),
+      _HomeFeatureDestination(
+        semanticsLabel: '惠民贷',
+        open: () => Get.toNamed(Routes.homeConsumerLoan),
+      ),
+      _HomeFeatureDestination(
+        semanticsLabel: '活期盈',
+        open: () => Get.toNamed(Routes.homeDemandDepositPlus),
+      ),
+      _HomeFeatureDestination(
+        semanticsLabel: '城市专区',
+        open: () => Get.toNamed(Routes.homeCityZone),
+      ),
+      _HomeFeatureDestination(
+        semanticsLabel: '资讯',
+        open: () => Get.toNamed(Routes.homeNews),
+      ),
+      _HomeFeatureDestination(
+        semanticsLabel: '存款',
+        open: () => Get.toNamed(Routes.homeDeposit),
+      ),
+      _HomeFeatureDestination(
+        semanticsLabel: '领券中心',
+        open: () => Get.toNamed(Routes.homeCouponCenter),
+      ),
+      _HomeFeatureDestination(
+        hotspotKey: const Key('home-income-expense-ledger-hotspot'),
+        semanticsLabel: '收支账本',
+        open: onIncomeExpenseLedgerTap ?? _reservedHomeFeatureTap,
+      ),
+      _HomeFeatureDestination(
+        hotspotKey: const Key('home-bill-hotspot'),
+        semanticsLabel: '账单',
+        open: onBillTap ?? _reservedHomeFeatureTap,
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (_, constraints) {
         final scale = constraints.maxWidth / _sourceWidth;
@@ -194,17 +252,33 @@ class _HomeTransferSection extends StatelessWidget {
                   gaplessPlayback: true,
                 ),
               ),
+              for (var index = 0; index < featureDestinations.length; index++)
+                Positioned(
+                  left: (index % 5) * 216 * scale,
+                  top: (index ~/ 5) * 198.5 * scale,
+                  width: 216 * scale,
+                  height: 198.5 * scale,
+                  child: Semantics(
+                    key: featureDestinations[index].hotspotKey,
+                    button: true,
+                    label: featureDestinations[index].semanticsLabel,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: featureDestinations[index].open,
+                    ),
+                  ),
+                ),
               Positioned(
-                left: 0,
-                top: 0,
+                left: 864 * scale,
+                top: 198.5 * scale,
                 width: 216 * scale,
-                height: 179 * scale,
+                height: 198.5 * scale,
                 child: Semantics(
                   button: true,
-                  label: '转账',
+                  label: '全部服务',
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => Get.toNamed(Routes.homeTransfer),
+                    onTap: () => Get.toNamed(Routes.allServices),
                   ),
                 ),
               ),
@@ -222,7 +296,7 @@ class _HomeAccountAssetSection extends StatelessWidget {
   final String assetPath;
 
   static const double _sourceWidth = 1080;
-  static const double _sourceHeight = 915;
+  static const double _sourceHeight = 538;
 
   static final List<_HomeFeatureDestination> _destinations = [
     _HomeFeatureDestination(
@@ -263,9 +337,9 @@ class _HomeAccountAssetSection extends StatelessWidget {
               for (var index = 0; index < _destinations.length; index++)
                 Positioned(
                   left: index * 270 * scale,
-                  top: 250 * scale,
+                  top: 215 * scale,
                   width: 270 * scale,
-                  height: 230 * scale,
+                  height: 323 * scale,
                   child: Semantics(
                     button: true,
                     label: _destinations[index].semanticsLabel,
@@ -287,11 +361,15 @@ class _HomeFeatureDestination {
   const _HomeFeatureDestination({
     required this.semanticsLabel,
     required this.open,
+    this.hotspotKey,
   });
 
   final String semanticsLabel;
   final VoidCallback open;
+  final Key? hotspotKey;
 }
+
+void _reservedHomeFeatureTap() {}
 
 class _HomeSearchBar extends StatelessWidget {
   const _HomeSearchBar({required this.isDark});
@@ -338,8 +416,9 @@ class _HomeSearchBar extends StatelessWidget {
               ),
               Image.asset(
                 'assets/images/home_nav_voice_$suffix.png',
-                width: 22.w,
-                height: 22.w,
+                width: 19.w,
+                height: 19.w,
+                fit: BoxFit.contain,
               ),
             ],
           ),

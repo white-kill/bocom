@@ -15,6 +15,20 @@ class Routes {
 
   static const customerService = '/customerService';
 
+  static const allServices = '/allServices';
+
+  static const homeConsumerLoan = '/homeConsumerLoan';
+
+  static const homeDemandDepositPlus = '/homeDemandDepositPlus';
+
+  static const homeCityZone = '/homeCityZone';
+
+  static const homeNews = '/homeNews';
+
+  static const homeDeposit = '/homeDeposit';
+
+  static const homeCouponCenter = '/homeCouponCenter';
+
   static const transactionDetail = '/transactionDetail';
 
   static const homeCreditCard = '/homeCreditCard';

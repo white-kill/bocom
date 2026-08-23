@@ -1,6 +1,5 @@
-import 'package:bocom/config/abc_config/boc_logic.dart';
+import 'package:bocom/config/abc_config/account_city_builder.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class SearchCityText extends StatelessWidget {
   const SearchCityText({
@@ -14,16 +13,8 @@ class SearchCityText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<BocLogic>()) {
-      return _label('上海');
-    }
-
-    return GetBuilder<BocLogic>(
-      id: 'updateUI',
-      builder: (logic) {
-        final city = logic.memberInfo.city.trim();
-        return _label(city.isEmpty ? '上海' : city);
-      },
+    return AccountCityBuilder(
+      builder: (_, city) => _label(city),
     );
   }
 
