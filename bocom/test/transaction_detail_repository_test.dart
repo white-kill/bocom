@@ -79,7 +79,7 @@ void main() {
               'transactionTime': '2026-07-29 10:30:00',
               'transactionChannel': '支付宝',
               'transactionCategory': '快捷支付',
-              'explain': '其他商家消费',
+              'transactionDescription': '其他商家消费',
               'merchantName': '拼多多平台商户',
               'oppositeName': '拼多多平台商户',
               'postscriptno': 'ORDER-10001',
@@ -106,7 +106,10 @@ void main() {
     expect(page.entries.single.monthExpensesTotal, 792.47);
     expect(page.entries.single.detail?.bankCard, '622262****2910');
     expect(page.entries.single.detail?.transactionCategory, '快捷支付');
-    expect(page.entries.single.detail?.explain, '其他商家消费');
+    expect(
+      page.entries.single.detail?.transactionDescription,
+      '其他商家消费',
+    );
     expect(page.entries.single.detail?.postscriptno, 'ORDER-10001');
     expect(page.entries.single.detail?.transactionLogno, 'FLOW-10001');
     expect(page.entries.single.detail?.excerpt, '网上支付');
@@ -128,7 +131,7 @@ void main() {
           'transactionTime': '2026-08-15 12:54:23',
           'transactionChannel': '支付宝',
           'transactionCategory': '快捷支付',
-          'explain': '其他商家消费',
+          'transactionDescription': '其他商家消费',
           'merchantName': '拼多多平台商户',
           'oppositeName': '拼多多平台商户',
           'postscriptno': '20260815110100010539160975713552',

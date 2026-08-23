@@ -220,7 +220,7 @@ TransactionBillPage _billPage() {
           transactionTime: DateTime(2026, 8, 14, 11, 30),
           transactionChannel: '手机银行',
           transactionCategory: '快捷支付',
-          explain: '消费',
+          transactionDescription: '消费',
           oppositeName: '',
           oppositeAccount: '',
           oppositeBankName: '',

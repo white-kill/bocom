@@ -259,7 +259,7 @@ class TransactionBillDetail {
     required this.transactionTime,
     required this.transactionChannel,
     required this.transactionCategory,
-    required this.explain,
+    required this.transactionDescription,
     required this.oppositeName,
     required this.oppositeAccount,
     required this.oppositeBankName,
@@ -276,7 +276,7 @@ class TransactionBillDetail {
   final DateTime? transactionTime;
   final String transactionChannel;
   final String transactionCategory;
-  final String explain;
+  final String transactionDescription;
   final String oppositeName;
   final String oppositeAccount;
   final String oppositeBankName;
@@ -359,10 +359,9 @@ class TransactionBillDetail {
         source['transactionType'],
         detail['billType'],
       ]),
-      explain: _firstText([
-        detail['explain'],
-        source['explain'],
-        detail['bankExcerpt'],
+      transactionDescription: _firstText([
+        detail['transactionDescription'],
+        source['transactionDescription'],
       ]),
       oppositeName: oppositeName,
       oppositeAccount: _firstText([
@@ -403,7 +402,7 @@ class TransactionBillDetail {
         transactionTime: record.occurredAt,
         transactionChannel: record.channel,
         transactionCategory: '',
-        explain: '',
+        transactionDescription: '',
         oppositeName: '',
         oppositeAccount: '',
         oppositeBankName: '',

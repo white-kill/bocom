@@ -298,7 +298,10 @@ class _BillDetailCard extends StatelessWidget {
     return switch (detail.kind) {
       TransactionBillDetailKind.onlinePayment => [
           ..._baseRows,
-          _BillDetailRowData('交易说明', _value(detail.explain)),
+          _BillDetailRowData(
+            '交易说明',
+            _value(detail.transactionDescription),
+          ),
           _BillDetailRowData('交易商户', _value(detail.merchantName)),
           if (detail.oppositeName.trim().isNotEmpty)
             _BillDetailRowData('对方户名', detail.oppositeName.trim()),
@@ -315,8 +318,11 @@ class _BillDetailCard extends StatelessWidget {
         ],
       TransactionBillDetailKind.unknown => [
           ..._baseRows,
-          if (detail.explain.trim().isNotEmpty)
-            _BillDetailRowData('交易说明', detail.explain.trim()),
+          if (detail.transactionDescription.trim().isNotEmpty)
+            _BillDetailRowData(
+              '交易说明',
+              detail.transactionDescription.trim(),
+            ),
           if (detail.merchantName.trim().isNotEmpty)
             _BillDetailRowData('交易商户', detail.merchantName.trim()),
           if (detail.oppositeName.trim().isNotEmpty)
