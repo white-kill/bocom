@@ -14,6 +14,8 @@ import '../pages/tabs/home/all_services/all_services_view.dart';
 import '../pages/tabs/home/transfer/home_transfer_view.dart';
 import '../pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
 import '../pages/tabs/home/transfer/record/transfer_record_view.dart';
+import '../pages/tabs/mine/children/ledger/ledger_view.dart';
+import '../pages/tabs/mine/children/comprehensive_bill/comprehensive_bill_view.dart';
 import '../config/model/contacts_model.dart';
 
 part 'app_routes.dart';
@@ -101,6 +103,14 @@ class AppPages {
     GetPage(
       name: Routes.printPage,
       page: () => PrintPage(),
+    ),
+    GetPage(
+      name: Routes.ledgerPage,
+      page: () => LedgerPage(),
+    ),
+    GetPage(
+      name: Routes.comprehensiveBillPage,
+      page: () => ComprehensiveBillPage(),
     ),
     GetPage(
       name: Routes.homeAccountTransfer,

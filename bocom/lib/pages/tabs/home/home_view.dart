@@ -228,12 +228,12 @@ class _HomeTransferSection extends StatelessWidget {
       _HomeFeatureDestination(
         hotspotKey: const Key('home-income-expense-ledger-hotspot'),
         semanticsLabel: '收支账本',
-        open: onIncomeExpenseLedgerTap ?? _reservedHomeFeatureTap,
+        open: () => Get.toNamed(Routes.ledgerPage),
       ),
       _HomeFeatureDestination(
         hotspotKey: const Key('home-bill-hotspot'),
         semanticsLabel: '账单',
-        open: onBillTap ?? _reservedHomeFeatureTap,
+        open: () => Get.toNamed(Routes.comprehensiveBillPage),
       ),
     ];
 

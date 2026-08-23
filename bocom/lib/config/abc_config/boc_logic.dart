@@ -111,6 +111,7 @@ class BocLogic extends GetxController {
     return memberInfo.branchBelongs.isEmpty ? '--' : memberInfo.branchBelongs;
   }
 
+
   String phone(){
     return memberInfo.phone.desensitize();
   }

@@ -12,12 +12,14 @@ class LedgerBillItem extends StatelessWidget {
     required this.isFirst,
     required this.isLast,
     this.topCornerBackgroundGradient,
+    this.onDetailUpdated,
   });
 
   final BillItemList item;
   final bool isFirst;
   final bool isLast;
   final Gradient? topCornerBackgroundGradient;
+  final VoidCallback? onDetailUpdated;
 
   String _total(String value) => value.isEmpty ? '0.00' : value;
 
@@ -53,12 +55,20 @@ class LedgerBillItem extends StatelessWidget {
         item.type.toLowerCase() == 'income' ||
         item.type == '收入' ||
         item.amount.startsWith('+');
-    final amount = item.amount.replaceFirst(RegExp(r'^[+-]'), '');
-    final billType = detail?.billType ?? '';
+    final rawAmount = item.amount.replaceFirst(RegExp(r'^[+-]'), '').trim();
+    final amount = double.tryParse(rawAmount.replaceAll(',', ''))
+            ?.toStringAsFixed(2) ??
+        '0.00';
+    bool includeInTotal = detail?.includeInTotal ?? true;
 
     final content = GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => Get.to(() => LedgerDetailPage(item: item)),
+      onTap: () => Get.to(
+        () => LedgerDetailPage(
+          item: item,
+          onUpdated: onDetailUpdated,
+        ),
+      ),
       child: Container(
         // margin: EdgeInsets.symmetric(horizontal: 10.w),
         // margin: EdgeInsets.symmetric(horizontal: 10.w),
@@ -158,14 +168,13 @@ class LedgerBillItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     BaseText(
-                      text:
-                          '${isIncome ? '+' : '-'}${amount.isEmpty ? '0.00' : amount}',
+                      text: '${isIncome ? '+' : '-'}$amount',
                       fontSize: 16,
                       color: isIncome
                           ? const Color(0xFFFF565B)
                           : const Color(0xFF222222),
                     ),
-                    if (billType.isNotEmpty) ...[
+                    if (!includeInTotal) ...[
                       SizedBox(height: 4.w),
                       Container(
                         padding: EdgeInsets.symmetric(
@@ -175,7 +184,7 @@ class LedgerBillItem extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4.w),
                         ),
                         child: BaseText(
-                            text: billType,
+                            text: '不计入',
                             fontSize: 12,
                             color: const Color(0xFF999999)),
                       ),

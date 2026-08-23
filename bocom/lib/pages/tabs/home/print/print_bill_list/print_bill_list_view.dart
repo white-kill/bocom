@@ -242,31 +242,20 @@ class PrintBillListPage extends BaseStateless {
                 separatorBuilder: (_, __) => const SizedBox.shrink(),
                 itemBuilder: (context, index) {
                   if (dataList.isEmpty) {
-                    return Row(
+                    return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Stack(
-                          children: [
-                            Image.asset(
-                              'assets/images/bg_lefger_water_empty.png',
-                              width: 110.w,
-                              fit: BoxFit.fitWidth,
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  BaseText(
-                                    text: '交易记录为空',
-                                    fontSize: 14,
-                                    color: Color(0xFF333333),
-                                  )
-                                ],
-                              ).withSizedBox(width: 110.w),
-                            )
-                          ],
+                        SizedBox(height: 40.h,),
+                        Image.asset(
+                          'assets/images/ic_print_empty.png',
+                          width: 70.w,
+                          fit: BoxFit.fitWidth,
+                        ),
+                        SizedBox(height: 10.h,),
+                        const BaseText(
+                          text: '交易记录为空',
+                          fontSize: 12,
+                          color: Color(0xFF333333),
                         )
                       ],
                     ).marginOnly(top: 30.w);
