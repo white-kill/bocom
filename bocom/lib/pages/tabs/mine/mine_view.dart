@@ -9,8 +9,8 @@ import '../../../routes/app_pages.dart';
 import '../../../utils/sp_util.dart';
 import 'children/account_asset/account_asset_view.dart';
 import 'children/comprehensive_bill/comprehensive_bill_view.dart';
-import '../home/print/print_view.dart';
 import 'children/ledger/ledger_view.dart';
+import 'children/user_info/user_info_view.dart';
 import 'children/profit_center/profit_center_view.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
@@ -192,6 +192,22 @@ class MinePage extends BaseStateless {
                   fontSize: 13,
                   color: Color(0xFF878787),
                 )),
+                Positioned(
+                    left: position1.getX(250),
+                    top: position1.getY(330) - backgroundCropTop,
+                    child: const BaseText(
+                      text: '开启财富管理之旅',
+                      fontSize: 13,
+                      color: Color(0xFF878787),
+                    )),
+                Positioned(
+                    left: position1.getX(30),
+                    top: position1.getY(230) - backgroundCropTop,
+                    width: position1.getWidth(700),
+                    height: position1.getHeight(170),
+                    child: Container().withOnTap(onTap: (){
+                      Get.to(() => UserInfoPage());
+                    })),
             // 借记卡积分
             Positioned(
                 left: position1.getX(80),

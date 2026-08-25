@@ -98,7 +98,7 @@ class LoginPage extends BaseStateless {
                           fit: BoxFit.fitWidth,
                         ),
                         Positioned(
-                          top: stackPosition.getX(230),
+                          top: stackPosition.getX(390),
                           left: 30.w,
                           child: Obx(() => Image(
                             image: (logic.canLoginActive
@@ -122,6 +122,21 @@ class LoginPage extends BaseStateless {
                           ).withOnTap(onTap: () {
                             FocusScope.of(context).unfocus();
                             logic.toggleAgreement();
+                          })),
+                        ),
+                        Positioned(
+                          top: stackPosition.getX(230),
+                          left: 30.w,
+                          child: Obx(() => Image(
+                            image: (logic.agreedToTerms2.value
+                                ? 'login_read_check'
+                                : 'login_read')
+                                .png,
+                            width: stackPosition.getWidth(60),
+                            fit: BoxFit.fitWidth,
+                          ).withOnTap(onTap: () {
+                            FocusScope.of(context).unfocus();
+                            logic.agreedToTerms2.value = !logic.agreedToTerms2.value;
                           })),
                         )
                       ]
