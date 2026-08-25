@@ -43,6 +43,9 @@ class Apis {
   // 明细流水
   static const bookDetailPage = '/servicecomm/bill/book/detailPage';
 
+  // 更新账单详情
+  static const bookDetailUpdate = '/servicecomm/bill/book/detail/update';
+
   // 账本分析
   static const bookAnalysis = '/servicecomm/bill/book/analysis';
 

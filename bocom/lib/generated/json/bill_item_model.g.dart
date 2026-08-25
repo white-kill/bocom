@@ -300,6 +300,14 @@ BillItemListBillDetail $BillItemListBillDetailFromJson(
           .whereType<int>()
           .toList() ??
       [];
+  final bool? includeInTotal =
+      jsonConvert.convert<bool>(json['includeInTotal']);
+  if (includeInTotal != null) {
+    billItemListBillDetail.includeInTotal = includeInTotal;
+  }
+  billItemListBillDetail.bookkeepingTag =
+      jsonConvert.convert<String>(json['bookkeepingTag']);
+  billItemListBillDetail.remark = jsonConvert.convert<String>(json['remark']);
   return billItemListBillDetail;
 }
 
@@ -327,6 +335,9 @@ Map<String, dynamic> $BillItemListBillDetailToJson(
   data['postscriptno'] = entity.postscriptno;
   data['transactionObject'] = entity.transactionObject;
   data['bookTypes'] = entity.bookTypes;
+  data['includeInTotal'] = entity.includeInTotal;
+  data['bookkeepingTag'] = entity.bookkeepingTag;
+  data['remark'] = entity.remark;
   return data;
 }
 
@@ -353,6 +364,9 @@ extension BillItemListBillDetailExtension on BillItemListBillDetail {
     String? postscriptno,
     String? transactionObject,
     List<int>? bookTypes,
+    bool? includeInTotal,
+    String? bookkeepingTag,
+    String? remark,
   }) {
     return BillItemListBillDetail()
       ..id = id ?? this.id
@@ -375,6 +389,9 @@ extension BillItemListBillDetailExtension on BillItemListBillDetail {
       ..transactionCategory = transactionCategory ?? this.transactionCategory
       ..postscriptno = postscriptno ?? this.postscriptno
       ..transactionObject = transactionObject ?? this.transactionObject
-      ..bookTypes = bookTypes ?? this.bookTypes;
+      ..bookTypes = bookTypes ?? this.bookTypes
+      ..includeInTotal = includeInTotal ?? this.includeInTotal
+      ..bookkeepingTag = bookkeepingTag ?? this.bookkeepingTag
+      ..remark = remark ?? this.remark;
   }
 }

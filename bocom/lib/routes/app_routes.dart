@@ -52,6 +52,8 @@ class Routes {
   static const transResultPage = '/transResultPage';
 
   static const printPage = '/printPage';
+  static const ledgerPage = '/ledgerPage';
+  static const comprehensiveBillPage = '/comprehensiveBillPage';
 }
 
 extension RoutesStringExtension on String {

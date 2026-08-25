@@ -51,6 +51,13 @@ class LedgerOverviewTab extends StatelessWidget {
                 item: dataList[index - 1],
                 isFirst: index == 1,
                 isLast: index == dataList.length,
+                onDetailUpdated: () {
+                  logic.bookDetailPage.refresh();
+                  Future.wait([
+                    logic.getOverView(),
+                    logic.getBookDetailPage(),
+                  ]);
+                },
               ).marginSymmetric(horizontal: _position.getX(30));
             },
           ),

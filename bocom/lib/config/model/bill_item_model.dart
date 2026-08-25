@@ -89,6 +89,12 @@ class BillItemListBillDetail {
   /// 所属账本：1-投资账本，2-消费账本，4-薪资账本
   List<int> bookTypes = [];
 
+  /// 是否计入账单统计
+  bool includeInTotal = true;
+
+  String? bookkeepingTag;
+  String? remark;
+
   BillItemListBillDetail();
 
   factory BillItemListBillDetail.fromJson(Map<String, dynamic> json) =>

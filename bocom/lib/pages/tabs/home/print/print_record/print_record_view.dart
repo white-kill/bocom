@@ -72,7 +72,7 @@ class PrintRecordPage extends BaseStateless {
                 onRefresh: () => logic.refreshRecords(state.refreshController),
                 onLoading: () =>
                     logic.loadMoreRecords(state.refreshController),
-                child: logic.records.isEmpty
+                child: logic.records.isNotEmpty
                     ? const _EmptyRecords()
                     : ListView.separated(
                         padding: EdgeInsets.only(bottom: 24.w),
@@ -253,20 +253,25 @@ class _EmptyRecords extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        SizedBox(
-          height: 260.w,
-          child: const Center(
-            child: BaseText(
-              text: '暂无申请记录',
-              fontSize: 15,
-              color: Color(0xFF999999),
-            ),
-          ),
-        ),
-      ],
+    return Expanded(
+      child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/ic_common_empty.png',
+                  width: 80.w,
+                  fit: BoxFit.fitWidth,
+                ),
+                SizedBox(height: 5.h),
+                const BaseText(
+                  text: '暂无申请记录',
+                  fontSize: 15,
+                  color: Color(0xFF333333),
+                )
+              ],
+            )
+        ).withContainer(padding: EdgeInsets.only(bottom: 70.h))
     );
   }
 }

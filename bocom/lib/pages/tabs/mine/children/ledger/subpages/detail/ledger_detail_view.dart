@@ -1,4 +1,6 @@
 import 'package:bocom/config/model/bill_item_model.dart';
+import 'package:bocom/config/dio/network.dart';
+import 'package:bocom/config/net_config/apis.dart';
 import 'package:bocom/utils/stack_position.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,16 +8,41 @@ import 'package:wb_base_widget/extension/widget_extension.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/text_widget/bank_text.dart';
 
-class LedgerDetailPage extends StatelessWidget {
-  const LedgerDetailPage({super.key, required this.item});
+class LedgerDetailPage extends StatefulWidget {
+  const LedgerDetailPage({
+    super.key,
+    required this.item,
+    this.onUpdated,
+  });
 
   final BillItemList item;
-  BillItemListBillDetail? get _detail => item.billDetail;
+  final VoidCallback? onUpdated;
+
+  @override
+  State<LedgerDetailPage> createState() => _LedgerDetailPageState();
+}
+
+class _LedgerDetailPageState extends State<LedgerDetailPage> {
+  BillItemListBillDetail? get _detail => widget.item.billDetail;
+  late List<int> _bookTypes;
+  late bool _includeInTotal;
+  late String _remark;
+  late String _transactionCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _bookTypes = List<int>.from(_detail?.bookTypes ?? const <int>[]);
+    _includeInTotal = _detail?.includeInTotal ?? true;
+    _remark = _detail?.remark ?? '';
+    _transactionCategory = _detail?.transactionCategory ?? '';
+  }
+
   bool get _isIncome =>
-      item.type == '1' ||
-      item.type == '收入' ||
-      item.type.toLowerCase() == 'income' ||
-      item.amount.startsWith('+') ||
+      widget.item.type == '1' ||
+      widget.item.type == '收入' ||
+      widget.item.type.toLowerCase() == 'income' ||
+      widget.item.amount.startsWith('+') ||
       _detail?.type == '1';
 
   @override
@@ -70,7 +97,12 @@ class LedgerDetailPage extends StatelessWidget {
           child: _DetailRemarkField(
             height: position.getHeight(300),
             counterHeight: position.getHeight(45),
-            initialText: _detail?.postscriptno ?? '',
+            initialText: _remark,
+            onChanged: (value) => _remark = value,
+            onFocusLost: (value) {
+              _remark = value;
+              _updateDetail();
+            },
           ),
         ),
       ],
@@ -78,7 +110,11 @@ class LedgerDetailPage extends StatelessWidget {
   }
 
   Widget _transactionCard() {
-    final amount = item.amount.replaceFirst(RegExp(r'^[+-]'), '').trim();
+    final rawAmount = widget.item.amount.replaceFirst(RegExp(r'^[+-]'), '').trim();
+    final amount = double.tryParse(rawAmount.replaceAll(',', ''))
+        ?.toStringAsFixed(2) ??
+        '0.00';
+    // final amount = widget.item.amount.replaceFirst(RegExp(r'^[+-]'), '').trim();
     return Container(
       padding: EdgeInsets.fromLTRB(15.w, 24.w, 15.w, 15.w),
       decoration: BoxDecoration(
@@ -98,17 +134,22 @@ class LedgerDetailPage extends StatelessWidget {
           ),
           SizedBox(height: 9.w),
           BaseText(
-            text: _value(_detail?.excerpt, fallback: item.excerpt),
+            text: _value(_detail?.excerpt, fallback: widget.item.excerpt),
             fontSize: 17,
             color: const Color(0xFF738094),
             maxLines: 2,
           ),
           SizedBox(height: 35.w),
-          _detailRow('交易时间',
-              _value(_detail?.transactionTime, fallback: item.transactionTime)),
+          _detailRow(
+            '交易时间',
+            _value(
+              _detail?.transactionTime,
+              fallback: widget.item.transactionTime,
+            ),
+          ),
           _detailRow('交易账户', _accountText()),
           _detailRow('对方户名',
-              _value(_detail?.oppositeName, fallback: item.oppositeName)),
+              _value(_detail?.oppositeName, fallback: widget.item.oppositeName)),
           _detailRow('对方账户', _maskedOppositeAccount()),
           _detailRow(
               '对方开户行',
@@ -122,14 +163,12 @@ class LedgerDetailPage extends StatelessWidget {
   }
 
   Widget _settingCard() {
-    final category = _value(_detail?.transactionCategory,
+    final category = _value(_transactionCategory,
         fallback: _detail?.transactionType ?? '');
-    final counted = _detail?.billType != '不计入';
-    final bookTypes = _detail?.bookTypes ?? const <int>[];
-    final ledgerType = _displayLedgerType(bookTypes);
-    final ledger = bookTypes.isEmpty
+    final ledgerType = _displayLedgerType(_bookTypes);
+    final ledger = _bookTypes.isEmpty
         ? '总账本'
-        : '${_ledgerName(ledgerType)}等(${bookTypes.length + 1})';
+        : '${_ledgerName(ledgerType)}等(${_bookTypes.length + 1})';
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 15.w),
       decoration: BoxDecoration(
@@ -138,7 +177,11 @@ class LedgerDetailPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _settingRow('${_isIncome ? '收入' : '支出'}类别', category),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _selectTransactionCategory,
+            child: _settingRow('${_isIncome ? '收入' : '支出'}类别', category),
+          ),
           const Divider(height: 1, color: Color(0xFFE4E6E9)),
           SizedBox(
             height: 62.w,
@@ -146,18 +189,29 @@ class LedgerDetailPage extends StatelessWidget {
               children: [
                 BaseText(text: '计入总账${_isIncome ? '收入' : '支出'}', fontSize: 17),
                 const Spacer(),
-                const BaseText(
-                    text: '计入', fontSize: 15, color: Color(0xFF9AA1AB)),
+                BaseText(
+                  text: _includeInTotal ? '计入' : '不计入',
+                  fontSize: 15,
+                  color: const Color(0xFF9AA1AB),
+                ),
                 SizedBox(width: 10.w),
-                _ledgerSwitch(counted),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _toggleIncludeInTotal,
+                  child: _ledgerSwitch(_includeInTotal),
+                ),
               ],
             ),
           ),
           const Divider(height: 1, color: Color(0xFFE4E6E9)),
-          _settingRow(
-            '所属账本',
-            ledger,
-            leadingAsset: _ledgerIcon(ledgerType),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _selectBookTypes,
+            child: _settingRow(
+              '所属账本',
+              ledger,
+              leadingAsset: _ledgerIcon(ledgerType),
+            ),
           ),
         ],
       ),
@@ -186,6 +240,64 @@ class LedgerDetailPage extends StatelessWidget {
           ],
         ),
       );
+
+  Future<void> _toggleIncludeInTotal() async {
+    setState(() => _includeInTotal = !_includeInTotal);
+    await _updateDetail(refreshList: true);
+  }
+
+  Future<void> _selectTransactionCategory() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _LedgerCategorySheet(
+        isIncome: _isIncome,
+        initialCategory: _transactionCategory,
+      ),
+    );
+    if (selected == null || selected == _transactionCategory || !mounted) {
+      return;
+    }
+    setState(() => _transactionCategory = selected);
+    await _updateDetail(refreshList: true);
+  }
+
+  Future<void> _selectBookTypes() async {
+    final selected = await showModalBottomSheet<Set<int>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _LedgerBookSheet(initialTypes: _bookTypes.toSet()),
+    );
+    if (selected == null || !mounted) return;
+    setState(() => _bookTypes = selected.toList()..sort());
+    await _updateDetail(refreshList: true);
+  }
+
+  Future<void> _updateDetail({bool refreshList = false}) async {
+    final detail = _detail;
+    if (detail == null || detail.id <= 0) return;
+    await Http.post(
+      Apis.bookDetailUpdate,
+      data: {
+        'billId': detail.id,
+        'transactionCategory': _transactionCategory,
+        'bookTypes': _bookTypes,
+        'includeInTotal': _includeInTotal,
+        'bookkeepingTag': '',
+        'remark': _remark,
+      },
+      isLoading: false,
+    );
+    detail
+      ..transactionCategory = _transactionCategory
+      ..bookTypes = List<int>.from(_bookTypes)
+      ..includeInTotal = _includeInTotal
+      ..bookkeepingTag = ''
+      ..remark = _remark;
+    if (refreshList) widget.onUpdated?.call();
+  }
 
   Widget _settingRow(
     String label,
@@ -318,11 +430,15 @@ class _DetailRemarkField extends StatefulWidget {
     required this.height,
     required this.counterHeight,
     required this.initialText,
+    required this.onChanged,
+    required this.onFocusLost,
   });
 
   final double height;
   final double counterHeight;
   final String initialText;
+  final ValueChanged<String> onChanged;
+  final ValueChanged<String> onFocusLost;
 
   @override
   State<_DetailRemarkField> createState() => _DetailRemarkFieldState();
@@ -331,16 +447,28 @@ class _DetailRemarkField extends StatefulWidget {
 class _DetailRemarkFieldState extends State<_DetailRemarkField> {
   late final TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
+  bool _hadFocus = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialText);
     _controller.addListener(_refreshCounter);
+    _focusNode.addListener(_handleFocusChanged);
   }
 
   void _refreshCounter() {
+    widget.onChanged(_controller.text);
     if (mounted) setState(() {});
+  }
+
+  void _handleFocusChanged() {
+    if (_focusNode.hasFocus) {
+      _hadFocus = true;
+    } else if (_hadFocus) {
+      _hadFocus = false;
+      widget.onFocusLost(_controller.text);
+    }
   }
 
   @override
@@ -348,7 +476,9 @@ class _DetailRemarkFieldState extends State<_DetailRemarkField> {
     _controller
       ..removeListener(_refreshCounter)
       ..dispose();
-    _focusNode.dispose();
+    _focusNode
+      ..removeListener(_handleFocusChanged)
+      ..dispose();
     super.dispose();
   }
 
@@ -397,5 +527,405 @@ class _DetailRemarkFieldState extends State<_DetailRemarkField> {
             ),
           ],
         ),
+      );
+}
+
+class _LedgerCategorySheet extends StatefulWidget {
+  const _LedgerCategorySheet({
+    required this.isIncome,
+    required this.initialCategory,
+  });
+
+  final bool isIncome;
+  final String initialCategory;
+
+  @override
+  State<_LedgerCategorySheet> createState() => _LedgerCategorySheetState();
+}
+
+class _LedgerCategorySheetState extends State<_LedgerCategorySheet> {
+  late String _selectedCategory;
+
+  static const _expenseSections = <_CategorySection>[
+    _CategorySection(
+      title: '日常支出',
+      assetDirectory: 'expense/daily',
+      items: [
+        _CategoryItem('餐饮美食', assetName: 'dining'),
+        _CategoryItem('服饰美容', assetName: 'clothing_beauty'),
+        _CategoryItem('交通出行', assetName: 'transportation'),
+        _CategoryItem('居家生活', assetName: 'home_living'),
+        _CategoryItem('话费网费', assetName: 'phone_internet'),
+        _CategoryItem('转账', assetName: 'transfer'),
+        _CategoryItem('购物', assetName: 'shopping'),
+        _CategoryItem('旅游酒店', assetName: 'travel_hotel'),
+        _CategoryItem('休闲娱乐', assetName: 'entertainment'),
+        _CategoryItem('运动健身', assetName: 'fitness'),
+        _CategoryItem('学习培训', assetName: 'education'),
+        _CategoryItem('医疗保健', assetName: 'healthcare'),
+        _CategoryItem('人情往来', assetName: 'social_gifts'),
+        _CategoryItem('还款', assetName: 'repayment'),
+        _CategoryItem('现金取出', assetName: 'cash_withdrawal'),
+        _CategoryItem('税金服务费', assetName: 'tax_service_fee'),
+        _CategoryItem('慈善公益', assetName: 'charity'),
+        _CategoryItem('其他支出', assetName: 'other_expense'),
+      ],
+    ),
+    _CategorySection(
+      title: '金融理财',
+      assetDirectory: 'expense/finance',
+      items: [
+        _CategoryItem('理财', assetName: 'wealth_management'),
+        _CategoryItem('基金', assetName: 'fund'),
+        _CategoryItem('存款', assetName: 'deposit'),
+        _CategoryItem('债券', assetName: 'bond'),
+        _CategoryItem('保险', assetName: 'insurance'),
+        _CategoryItem('外汇', assetName: 'foreign_exchange'),
+        _CategoryItem('股票期货', assetName: 'stocks_futures'),
+        _CategoryItem('其他投资', assetName: 'other_investment'),
+      ],
+    ),
+  ];
+
+  static const _incomeSections = <_CategorySection>[
+    _CategorySection(
+      title: '日常收入',
+      assetDirectory: 'income/daily',
+      items: [
+        _CategoryItem('薪酬福利', assetName: 'salary_benefits'),
+        _CategoryItem('转账', assetName: 'transfer'),
+        _CategoryItem('经营所得', assetName: 'business_income'),
+        _CategoryItem('贷款发放', assetName: 'loan_disbursement'),
+        _CategoryItem('现金存入', assetName: 'cash_deposit'),
+        _CategoryItem('退款', assetName: 'refund'),
+        _CategoryItem('报销', assetName: 'reimbursement'),
+        _CategoryItem(
+          '社保公积金',
+          assetName: 'social_security_housing_fund',
+        ),
+        _CategoryItem('刷卡金', assetName: 'card_reward'),
+        _CategoryItem('人情往来', assetName: 'social_gifts'),
+        _CategoryItem('其他收入', assetName: 'other_income'),
+      ],
+    ),
+    _CategorySection(
+      title: '金融理财',
+      assetDirectory: 'income/finance',
+      items: [
+        _CategoryItem('理财', assetName: 'wealth_management'),
+        _CategoryItem('基金', assetName: 'fund'),
+        _CategoryItem('存款', assetName: 'deposit'),
+        _CategoryItem('债券', assetName: 'bond'),
+        _CategoryItem('保险', assetName: 'insurance'),
+        _CategoryItem('外汇', assetName: 'foreign_exchange'),
+        _CategoryItem('股票期货', assetName: 'stocks_futures'),
+        _CategoryItem('其他投资', assetName: 'other_investment'),
+      ],
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = switch (widget.initialCategory) {
+      '其它支出' => '其他支出',
+      '其它收入' => '其他收入',
+      '其它投资' => '其他投资',
+      '债卷' => '债券',
+      _ => widget.initialCategory,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = widget.isIncome ? _incomeSections : _expenseSections;
+    return Container(
+      height: MediaQuery.sizeOf(context).height * 0.72,
+      padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.w)),
+      ),
+      child: Column(
+        children: [
+          _header(),
+          const Divider(height: 1, color: Color(0xFFE7E9EC)),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.only(top: 15.w, bottom: 24.w),
+              itemCount: sections.length,
+              itemBuilder: (_, index) => _section(sections[index]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _header() => SizedBox(
+        height: 58.w,
+        width: double.infinity,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            BaseText(
+              text: '选择${widget.isIncome ? '收入' : '支出'}类别',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+            Positioned(
+              left: 8.w,
+              child: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, size: 27),
+              ),
+            ),
+            Positioned(
+              right: 15.w,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _selectedCategory.isEmpty
+                    ? null
+                    : () => Navigator.pop(context, _selectedCategory),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: BaseText(
+                    text: '确定',
+                    fontSize: 18,
+                    color: _selectedCategory.isEmpty
+                        ? const Color(0xFFB8BDC6)
+                        : const Color(0xFF087DFF),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _section(_CategorySection section) => Padding(
+        padding: EdgeInsets.only(bottom: 22.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15.w),
+              child: BaseText(
+                text: section.title,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 14.w),
+            GridView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 10.w),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: section.items.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                mainAxisExtent: 82.w,
+              ),
+              itemBuilder: (_, index) =>
+                  _categoryItem(section, section.items[index]),
+            ),
+          ],
+        ),
+      );
+
+  Widget _categoryItem(_CategorySection section, _CategoryItem item) {
+    final selected = item.name == _selectedCategory;
+    final asset =
+        'assets/images/category/${section.assetDirectory}/${item.assetName}.png';
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _selectedCategory = item.name),
+      child: Column(
+        children: [
+          Container(
+            width: 32.w,
+            height: 32.w,
+            padding: EdgeInsets.all(7.w),
+            decoration: BoxDecoration(
+              color: selected ? const Color(0xFF4D94F7) : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+            child: Image.asset(
+              asset,
+              fit: BoxFit.contain,
+              color: selected ? Colors.white : null,
+            ),
+          ),
+          SizedBox(height: 5.w),
+          BaseText(
+            text: item.name,
+            fontSize: 15,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategorySection {
+  const _CategorySection({
+    required this.title,
+    required this.assetDirectory,
+    required this.items,
+  });
+
+  final String title;
+  final String assetDirectory;
+  final List<_CategoryItem> items;
+}
+
+class _CategoryItem {
+  const _CategoryItem(this.name, {required this.assetName});
+
+  final String name;
+  final String assetName;
+}
+
+class _LedgerBookSheet extends StatefulWidget {
+  const _LedgerBookSheet({required this.initialTypes});
+
+  final Set<int> initialTypes;
+
+  @override
+  State<_LedgerBookSheet> createState() => _LedgerBookSheetState();
+}
+
+class _LedgerBookSheetState extends State<_LedgerBookSheet> {
+  late final Set<int> _selectedTypes;
+
+  static const _books = <({int? type, String name, int assetIndex})>[
+    (type: null, name: '总账本', assetIndex: 1),
+    (type: 1, name: '投资账本', assetIndex: 2),
+    (type: 2, name: '消费账本', assetIndex: 3),
+    (type: 4, name: '薪资账本', assetIndex: 4),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTypes = Set<int>.from(widget.initialTypes);
+  }
+
+  @override
+  Widget build(BuildContext context) => Container(
+        height: 510.w,
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16.w)),
+        ),
+        child: Column(
+          children: [
+            SizedBox(
+              height: 58.w,
+              width: 1.sw,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const BaseText(
+                    text: '所属账本',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  Positioned(
+                    left: 8.w,
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, size: 27),
+                    ),
+                  ),
+                  Positioned(
+                    right: 15.w,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Navigator.pop(context, _selectedTypes),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: BaseText(
+                          text: '确定',
+                          fontSize: 18,
+                          color: Color(0xFF087DFF),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(15.w, 12.w, 15.w, 16.w),
+              child: const BaseText(
+                text: '总账本将自动汇总全部流水，无需手动处理。同一笔流水可同时归属多个账本，您可按需勾选。',
+                fontSize: 15,
+                color: Color(0xFF929292),
+                maxLines: 3,
+              ),
+            ),
+            ..._books.map(_bookRow),
+          ],
+        ),
+      );
+
+  Widget _bookRow(({int? type, String name, int assetIndex}) book) {
+    final isTotal = book.type == null;
+    final selected = isTotal || _selectedTypes.contains(book.type);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isTotal
+          ? null
+          : () => setState(() {
+                if (selected) {
+                  _selectedTypes.remove(book.type);
+                } else {
+                  _selectedTypes.add(book.type!);
+                }
+              }),
+      child: Container(
+        height: 65.w,
+        margin: EdgeInsets.symmetric(horizontal: 15.w),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFE7E9EC))),
+        ),
+        child: Row(
+          children: [
+            Image.asset(
+              'assets/images/ledger_type_${book.assetIndex}_small.png',
+              width: 23.w,
+              height: 23.w,
+            ),
+            SizedBox(width: 12.w),
+            BaseText(text: book.name, fontSize: 16),
+            const Spacer(),
+            _checkBox(selected, disabled: isTotal),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _checkBox(bool selected, {required bool disabled}) => Container(
+        width: 24.w,
+        height: 24.w,
+        decoration: BoxDecoration(
+          color: selected
+              ? (disabled
+                  ? const Color(0xFF65A9F6)
+                  : const Color(0xFF087DFF))
+              : Colors.white,
+          borderRadius: BorderRadius.circular(6.w),
+          border: selected
+              ? null
+              : Border.all(color: const Color(0xFFD1D6DD), width: 1.5),
+        ),
+        child: selected
+            ? const Icon(Icons.check, color: Colors.white, size: 20)
+            : null,
       );
 }

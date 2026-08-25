@@ -79,6 +79,13 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
     return max <= 0 ? 5 : max * 1.2;
   }
 
+  // Keep zero slightly above the clipped plot boundary so consecutive zero
+  // values still render as a visible, connected line.
+  double get _minY => -_maxY * 0.04;
+
+  double _valueToChartY(double value, double plotHeight) =>
+      plotHeight * (_maxY - value) / (_maxY - _minY);
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -127,10 +134,14 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
   Widget _buildChart(double chartWidth) {
     final selectedX = chartWidth * _selectedIndex / (_pointCount - 1);
     final plotHeight = 140.w;
-    final incomeY = plotHeight *
-        (1 - _values(widget.incomeValues)[_selectedIndex] / _maxY);
-    final expenseY = plotHeight *
-        (1 - _values(widget.expenseValues)[_selectedIndex] / _maxY);
+    final incomeY = _valueToChartY(
+      _values(widget.incomeValues)[_selectedIndex],
+      plotHeight,
+    );
+    final expenseY = _valueToChartY(
+      _values(widget.expenseValues)[_selectedIndex],
+      plotHeight,
+    );
     final tooltipWidth = 115.w;
     final showTooltipOnRight = _selectedIndex < _pointCount ~/ 2;
     final tooltipLeft = showTooltipOnRight
@@ -152,6 +163,10 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
           bottom: 30.w,
           child: LineChart(
             _chartData(),
+            // Monthly and yearly data use very different Y-axis scales. Keep
+            // their animation states separate so fl_chart never interpolates
+            // yearly values against the previous monthly axis range.
+            key: ValueKey(widget.isYearMode),
             duration: const Duration(milliseconds: 250),
           ),
         ),
@@ -789,9 +804,11 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
     return LineChartData(
       minX: 0,
       maxX: (_pointCount - 1).toDouble(),
-      minY: 0,
+      minY: _minY,
       maxY: _maxY,
-      clipData: const FlClipData(top: false, bottom: false, left: false, right: false),
+      // Data and axis bounds are animated independently by fl_chart. Clipping
+      // keeps intermediate frames inside the plot if the scale changes a lot.
+      clipData: const FlClipData.all(),
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,

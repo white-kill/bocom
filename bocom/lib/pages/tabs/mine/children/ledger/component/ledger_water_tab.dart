@@ -58,6 +58,10 @@ class LedgerWaterTab extends StatelessWidget {
                     item: dataList[index - 1],
                     isFirst: index == 1,
                     isLast: index == dataList.length,
+                    onDetailUpdated: () {
+                      logic.bookWaterPage.refresh();
+                      logic.getBookWaterPage();
+                    },
                     topCornerBackgroundGradient: const LinearGradient(
                       colors: [
                         Color(0xFFECF7FF),
