@@ -8,6 +8,16 @@ import 'package:get/get.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('生活页问候语按小时切换', () {
+    expect(lifeGreetingForHour(0), '上午好');
+    expect(lifeGreetingForHour(11), '上午好');
+    expect(lifeGreetingForHour(12), '中午好');
+    expect(lifeGreetingForHour(13), '下午好');
+    expect(lifeGreetingForHour(17), '下午好');
+    expect(lifeGreetingForHour(18), '晚上好');
+    expect(lifeGreetingForHour(23), '晚上好');
+  });
+
   setUp(() {
     Get.testMode = true;
   });
@@ -24,10 +34,12 @@ void main() {
         builder: (_, __) => GetMaterialApp(home: LifePage()),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     final cityFinder = find.byKey(const Key('life-city-label'));
     expect(find.text('广州'), findsOneWidget);
+    expect(find.byKey(const Key('life-city-location-icon')), findsOneWidget);
+    expect(find.byKey(const Key('life-greeting')), findsOneWidget);
 
     final cityText = tester.widget<Text>(cityFinder);
     expect(cityText.style?.fontSize, 17.sp);

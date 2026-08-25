@@ -8,6 +8,14 @@ import 'package:wb_base_widget/state_widget/state_less_widget.dart';
 import 'life_logic.dart';
 import 'life_state.dart';
 
+String lifeGreetingForHour(int hour) {
+  assert(hour >= 0 && hour <= 23);
+  if (hour < 12) return '上午好';
+  if (hour < 13) return '中午好';
+  if (hour < 18) return '下午好';
+  return '晚上好';
+}
+
 // 生活页
 // 说明：当前页面使用不含导航栏的 01、02 内容切图，透明渐变导航由 BaseStateless 单独绘制。
 class LifePage extends BaseStateless {
@@ -34,7 +42,7 @@ class LifePage extends BaseStateless {
   Color? get navColor => const Color(0xFFF7F7F7);
 
   @override
-  double? get lefItemWidth => 65.w;
+  double? get lefItemWidth => 70.w;
 
   @override
   Widget? get leftItem => Obx(
@@ -61,15 +69,41 @@ class LifePage extends BaseStateless {
   Widget initBody(BuildContext context) {
     return ListView.builder(
       padding: EdgeInsets.zero,
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       itemCount: _sectionAssets.length,
-      itemBuilder: (_, index) => Image.asset(
-        _sectionAssets[index],
-        width: 1.sw,
-        fit: BoxFit.fitWidth,
-        alignment: Alignment.topCenter,
-        gaplessPlayback: true,
-      ),
+      itemBuilder: (_, index) {
+        final section = Image.asset(
+          _sectionAssets[index],
+          width: 1.sw,
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          gaplessPlayback: true,
+        );
+        if (index != 0) return section;
+
+        return AspectRatio(
+          aspectRatio: 1080 / 2133,
+          child: Stack(
+            children: [
+              Positioned.fill(child: section),
+              Positioned(
+                left: 20.w,
+                top: 100.w,
+                child: Text(
+                  '${lifeGreetingForHour(DateTime.now().hour)}!',
+                  key: const Key('life-greeting'),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.w400,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -94,20 +128,15 @@ class _LifeCitySelector extends StatelessWidget {
             padding: EdgeInsets.only(left: 13.w),
             child: Row(
               children: [
-                Container(
-                  width: 13.w,
-                  height: 13.w,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFFF0F0F0)
-                        : Colors.white.withValues(alpha: 0.24),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.arrow_drop_down_rounded,
-                    size: 13.w,
-                    color: foreground,
-                  ),
+                Image.asset(
+                  'assets/images/search/search_location.png',
+                  key: const Key('life-city-location-icon'),
+                  width: 17.w,
+                  height: 20.w,
+                  fit: BoxFit.contain,
+                  color: foreground,
+                  colorBlendMode: BlendMode.srcIn,
+                  excludeFromSemantics: true,
                 ),
                 SizedBox(width: 3.w),
                 Text(
