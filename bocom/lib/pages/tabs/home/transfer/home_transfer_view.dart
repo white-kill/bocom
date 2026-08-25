@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../../routes/app_pages.dart';
+import 'account_transfer/home_account_transfer_view.dart';
 import 'account_transfer/account_transfer_support_pages.dart';
 
 // 转账页
@@ -126,6 +127,11 @@ class _TransferPageBody extends StatelessWidget {
   final VoidCallback onRetry;
   final Future<List<ContactsModel>> Function()? contactsLoader;
 
+  static const double _contactCardTop = 1374;
+  static const double _contactHeaderHeight = 158;
+  static const double _contactRowHeight = 217;
+  static const double _contactCardBottomPadding = 58;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -133,8 +139,12 @@ class _TransferPageBody extends StatelessWidget {
         final scale = constraints.maxWidth / HomeTransferPage._sourceWidth;
         final rowCount =
             isLoading || hasError || contacts.isEmpty ? 1 : contacts.length;
-        final dynamicCardHeight = (150 + rowCount * 217 + 24) * scale;
-        final requiredHeight = 1180 * scale + dynamicCardHeight + 48 * scale;
+        final dynamicCardHeight = (_contactHeaderHeight +
+                rowCount * _contactRowHeight +
+                _contactCardBottomPadding) *
+            scale;
+        final requiredHeight =
+            (_contactCardTop + 48) * scale + dynamicCardHeight;
         final pageHeight = requiredHeight < constraints.maxHeight
             ? constraints.maxHeight
             : requiredHeight;
@@ -148,7 +158,7 @@ class _TransferPageBody extends StatelessWidget {
                   left: 0,
                   right: 0,
                   top: 0,
-                  height: 1180 * scale,
+                  height: _contactCardTop * scale,
                   child: ClipRect(
                     child: OverflowBox(
                       alignment: Alignment.topCenter,
@@ -166,10 +176,11 @@ class _TransferPageBody extends StatelessWidget {
                 ),
                 Positioned(
                   right: 28 * scale,
-                  top: 565 * scale,
+                  top: 720 * scale,
                   width: 290 * scale,
-                  height: 245 * scale,
+                  height: 260 * scale,
                   child: Semantics(
+                    key: const ValueKey('home_transfer_all_recipients_hotspot'),
                     button: true,
                     label: '全部收款人',
                     child: GestureDetector(
@@ -225,11 +236,27 @@ class _TransferPageBody extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  left: 44 * scale,
-                  top: 790 * scale,
-                  width: 282 * scale,
-                  height: 210 * scale,
+                  left: 414 * scale,
+                  top: 180 * scale,
+                  width: 370 * scale,
+                  height: 355 * scale,
                   child: Semantics(
+                    key: const ValueKey('home_phone_transfer_hotspot'),
+                    button: true,
+                    label: '手机号转账',
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Get.toNamed(Routes.homePhoneTransfer),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 44 * scale,
+                  top: 540 * scale,
+                  width: 558 * scale,
+                  height: 185 * scale,
+                  child: Semantics(
+                    key: const ValueKey('home_transfer_record_hotspot'),
                     button: true,
                     label: '转账记录',
                     child: GestureDetector(
@@ -239,11 +266,12 @@ class _TransferPageBody extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  left: 50 * scale,
-                  right: 50 * scale,
-                  top: 1180 * scale,
+                  left: 44 * scale,
+                  right: 44 * scale,
+                  top: _contactCardTop * scale,
                   height: dynamicCardHeight,
                   child: DecoratedBox(
+                    key: const ValueKey('home_transfer_contacts_card'),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(28 * scale),
@@ -251,7 +279,7 @@ class _TransferPageBody extends StatelessWidget {
                     child: Column(
                       children: [
                         SizedBox(
-                          height: 150 * scale,
+                          height: _contactHeaderHeight * scale,
                           child: Padding(
                             padding:
                                 EdgeInsets.symmetric(horizontal: 42 * scale),
@@ -262,21 +290,51 @@ class _TransferPageBody extends StatelessWidget {
                                     '常用收款人',
                                     style: TextStyle(
                                       fontSize: 52 * scale,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                 ),
-                                TextButton(
-                                  onPressed: () => Get.to(
-                                    () => AccountTransferRecipientsPage(
-                                      contactsLoader: contactsLoader,
+                                Semantics(
+                                  button: true,
+                                  label: '全部常用收款人',
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => Get.to(
+                                      () => AccountTransferRecipientsPage(
+                                        contactsLoader: contactsLoader,
+                                      ),
                                     ),
-                                  ),
-                                  child: Text(
-                                    '全部',
-                                    style: TextStyle(
-                                      color: const Color(0xFF0875E8),
-                                      fontSize: 42 * scale,
+                                    child: Container(
+                                      key: const ValueKey(
+                                        'home_transfer_contacts_all_button',
+                                      ),
+                                      width: 230 * scale,
+                                      height: 104 * scale,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF7F7F7),
+                                        borderRadius:
+                                            BorderRadius.circular(52 * scale),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Image.asset(
+                                            'assets/images/account_transfer/icons/recipient_contact.png',
+                                            width: 42 * scale,
+                                            height: 42 * scale,
+                                            fit: BoxFit.contain,
+                                          ),
+                                          SizedBox(width: 18 * scale),
+                                          Text(
+                                            '全部',
+                                            style: TextStyle(
+                                              color: const Color(0xFF333333),
+                                              fontSize: 42 * scale,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -328,7 +386,7 @@ class _TransferPageBody extends StatelessWidget {
       children: contacts
           .map(
             (contact) => SizedBox(
-              height: 217 * scale,
+              height: _contactRowHeight * scale,
               child: _FrequentPayeeRow(contact: contact, scale: scale),
             ),
           )
@@ -361,7 +419,7 @@ class _FrequentPayeeRow extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: () => Get.toNamed(
           Routes.homeAccountTransfer,
-          arguments: contact,
+          arguments: AccountTransferRouteArguments.quickRecipient(contact),
         ),
         child: Padding(
           padding: EdgeInsets.only(left: 42 * scale, right: 32 * scale),
@@ -403,7 +461,7 @@ class _FrequentPayeeRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: const Color(0xFF999999),
+                        color: const Color(0xFF8C98A8),
                         fontSize: 41 * scale,
                         fontWeight: FontWeight.w400,
                         height: 1.2,

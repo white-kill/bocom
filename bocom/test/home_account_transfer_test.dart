@@ -70,6 +70,31 @@ void main() {
     expect(find.bySemanticsLabel('返回'), findsOneWidget);
   });
 
+  testWidgets('快捷联系人模式使用固定收款人卡片且保留提交数据', (tester) async {
+    final recipient = ContactsModel()
+      ..name = '沈光德'
+      ..bankName = '中国建设银行'
+      ..bankCard = '6217001630076962353';
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: HomeAccountTransferPage(
+          initialRecipient: recipient,
+          entryMode: AccountTransferEntryMode.quickRecipient,
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('quick-recipient-card')), findsOneWidget);
+    expect(find.text('沈光德'), findsOneWidget);
+    expect(
+      find.text('中国建设银行 (6217 0016 3007 6962 353)'),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('transfer-recipient-bank-row')), findsNothing);
+    expect(find.byType(TextField), findsNWidgets(2));
+  });
+
   testWidgets('点击银行行右侧箭头可进入收款银行列表', (tester) async {
     await tester.pumpWidget(
       GetMaterialApp(

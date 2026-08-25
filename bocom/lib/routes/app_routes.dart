@@ -43,6 +43,8 @@ class Routes {
 
   static const homeAccountTransfer = '/homeAccountTransfer';
 
+  static const homePhoneTransfer = '/homePhoneTransfer';
+
   static const searchHistoryPage = '/searchHistoryPage';
   static const searchListPage = '/searchListPage';
   static const confirmInfoPage = '/confirmInfoPage';

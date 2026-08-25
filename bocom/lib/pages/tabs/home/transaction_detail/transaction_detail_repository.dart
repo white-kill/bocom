@@ -183,12 +183,7 @@ class TransactionBillEntry {
           TransactionBillPage._int(detail['id']) ??
           0,
       record: TransactionRecord(
-        title: _firstText([
-          json['oppositeName'],
-          detail['oppositeName'],
-          json['excerpt'],
-          detail['excerpt'],
-        ], fallback: '交易'),
+        title: _text(json['title']),
         channel: _firstText([
           json['merchantBranch'],
           json['transactionChannel'],
