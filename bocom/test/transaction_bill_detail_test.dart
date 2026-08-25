@@ -31,6 +31,22 @@ void main() {
     expect(find.text('网上支付'), findsOneWidget);
   });
 
+  testWidgets('入账金额显示加号并使用列表同款红色', (tester) async {
+    await _pumpPage(
+      tester,
+      const TransactionBillDetailPage(
+        billId: 12,
+        initialDetail: _incomeDetail,
+      ),
+    );
+
+    final amount = tester.widget<Text>(
+      find.byKey(const ValueKey('transaction_bill_detail_amount')),
+    );
+    expect(amount.data, '+253.15');
+    expect(amount.style?.color, const Color(0xFFFF5C5C));
+  });
+
   testWidgets('未传详情时根据 billId 加载并显示加载状态', (tester) async {
     final completer = Completer<TransactionBillDetail>();
     int? requestedId;
@@ -91,6 +107,7 @@ void main() {
     expect(text('明细详情').style?.fontSize, 18);
     expect(text('拼多多平台商户').style?.fontSize, 17);
     expect(text('-35.00').style?.fontSize, 32);
+    expect(text('-35.00').style?.color, const Color(0xFF262626));
     expect(text('交易卡号').style?.fontSize, 16);
 
     final banner = tester.getSize(
@@ -223,6 +240,24 @@ final _detail = TransactionBillDetail(
   postscriptno: '20260815110100010539160975713552',
   transactionLogno: '2026081506840308560516090110306',
   excerpt: '网上支付',
+);
+
+const _incomeDetail = TransactionBillDetail(
+  id: 12,
+  merchantName: '退款入账',
+  amount: 253.15,
+  balance: 1297.15,
+  bankCard: '622262****2910',
+  transactionTime: null,
+  transactionChannel: '手机银行',
+  transactionCategory: '入账',
+  transactionDescription: '',
+  oppositeName: '',
+  oppositeAccount: '',
+  oppositeBankName: '',
+  postscriptno: '',
+  transactionLogno: '',
+  excerpt: '',
 );
 
 final _wechatDetail = TransactionBillDetail(

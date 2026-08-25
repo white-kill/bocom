@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../config/model/contacts_model.dart';
 import '../../../../routes/app_pages.dart';
+import '../transfer/account_transfer/home_account_transfer_view.dart';
 import 'transaction_detail_repository.dart';
 
 // 明细详情页
@@ -82,7 +83,10 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
       ..name = detail.oppositeName
       ..bankName = detail.oppositeBankName
       ..bankCard = detail.oppositeAccount;
-    Get.toNamed<void>(Routes.homeAccountTransfer, arguments: recipient);
+    Get.toNamed<void>(
+      Routes.homeAccountTransfer,
+      arguments: AccountTransferRouteArguments.prefilledRecipient(recipient),
+    );
   }
 
   @override
@@ -368,7 +372,9 @@ class _BillDetailCard extends StatelessWidget {
             _amountText,
             key: const ValueKey('transaction_bill_detail_amount'),
             style: TextStyle(
-              color: const Color(0xFF262626),
+              color: detail.amount > 0
+                  ? const Color(0xFFFF5C5C)
+                  : const Color(0xFF262626),
               fontSize: 32.sp,
               fontWeight: FontWeight.w600,
               height: 1,

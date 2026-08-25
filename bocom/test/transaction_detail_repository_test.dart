@@ -63,6 +63,7 @@ void main() {
         'list': [
           {
             'id': 10001,
+            'title': '服务端交易标题',
             'excerpt': '转账',
             'oppositeName': '张三',
             'amount': '500.00',
@@ -99,7 +100,7 @@ void main() {
     expect(page.pages, 1);
     expect(page.incomeTotal, 715.82);
     expect(page.entries.single.id, 10001);
-    expect(page.entries.single.record.title, '张三');
+    expect(page.entries.single.record.title, '服务端交易标题');
     expect(page.entries.single.record.channel, '手机银行');
     expect(page.entries.single.record.amount, -500);
     expect(page.entries.single.record.balance, 8000);

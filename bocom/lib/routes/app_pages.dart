@@ -13,6 +13,7 @@ import '../pages/tabs/home/feature_pages/home_static_feature_pages.dart';
 import '../pages/tabs/home/all_services/all_services_view.dart';
 import '../pages/tabs/home/transfer/home_transfer_view.dart';
 import '../pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
+import '../pages/tabs/home/transfer/phone_transfer/home_phone_transfer_view.dart';
 import '../pages/tabs/home/transfer/record/transfer_record_view.dart';
 import '../config/model/contacts_model.dart';
 
@@ -104,11 +105,22 @@ class AppPages {
     ),
     GetPage(
       name: Routes.homeAccountTransfer,
-      page: () => HomeAccountTransferPage(
-        initialRecipient: Get.arguments is ContactsModel
-            ? Get.arguments as ContactsModel
-            : null,
-      ),
+      page: () {
+        final arguments = Get.arguments;
+        if (arguments is AccountTransferRouteArguments) {
+          return HomeAccountTransferPage(
+            initialRecipient: arguments.recipient,
+            entryMode: arguments.mode,
+          );
+        }
+        return HomeAccountTransferPage(
+          initialRecipient: arguments is ContactsModel ? arguments : null,
+        );
+      },
+    ),
+    GetPage(
+      name: Routes.homePhoneTransfer,
+      page: () => const HomePhoneTransferPage(),
     ),
   ];
 }

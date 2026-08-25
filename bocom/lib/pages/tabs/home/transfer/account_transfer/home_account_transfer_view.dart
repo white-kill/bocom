@@ -3,6 +3,7 @@ import 'package:bocom/config/app_config.dart';
 import 'package:bocom/config/dio/network.dart';
 import 'package:bocom/config/model/contacts_model.dart';
 import 'package:bocom/config/net_config/apis.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -31,6 +32,34 @@ typedef AccountTransferSubmitter = Future<dynamic> Function(
   Map<String, dynamic> data,
 );
 
+enum AccountTransferEntryMode {
+  editable,
+  quickRecipient,
+}
+
+enum TransferPageKind {
+  account,
+  phone,
+}
+
+class AccountTransferRouteArguments {
+  const AccountTransferRouteArguments({
+    this.mode = AccountTransferEntryMode.editable,
+    this.recipient,
+  });
+
+  const AccountTransferRouteArguments.quickRecipient(
+    ContactsModel this.recipient,
+  ) : mode = AccountTransferEntryMode.quickRecipient;
+
+  const AccountTransferRouteArguments.prefilledRecipient(
+    ContactsModel this.recipient,
+  ) : mode = AccountTransferEntryMode.editable;
+
+  final AccountTransferEntryMode mode;
+  final ContactsModel? recipient;
+}
+
 double _referencePixels(BuildContext context, double pixels) {
   return MediaQuery.sizeOf(context).width /
       _accountTransferReferenceWidth *
@@ -49,6 +78,8 @@ class HomeAccountTransferPage extends StatefulWidget {
   const HomeAccountTransferPage({
     super.key,
     this.initialRecipient,
+    this.entryMode = AccountTransferEntryMode.editable,
+    this.pageKind = TransferPageKind.account,
     this.initialAmount,
     this.contactsLoader,
     this.bankLoader,
@@ -57,9 +88,12 @@ class HomeAccountTransferPage extends StatefulWidget {
     this.transferSubmitter,
     this.billDetailLoader,
     this.now,
+    this.onPhoneNext,
   });
 
   final ContactsModel? initialRecipient;
+  final AccountTransferEntryMode entryMode;
+  final TransferPageKind pageKind;
   final double? initialAmount;
   final Future<List<ContactsModel>> Function()? contactsLoader;
   final Future<List<RecipientBank>> Function()? bankLoader;
@@ -68,6 +102,7 @@ class HomeAccountTransferPage extends StatefulWidget {
   final AccountTransferSubmitter? transferSubmitter;
   final TransferBillDetailLoader? billDetailLoader;
   final DateTime Function()? now;
+  final VoidCallback? onPhoneNext;
 
   @override
   State<HomeAccountTransferPage> createState() =>
@@ -105,17 +140,23 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
 
   bool get _usesDeferredArrival => _amountValue >= 10000000;
 
-  List<TextEditingController> get _requiredControllers => [
-        _nameController,
-        _accountController,
-        _bankController,
-        _amountController,
-      ];
+  bool get _isPhoneTransfer => widget.pageKind == TransferPageKind.phone;
+
+  List<TextEditingController> get _requiredControllers => _isPhoneTransfer
+      ? [_nameController, _accountController, _amountController]
+      : [
+          _nameController,
+          _accountController,
+          _bankController,
+          _amountController,
+        ];
 
   bool get _canContinue =>
       _requiredControllers.every(
         (controller) => controller.text.trim().isNotEmpty,
       ) &&
+      (!_isPhoneTransfer ||
+          _accountController.text.replaceAll(RegExp(r'\D'), '').length == 11) &&
       _amountValue >= 0.01 &&
       !_hasInsufficientBalance;
 
@@ -219,6 +260,10 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   Future<void> _continue() async {
     if (!_canContinue || _isSubmitting) return;
     _amountFocusNode.unfocus();
+    if (_isPhoneTransfer) {
+      widget.onPhoneNext?.call();
+      return;
+    }
     final recipient = ContactsModel()
       ..name = _nameController.text.trim()
       ..bankCard = _accountController.text.trim()
@@ -400,9 +445,9 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
               ),
             ),
           ),
-          title: const Text(
-            '账号转账',
-            style: TextStyle(
+          title: Text(
+            _isPhoneTransfer ? '手机号转账' : '账号转账',
+            style: const TextStyle(
               color: Color(0xFF111111),
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -442,40 +487,29 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
             _buildRecipientCard(),
             const SizedBox(height: 12),
             _buildAmountCard(),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(child: _buildArrivalSummary()),
-                TextButton(
-                  onPressed: _chooseArrivalTime,
-                  child: const Text(
-                    '更换到账时间',
-                    style: TextStyle(color: Color(0xFF0875E8), fontSize: 15),
+            if (!_isPhoneTransfer) ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(child: _buildArrivalSummary()),
+                  TextButton(
+                    onPressed: _chooseArrivalTime,
+                    child: const Text(
+                      '更换到账时间',
+                      style: TextStyle(color: Color(0xFF0875E8), fontSize: 15),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _canContinue && !_isSubmitting ? _continue : null,
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: const Color(0xFF72A7E9),
-                  disabledBackgroundColor: const Color(0xFFD2D6DE),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                ),
-                child: const Text(
-                  '下一步',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
+                ],
               ),
-            ),
+              const SizedBox(height: 10),
+            ] else
+              const SizedBox(height: 30),
+            _buildNextButton(),
             const SizedBox(height: 28),
-            const _TransferTips(),
+            if (_isPhoneTransfer)
+              const _PhoneTransferTips()
+            else
+              const _TransferTips(),
           ],
         ),
       ),
@@ -484,22 +518,25 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
 
   Widget _buildPayerCard() {
     if (!Get.isRegistered<BocLogic>()) {
-      return const _PayerCardEmpty();
+      return _PayerCardEmpty(label: _isPhoneTransfer ? '付款卡' : '付款账户');
     }
     return GetBuilder<BocLogic>(
       id: 'updateCard',
       builder: (logic) {
         if (logic.memberInfo.bankList.isEmpty) {
-          return const _PayerCardEmpty();
+          return _PayerCardEmpty(label: _isPhoneTransfer ? '付款卡' : '付款账户');
         }
         final bank = logic.memberInfo.bankList.first;
         final digits = bank.bankCard.replaceAll(RegExp(r'\D'), '');
         final suffix =
             digits.length > 4 ? digits.substring(digits.length - 4) : digits;
         return _PayerCard(
+          label: _isPhoneTransfer ? '付款卡' : '付款账户',
           bankName: bank.bankName,
           title: '${bank.bankName} 借记卡(**$suffix)',
-          balance: '可用余额 ${bank.accountBalance.bankBalance}元',
+          balance: _isPhoneTransfer
+              ? '可用余额： ${bank.accountBalance.bankBalance}元'
+              : '可用余额 ${bank.accountBalance.bankBalance}元',
           onTap: () => _showPayerAccountSheet(
             bankName: bank.bankName,
             title: '${bank.bankName} 借记卡 (**$suffix)',
@@ -565,6 +602,11 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   }
 
   Widget _buildRecipientCard() {
+    if (_isPhoneTransfer) return _buildPhoneRecipientCard();
+    if (widget.entryMode == AccountTransferEntryMode.quickRecipient &&
+        widget.initialRecipient != null) {
+      return _QuickRecipientCard(recipient: widget.initialRecipient!);
+    }
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -626,6 +668,61 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
     );
   }
 
+  Widget _buildPhoneRecipientCard() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 12, 3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '收款人',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            _TransferInputRow(
+              rowHeight: 48,
+              fieldKey: const Key('phone-transfer-name-field'),
+              label: '姓名',
+              hint: '请输入收款人的真实姓名',
+              controller: _nameController,
+              textInputAction: TextInputAction.next,
+              suffix: const SizedBox(
+                width: 40,
+                height: 43,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Icon(
+                    Icons.person_outline,
+                    size: 23,
+                    color: Color(0xFF333333),
+                  ),
+                ),
+              ),
+            ),
+            _TransferInputRow(
+              rowHeight: 48,
+              fieldKey: const Key('phone-transfer-phone-field'),
+              label: '手机号',
+              hint: '请输入收款人手机号',
+              controller: _accountController,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(11),
+              ],
+              showDivider: false,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAmountCard() {
     final unit = _amountUnit(_amountValue);
     return DecoratedBox(
@@ -647,11 +744,18 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () => showTransferLimitSheet(context),
-                  child: const Text(
-                    '限额说明',
-                    style: TextStyle(color: Color(0xFF0875E8), fontSize: 14),
-                  ),
+                  onPressed: _isPhoneTransfer
+                      ? null
+                      : () => showTransferLimitSheet(context),
+                  child: _isPhoneTransfer
+                      ? const SizedBox.shrink()
+                      : const Text(
+                          '限额说明',
+                          style: TextStyle(
+                            color: Color(0xFF0875E8),
+                            fontSize: 14,
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -793,6 +897,27 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
     if (amount >= 10000) return '万';
     if (amount >= 1000) return '千';
     return null;
+  }
+
+  Widget _buildNextButton() {
+    return SizedBox(
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _canContinue && !_isSubmitting ? _continue : null,
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: const Color(0xFF72A7E9),
+          disabledBackgroundColor: const Color(0xFFD2D6DE),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(7),
+          ),
+        ),
+        child: const Text(
+          '下一步',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+      ),
+    );
   }
 }
 
@@ -1284,12 +1409,14 @@ Future<void> showArrivalExplanationSheet(BuildContext context) {
 
 class _PayerCard extends StatelessWidget {
   const _PayerCard({
+    this.label = '付款账户',
     required this.bankName,
     required this.title,
     required this.balance,
     required this.onTap,
   });
 
+  final String label;
   final String bankName;
   final String title;
   final String balance;
@@ -1309,9 +1436,12 @@ class _PayerCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '付款账户',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 18),
               Row(
@@ -1373,6 +1503,125 @@ class _PayerBankLogo extends StatelessWidget {
         sourceHeight: isBankOfChina ? 38 : 48,
       ),
     );
+  }
+}
+
+class _QuickRecipientCard extends StatelessWidget {
+  const _QuickRecipientCard({required this.recipient});
+
+  final ContactsModel recipient;
+
+  String get _formattedCardNumber {
+    final compact = recipient.bankCard.replaceAll(RegExp(r'\s+'), '');
+    if (compact.isEmpty) return '';
+    final groups = <String>[];
+    for (var index = 0; index < compact.length; index += 4) {
+      final end = (index + 4).clamp(0, compact.length);
+      groups.add(compact.substring(index, end));
+    }
+    return groups.join(' ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('quick-recipient-card'),
+      height: 108,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 13),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '收款人',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              _QuickRecipientBankLogo(recipient: recipient),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recipient.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF333333),
+                        fontSize: 16,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${recipient.bankName} ($_formattedCardNumber)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF8C98A8),
+                        fontSize: 13,
+                        height: 1.15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickRecipientBankLogo extends StatelessWidget {
+  const _QuickRecipientBankLogo({required this.recipient});
+
+  final ContactsModel recipient;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 26.0;
+    if (recipient.icon.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: recipient.icon,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorWidget: (_, __, ___) => _fallback(size),
+      );
+    }
+    return _fallback(size);
+  }
+
+  Widget _fallback(double size) {
+    final bankName = recipient.bankName;
+    final String asset;
+    if (bankName.contains('建设银行')) {
+      asset = 'assets/images/account_transfer/banks/bank_construction.jpg';
+    } else if (bankName.contains('中国银行')) {
+      asset = _bankOfChinaAsset;
+    } else if (bankName.contains('交通银行')) {
+      asset = _bankOfCommunicationsAsset;
+    } else {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: Icon(
+          Icons.account_balance,
+          color: const Color(0xFF0B6DB9),
+          size: size * .85,
+        ),
+      );
+    }
+    return Image.asset(asset, width: size, height: size, fit: BoxFit.contain);
   }
 }
 
@@ -1465,7 +1714,9 @@ class _TransferSuffixButton extends StatelessWidget {
 }
 
 class _PayerCardEmpty extends StatelessWidget {
-  const _PayerCardEmpty();
+  const _PayerCardEmpty({this.label = '付款账户'});
+
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -1474,17 +1725,20 @@ class _PayerCardEmpty extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(6),
       ),
-      child: const Padding(
-        padding: EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '付款账户',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              label,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            SizedBox(height: 18),
-            Text(
+            const SizedBox(height: 18),
+            const Text(
               '暂无可用付款账户',
               style: TextStyle(color: Color(0xFF999999), fontSize: 15),
             ),
@@ -1507,6 +1761,10 @@ class _TransferInputRow extends StatelessWidget {
     this.suffix,
     this.showDivider = true,
     this.semanticsLabel,
+    this.fieldKey,
+    this.inputFormatters,
+    this.textInputAction,
+    this.rowHeight = 43,
   });
 
   final String label;
@@ -1518,11 +1776,15 @@ class _TransferInputRow extends StatelessWidget {
   final Widget? suffix;
   final bool showDivider;
   final String? semanticsLabel;
+  final Key? fieldKey;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextInputAction? textInputAction;
+  final double rowHeight;
 
   @override
   Widget build(BuildContext context) {
     final content = Container(
-      height: 43,
+      height: rowHeight,
       decoration: BoxDecoration(
         border: showDivider
             ? const Border(bottom: BorderSide(color: Color(0xFFEEEEEE)))
@@ -1539,8 +1801,11 @@ class _TransferInputRow extends StatelessWidget {
               textField: true,
               label: semanticsLabel ?? label,
               child: TextField(
+                key: fieldKey,
                 controller: controller,
                 keyboardType: keyboardType,
+                inputFormatters: inputFormatters,
+                textInputAction: textInputAction,
                 readOnly: readOnly,
                 decoration: InputDecoration(
                   hintText: hint,
@@ -1573,6 +1838,70 @@ class _TransferInputRow extends StatelessWidget {
           child: AbsorbPointer(child: content),
         ),
       ),
+    );
+  }
+}
+
+class _PhoneTransferTips extends StatelessWidget {
+  const _PhoneTransferTips();
+
+  @override
+  Widget build(BuildContext context) {
+    const normal =
+        TextStyle(color: Color(0xFF888888), fontSize: 13, height: 1.55);
+    const link =
+        TextStyle(color: Color(0xFF0875E8), fontSize: 13, height: 1.55);
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '温馨提示：',
+          style: TextStyle(color: Color(0xFF777777), fontSize: 15),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '1.通过手机银行进行手机号转账，单日/单笔限额为5000元。',
+          style: normal,
+        ),
+        SizedBox(height: 5),
+        Text(
+          '2.如收款人手机号已绑定收款账户（绑定账户需收款人另行开通），转账资金将实时入账至绑定的默认收款账户中，否则资金将在付款人账户中冻结直至收款人收款，次日22:00前未收款将自动解除交易。',
+          style: normal,
+        ),
+        SizedBox(height: 5),
+        Text.rich(
+          TextSpan(
+            style: normal,
+            children: [
+              TextSpan(
+                text: '3.收款人手机号可绑定银行卡收款，未绑定也可以通过短信回复卡号收款。点击设置您的 ',
+              ),
+              TextSpan(text: '手机号收款卡', style: link),
+              TextSpan(text: '。'),
+            ],
+          ),
+        ),
+        SizedBox(height: 5),
+        Text(
+          '4.使用交通银行借记卡向未绑定账户的手机号转账时，同时受借记卡本身支出限额（日累计1万元，年累计20万元）限制。',
+          style: normal,
+        ),
+        SizedBox(height: 5),
+        Text(
+          '5.为保障您的资金安全，切勿轻信以网购刷单、冒充公检法、领导或亲人朋友、代办大额信用卡和高额贷款、网购客服或快递进行退款、鼓吹大额投资理财等非正规渠道要求进行的转账汇款，谨防被骗。涉及不明资金的转账事宜，务必当面或电话确认核实。资金一旦转出将无法追回。',
+          style: normal,
+        ),
+        SizedBox(height: 5),
+        Text(
+          '6.不扫描可疑二维码，不安装不明APP，妥善保管卡号、密码、短信验证码、令牌动态口令等个人重要信息。',
+          style: normal,
+        ),
+        SizedBox(height: 5),
+        Text(
+          '7.防范非法集资，警惕高息诱惑。远离以“保本高收益”为诱饵，以虚拟项目、消费返利、养老投资等伪装的非法金融活动。请选择合法正规金融机构办理投资理财业务。',
+          style: normal,
+        ),
+      ],
     );
   }
 }
