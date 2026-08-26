@@ -132,10 +132,10 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
     with SingleTickerProviderStateMixin {
   static const _passwordLength = 6;
   static const _designWidth = 645.0;
-  static const _transactionDesignHeight = 1008.0;
-  static const _accountDesignHeight = 848.0;
+  static const _transactionDesignHeight = 945.0;
+  static const _accountDesignHeight = 785.0;
   static const _keyboardSourceTop = 295.0;
-  static const _keyboardHeight = 523.0;
+  static const _keyboardHeight = 460.0;
   static const _transactionKeyboardTop = 485.0;
   static const _accountKeyboardTop = 325.0;
   static const _titleFontSize = 29.0;
@@ -190,6 +190,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+    final bottomSafeHeight = MediaQuery.paddingOf(context).bottom;
     // 转账场景需要保留收款人和账户信息的纵向空间；“我的账户”
     // 只显示一行提示，键盘整体上移，避免弹层遮挡过多页面内容。
     final isTransaction = widget.transaction != null;
@@ -207,7 +208,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
     return SizedBox(
       key: const Key('password-keyboard-sheet'),
       width: width,
-      height: position.getHeight(designHeight),
+      height: position.getHeight(designHeight) + bottomSafeHeight,
       child: Stack(
         children: [
           Positioned.fill(
@@ -221,10 +222,11 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
             ),
           ),
           Positioned(
+            key: const Key('password-keyboard'),
             left: 0,
             right: 0,
             top: position.getY(keyboardTop),
-            height: position.getHeight(_keyboardHeight),
+            height: position.getHeight(_keyboardHeight) + bottomSafeHeight,
             child: ClipRect(
               child: OverflowBox(
                 alignment: Alignment.topCenter,
@@ -322,6 +324,19 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
               ),
             ),
           ] else
+            Positioned(
+              right: position.getX(20),
+              top: position.getY(35),
+              child: Text(
+                '切换认证',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: const Color(0XFF005DDA),
+                  fontSize: position.getWidth(_titleFontSize),
+                  height: 1.05,
+                ),
+              ),
+            ),
             Positioned(
                 left: position.getX(40),
                 right: position.getX(40),

@@ -5,6 +5,7 @@ import 'package:bocom/routes/app_pages.dart';
 import 'package:bocom/utils/stack_position.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:bocom/pages/other/fixed_nav/fixed_nav_view.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
 import 'package:bocom/pages/component/password_keyboard_sheet.dart';
@@ -192,16 +193,16 @@ class _AccountContent extends StatelessWidget {
           height: topPlaceholderHeight,
           color: const Color(0xFFF7F7F7),
         ),
-        Stack(
+        Obx(() => Stack(
           children: [
             Image(
-              image: 'bg_my_account_1'.png3x,
+              image: logic.accountExpandVisible.value ? 'bg_my_account_1_1'.png3x : 'bg_my_account_1_2'.png3x,
               width: 1.sw,
               fit: BoxFit.fitWidth,
             ),
             Positioned(
                 right: position1.getX(480),
-                top: position1.getY(165),
+                top: position1.getY(130),
                 child: BaseText(
                   text: '**${AppConfig.config.abcLogic.cardFour()}',
                   fontWeight: FontWeight.w500,
@@ -210,76 +211,98 @@ class _AccountContent extends StatelessWidget {
                 )),
             Positioned(
               right: position1.getX(40),
-              top: position1.getY(30),
-              child: Obx(
-                () => Row(
-                  children: [
-                    BaseText(
-                      text: logic.amountVisible.value ? '隐藏余额' : '显示余额',
-                      fontSize: 13,
-                      color: const Color(0xFF333333),
-                    ),
-                    SizedBox(
-                      width: 4.w,
-                    ),
-                    Image(
-                      image: (!logic.amountVisible.value
-                              ? 'my_asset_eye_open'
-                              : 'my_asset_eye_close')
-                          .png,
-                      width: position1.getWidth(38),
-                      fit: BoxFit.fitWidth,
-                      color: const Color(0xFF333333),
-                    ),
-                  ],
-                ).withOnTap(onTap: logic.toggleAmountVisible),
-              ),
-            ),
-            Positioned(
-                right: position1.getX(140),
-                top: position1.getY(445),
-                child: Obx(
-                  () => BaseText(
-                    text: logic.amountVisible.value
-                        ? AppConfig.config.abcLogic.memberInfo.accountBalance
-                            .bankBalance
-                        : '****',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 18,
-                    color: Colors.black,
+              top: position1.getY(0),
+              child: Row(
+                children: [
+                  BaseText(
+                    text: logic.amountVisible.value ? '隐藏余额' : '显示余额',
+                    fontSize: 13,
+                    color: const Color(0xFF333333),
                   ),
-                )),
-            Positioned(
-              right: position1.getX(310),
-              top: position1.getY(165),
-              child: SizedBox(
-                height: position1.getHeight(100),
-                width: position1.getWidth(320),
-              ).withOnTap(
-                onTap: () => PasswordKeyboardSheet.show(
-                  context,
-                  onCompleted: () async {
-                    await BankDetailDialog.show(context);
-                  },
-                ),
-              ),
+                  SizedBox(
+                    width: 4.w,
+                  ),
+                  Image(
+                    image: (!logic.amountVisible.value
+                        ? 'my_asset_eye_open'
+                        : 'my_asset_eye_close')
+                        .png,
+                    width: position1.getWidth(38),
+                    fit: BoxFit.fitWidth,
+                    color: const Color(0xFF333333),
+                  ),
+                ],
+              ).withOnTap(onTap: logic.toggleAmountVisible),
             ),
-            Positioned(
-              left: position1.getX(40),
-              top: position1.getY(560),
-              width: position1.getWidth(250),
-              height: position1.getHeight(125),
-              child: Semantics(
-                button: true,
-                label: '交易明细',
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => Get.toNamed(Routes.transactionDetail),
+            if(logic.accountExpandVisible.value) ...[
+              Positioned(
+                right: position1.getX(140),
+                top: position1.getY(410),
+                child: BaseText(
+                  text: logic.amountVisible.value
+                      ? AppConfig.config.abcLogic.memberInfo.accountBalance
+                      .bankBalance
+                      : '****',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 18,
+                  color: Colors.black,
                 ),
               ),
+              Positioned(
+                right: position1.getX(310),
+                top: position1.getY(135),
+                child: SizedBox(
+                  height: position1.getHeight(100),
+                  width: position1.getWidth(320),
+                ).withOnTap(
+                  onTap: () => PasswordKeyboardSheet.show(
+                    context,
+                    onCompleted: () async {
+                      await BankDetailDialog.show(context);
+                    },
+                  ),
+                ),
+              ),
+              Positioned(
+                left: position1.getX(40),
+                top: position1.getY(530),
+                width: position1.getWidth(250),
+                height: position1.getHeight(125),
+                child: Semantics(
+                  button: true,
+                  label: '交易明细',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Get.toNamed(Routes.transactionDetail),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: position1.getX(290),
+                top: position1.getY(530),
+                width: position1.getWidth(250),
+                height: position1.getHeight(125),
+                child: Semantics(
+                  button: true,
+                  label: '转账',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => Get.toNamed(Routes.homeTransfer),
+                  ),
+                ),
+              ),
+            ],
+            Positioned(
+              left: 0,
+              bottom: position1.getY(170),
+              width: 1.sw,
+              height: position1.getHeight(100),
+              child: Container().withOnTap(onTap: (){
+                logic.accountExpandVisible.value = !logic.accountExpandVisible.value;
+              }),
             ),
           ],
-        ),
+        )),
         Image(
           image: 'bg_my_account_2'.png3x,
           width: 1.sw,
@@ -371,6 +394,30 @@ class _AssetContent extends StatelessWidget {
               ),
             ),
             Positioned(
+              left: position1.getX(120),
+              top: position1.getY(150),
+              width: position1.getWidth(100),
+              height: position1.getHeight(100),
+              child: Container().withOnTap(onTap: (){
+                 Get.to(() => FixedNavPage(), arguments: {
+                  'image': 'bg_zzc',
+                  'title': '资产说明',
+                });
+              }),
+            ),
+            Positioned(
+              left: position1.getX(620),
+              top: position1.getY(150),
+              width: position1.getWidth(100),
+              height: position1.getHeight(100),
+              child: Container().withOnTap(onTap: (){
+                Get.to(() => FixedNavPage(), arguments: {
+                  'image': 'bg_zfz',
+                  'title': '负债说明',
+                });
+              }),
+            ),
+            Positioned(
                 left: position1.getX(45),
                 top: position1.getY(325) - assetImageTopCrop,
                 child: Obx(
@@ -399,12 +446,13 @@ class _AssetContent extends StatelessWidget {
             Positioned(
               left: position1.getX(40),
               top: position1.getY(420) - assetImageTopCrop,
-              child: BaseText(
-                text:
-                    '${AppConfig.config.abcLogic.memberInfo.realName}交行资产更新至${logic.nowDate.value}',
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
-                color: const Color(0xFFADCBFF),
+              child: Obx(() => BaseText(
+                  text: logic.amountVisible.value ?
+                      '${AppConfig.config.abcLogic.memberInfo.realName}交行资产更新至${logic.nowDate.value}':'更新至${logic.nowDate.value}',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 14,
+                  color: const Color(0xFFADCBFF),
+                )
               ),
             ),
             Positioned(

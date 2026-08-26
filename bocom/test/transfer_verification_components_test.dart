@@ -59,8 +59,10 @@ void main() {
   testWidgets('交易密码动态显示业务文字且输入后仅显示圆点', (tester) async {
     tester.view.physicalSize = const Size(1206, 2622);
     tester.view.devicePixelRatio = 1;
+    tester.view.padding = const FakeViewPadding(bottom: 72);
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPadding);
 
     await tester.pumpWidget(
       const MaterialApp(
@@ -84,7 +86,11 @@ void main() {
     expect(find.text('中国建设银行 6217 0016 3007 6962 353'), findsOneWidget);
     expect(
       tester.getSize(find.byKey(const Key('password-keyboard-sheet'))).height,
-      closeTo(1206 / 645 * 1008, 0.01),
+      closeTo(1206 / 645 * 945 + 72, 0.01),
+    );
+    expect(
+      tester.getSize(find.byKey(const Key('password-keyboard'))).height,
+      closeTo(1206 / 645 * 460 + 72, 0.01),
     );
     expect(find.byKey(const Key('password-dot-0')), findsNothing);
 
@@ -101,8 +107,10 @@ void main() {
   testWidgets('我的账户场景使用紧凑高度', (tester) async {
     tester.view.physicalSize = const Size(1206, 2622);
     tester.view.devicePixelRatio = 1;
+    tester.view.padding = const FakeViewPadding(bottom: 72);
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPadding);
 
     await tester.pumpWidget(
       const MaterialApp(
@@ -117,7 +125,7 @@ void main() {
 
     expect(
       tester.getSize(find.byKey(const Key('password-keyboard-sheet'))).height,
-      closeTo(1206 / 645 * 888, 0.01),
+      closeTo(1206 / 645 * 785 + 72, 0.01),
     );
     expect(find.textContaining('请输入银行账号'), findsOneWidget);
   });

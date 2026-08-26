@@ -13,6 +13,7 @@ class LoginLogic extends GetxController {
 
   final currentStep = 0.obs;
   final agreedToTerms = false.obs;
+  final agreedToTerms2 = false.obs;
   final isFormFilled = false.obs;
 
   /// 账号、密码均已填写且已勾选协议时，登录按钮显示可点击态

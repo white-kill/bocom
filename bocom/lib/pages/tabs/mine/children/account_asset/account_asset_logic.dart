@@ -10,6 +10,7 @@ class AccountAssetLogic extends GetxController {
   var navActionColor = Colors.white.obs;
   var navActionFlag = false.obs;
   final RxBool amountVisible = true.obs;
+  final RxBool accountExpandVisible = true.obs;
   final RxInt bottomItemIndex = 1.obs;
   var nowDate = "".obs;
 
