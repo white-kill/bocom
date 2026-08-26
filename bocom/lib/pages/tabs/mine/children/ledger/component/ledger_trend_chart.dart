@@ -142,16 +142,23 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
       _values(widget.expenseValues)[_selectedIndex],
       plotHeight,
     );
-    final tooltipWidth = 115.w;
+    final tooltipGap = 12.w;
+    final minimumTooltipWidth = 115.w;
+    final maximumTooltipOffset = math.max(
+      0.0,
+      chartWidth - minimumTooltipWidth,
+    );
     final showTooltipOnRight = _selectedIndex < _pointCount ~/ 2;
-    final tooltipLeft = showTooltipOnRight
-        ? (selectedX + 12.w)
-            .clamp(0.0, chartWidth - tooltipWidth)
-            .toDouble()
-        : (selectedX - tooltipWidth - 12.w)
-            .clamp(0.0, chartWidth - tooltipWidth)
-            .toDouble();
-
+    final tooltipLeft = (selectedX + tooltipGap)
+        .clamp(0.0, maximumTooltipOffset)
+        .toDouble();
+    final tooltipRight = (chartWidth - selectedX + tooltipGap)
+        .clamp(0.0, maximumTooltipOffset)
+        .toDouble();
+    final middleYearIndex = widget.dateValues.length ~/ 2;
+    final middleYearX = widget.dateValues.length > 2
+        ? chartWidth * middleYearIndex / (_pointCount - 1)
+        : 0.0;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -199,28 +206,42 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
           color: _incomeColor,
         ),
         Positioned(
-          left: tooltipLeft,
+          left: showTooltipOnRight ? tooltipLeft : null,
+          right: showTooltipOnRight ? null : tooltipRight,
           top: 5.w,
           child: _buildTooltip(),
         ),
-        Positioned(
-          left: 0,
-          bottom: 0,
-          child: BaseText(
-            text: _dateLabel(0),
-            fontSize: 13,
-            color: const Color(0xFFA6ADB7),
+        if (widget.isYearMode)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 30.w,
+            child: _yearAxisLabels(
+              middleIndex: middleYearIndex,
+              middleX: middleYearX,
+            ),
+          )
+        else ...[
+          Positioned(
+            left: 0,
+            bottom: 0,
+            child: BaseText(
+              text: _dateLabel(0),
+              fontSize: 13,
+              color: const Color(0xFFA6ADB7),
+            ),
           ),
-        ),
-        Positioned(
-          right: 0,
-          bottom: 0,
-          child: BaseText(
-            text: _endDateLabel(),
-            fontSize: 13,
-            color: const Color(0xFF222222),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: BaseText(
+              text: _endDateLabel(),
+              fontSize: 13,
+              color: const Color(0xFF222222),
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -641,6 +662,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
                 : const Color(0xFFFFF0E7)
             : Colors.transparent;
 
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => setState(() => _selectedCalendarIndex = index),
@@ -754,7 +776,8 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         ? widget.dateValues[_selectedIndex]
         : '';
     return Container(
-      width: 115.w,
+      key: const Key('ledger-trend-tooltip'),
+      constraints: BoxConstraints(minWidth: 115.w),
       padding: EdgeInsets.all(9.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -762,6 +785,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 3))],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           BaseText(
@@ -779,6 +803,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
   }
 
   Widget _tooltipRow(Color color, String label, double value) => Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(width: 9.w, height: 9.w, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           SizedBox(width: 5.w),
@@ -790,6 +815,75 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
     if (index >= widget.dateValues.length) return '';
     final value = widget.dateValues[index];
     return value.length >= 10 ? value.substring(5, 10) : value;
+  }
+
+  Widget _yearStartLabel() {
+    final date = _yearMonthAt(0);
+    if (date == null) return const SizedBox.shrink();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        BaseText(
+          text: '${date.month}月',
+          fontSize: 13,
+          color: const Color(0xFFA6ADB7),
+        ),
+        BaseText(
+          text: '${date.year}',
+          fontSize: 13,
+          color: const Color(0xFFA6ADB7),
+        ),
+      ],
+    );
+  }
+
+  Widget _yearAxisLabels({
+    required int middleIndex,
+    required double middleX,
+  }) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          left: 0,
+          top: 5.w,
+          child: _yearStartLabel(),
+        ),
+        if (!_isCurrentYear && widget.dateValues.length > 2)
+          Positioned(
+            left: middleX,
+            top: 5.w,
+            child: FractionalTranslation(
+              translation: const Offset(-0.5, 0),
+              child: BaseText(
+                text: _yearMonthLabel(middleIndex),
+                fontSize: 13,
+                color: const Color(0xFF222222),
+              ),
+            ),
+          ),
+        Positioned(
+          right: 0,
+          top: 5.w,
+          child: BaseText(
+            text: _yearMonthLabel(widget.dateValues.length - 1),
+            fontSize: 13,
+            color: const Color(0xFF222222),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _yearMonthLabel(int index) {
+    final date = _yearMonthAt(index);
+    return date == null ? '' : '${date.month}月';
+  }
+
+  DateTime? _yearMonthAt(int index) {
+    if (index < 0 || index >= widget.dateValues.length) return null;
+    return _yearMonthFromDate(widget.dateValues[index]);
   }
 
   String _endDateLabel() {
