@@ -127,10 +127,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AccountTransferReceiptPage), findsOneWidget);
-    expect(find.text('沈光德'), findsNWidgets(2));
-    expect(find.text('621700****2353'), findsNWidgets(2));
-    expect(find.text('1.00元'), findsNWidgets(2));
-    expect(find.text('2005000420260812436002416952'), findsNWidgets(2));
+    expect(find.text('沈光德'), findsOneWidget);
+    expect(find.text('621700****2353'), findsOneWidget);
+    expect(find.text('1.00元'), findsOneWidget);
+    expect(find.text('2005000420260812436002416952'), findsOneWidget);
   });
 
   testWidgets('再转一笔回填收款人和金额', (tester) async {

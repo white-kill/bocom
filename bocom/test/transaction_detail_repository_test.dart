@@ -69,6 +69,7 @@ void main() {
             'amount': '500.00',
             'accountBalance': '8,000.00',
             'merchantBranch': '手机银行',
+            'transactionChannel': '支付宝',
             'month': '2026-07',
             'day': '2026-07-29 10:30:00',
             'monthIncomeTotal': '715.82',
@@ -101,7 +102,7 @@ void main() {
     expect(page.incomeTotal, 715.82);
     expect(page.entries.single.id, 10001);
     expect(page.entries.single.record.title, '服务端交易标题');
-    expect(page.entries.single.record.channel, '手机银行');
+    expect(page.entries.single.record.channel, '支付宝');
     expect(page.entries.single.record.amount, -500);
     expect(page.entries.single.record.balance, 8000);
     expect(page.entries.single.monthExpensesTotal, 792.47);

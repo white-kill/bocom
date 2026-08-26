@@ -53,11 +53,46 @@ void main() {
 
     expect(
         find.byKey(const Key('account-transfer-receipt-page')), findsOneWidget);
-    expect(find.text('621700****2353'), findsNWidgets(2));
-    expect(find.text('622262****2910'), findsNWidgets(2));
-    expect(find.text('DETAIL202608121130'), findsNWidgets(2));
-    expect(find.text('2026-08-12 11:30:00'), findsNWidgets(2));
-    expect(find.text('人民币壹元整'), findsNWidgets(2));
+    expect(find.text('621700****2353'), findsOneWidget);
+    expect(find.text('622262****2910'), findsOneWidget);
+    expect(find.text('DETAIL202608121130'), findsOneWidget);
+    expect(find.text('2026-08-12 11:30:00'), findsOneWidget);
+    expect(find.text('人民币壹元整'), findsOneWidget);
+  });
+
+  testWidgets('回执中间独立滚动且底部切换完整卡号', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(402, 874));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(home: AccountTransferReceiptPage(data: result)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('receipt-fixed-navigation')), findsOneWidget);
+    expect(find.byKey(const Key('receipt-fixed-footer')), findsOneWidget);
+    expect(find.text('621700****2353'), findsOneWidget);
+    expect(find.text('622262****2910'), findsOneWidget);
+
+    final footerBefore = tester.getTopLeft(
+      find.byKey(const Key('receipt-fixed-footer')),
+    );
+    await tester.drag(
+      find.byKey(const Key('receipt-content-scroll-view')),
+      const Offset(0, -350),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.byKey(const Key('receipt-fixed-footer'))),
+      footerBefore,
+    );
+
+    await tester.tap(find.bySemanticsLabel('隐藏收付款卡号'));
+    await tester.pumpAndSettle();
+    expect(find.text('6217 0016 3007 6962 353'), findsOneWidget);
+    expect(find.text('6222 6200 0000 2910'), findsOneWidget);
+    expect(find.text('621700****2353'), findsNothing);
+    expect(find.bySemanticsLabel('保存图片'), findsOneWidget);
+    expect(find.bySemanticsLabel('通知微信好友'), findsOneWidget);
   });
 
   testWidgets('保存回执入口使用动态模板并进入保存状态', (tester) async {
@@ -94,6 +129,7 @@ void main() {
     if (savedBytes != null) {
       expect(savedBytes!.length, greaterThan(10000));
     }
-    expect(find.byKey(const Key('account-transfer-receipt-page')), findsOneWidget);
+    expect(
+        find.byKey(const Key('account-transfer-receipt-page')), findsOneWidget);
   });
 }

@@ -184,13 +184,7 @@ class TransactionBillEntry {
           0,
       record: TransactionRecord(
         title: _text(json['title']),
-        channel: _firstText([
-          json['merchantBranch'],
-          json['transactionChannel'],
-          detail['merchantBranch'],
-          detail['transactionChannel'],
-          detail['transactionCategory'],
-        ]),
+        channel: _text(json['transactionChannel']),
         occurredAt: occurredAt,
         amount: amount,
         balance: _number(json['accountBalance']) ??
@@ -201,17 +195,6 @@ class TransactionBillEntry {
       monthIncomeTotal: _number(json['monthIncomeTotal']),
       monthExpensesTotal: _number(json['monthExpensesTotal']),
     );
-  }
-
-  static String _firstText(
-    Iterable<dynamic> values, {
-    String fallback = '',
-  }) {
-    for (final value in values) {
-      final text = _text(value);
-      if (text.isNotEmpty) return text;
-    }
-    return fallback;
   }
 
   static String _text(dynamic value) => value?.toString().trim() ?? '';

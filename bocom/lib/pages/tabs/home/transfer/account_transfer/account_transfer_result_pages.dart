@@ -15,14 +15,21 @@ import 'package:wb_base_widget/extension/string_extension.dart';
 
 const _successTemplate =
     'assets/images/account_transfer/result/transfer_success_template.png';
-const _receiptTemplate =
-    'assets/images/account_transfer/result/transfer_receipt_template.png';
-const _savedReceiptTemplate =
-    'assets/images/account_transfer/result/transfer_receipt_saved_template.png';
+const _receiptBodyTemplate =
+    'assets/images/account_transfer/result/transfer_receipt_body.png';
+const _receiptNavigationTemplate =
+    'assets/images/account_transfer/result/transfer_receipt_navigation.png';
+const _receiptFooterChecked =
+    'assets/images/account_transfer/result/transfer_receipt_footer_checked.png';
+const _receiptFooterUnchecked =
+    'assets/images/account_transfer/result/transfer_receipt_footer_unchecked.png';
 const _referenceWidth = 1320.0;
 const _successTemplateHeight = 2610.0;
-const _savedReceiptHeight = 2448.0;
-const _receiptInk = Color(0xFF292929);
+const _receiptScreenReferenceWidth = 1206.0;
+const _receiptBodyHeight = 2025.0;
+const _receiptNavigationHeight = 180.0;
+const _receiptFooterHeight = 660.0;
+const _receiptInk = Color(0xFF333333);
 
 typedef TransferBillDetailLoader = Future<dynamic> Function(int billId);
 typedef TransferReceiptSaver = Future<bool> Function(Uint8List bytes);
@@ -99,6 +106,8 @@ class AccountTransferResultData {
   String get amountText => NumberFormat('0.00').format(amount);
   String get recipientAccountMasked => _maskReceiptCard(recipientAccount);
   String get payerAccountMasked => _maskReceiptCard(payerAccount);
+  String get recipientAccountFull => _formatReceiptCard(recipientAccount);
+  String get payerAccountFull => _formatReceiptCard(payerAccount);
   String get recipientSummary =>
       '$recipientBank(**${_lastFour(recipientAccount)})';
   String get transactionTimeText =>
@@ -210,6 +219,7 @@ class _AccountTransferSuccessPageState
           child: SingleChildScrollView(
             child: _ReferenceTemplate(
               asset: _successTemplate,
+              referenceWidth: _referenceWidth,
               referenceHeight: _successTemplateHeight,
               childrenBuilder: (scale) => [
                 _successText(
@@ -303,15 +313,19 @@ class _AccountTransferSuccessPageState
   }
 }
 
+// 转账回执页
+// 说明：导航使用不含系统状态栏的固定切图，中间使用完整回执长图滚动，底部使用选中/未选中状态切图固定展示。
 class AccountTransferReceiptPage extends StatefulWidget {
   const AccountTransferReceiptPage({
     super.key,
     required this.data,
     this.receiptSaver,
+    this.onNotifyWechatFriend,
   });
 
   final AccountTransferResultData data;
   final TransferReceiptSaver? receiptSaver;
+  final VoidCallback? onNotifyWechatFriend;
 
   @override
   State<AccountTransferReceiptPage> createState() =>
@@ -322,6 +336,7 @@ class _AccountTransferReceiptPageState
     extends State<AccountTransferReceiptPage> {
   final _savedReceiptKey = GlobalKey();
   bool _isSaving = false;
+  bool _hideCardNumbers = true;
 
   Future<void> _saveReceipt() async {
     if (_isSaving) return;
@@ -330,7 +345,7 @@ class _AccountTransferReceiptPageState
       final boundary = _savedReceiptKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) throw StateError('Receipt render is unavailable');
-      final ratio = _referenceWidth / boundary.size.width;
+      final ratio = _receiptScreenReferenceWidth / boundary.size.width;
       final image = await boundary.toImage(pixelRatio: ratio);
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
@@ -354,7 +369,7 @@ class _AccountTransferReceiptPageState
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFFF8F8F8),
+        statusBarColor: Color(0xFFF7F7F7),
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
         systemNavigationBarColor: Colors.white,
@@ -362,58 +377,42 @@ class _AccountTransferReceiptPageState
       ),
       child: Scaffold(
         key: const Key('account-transfer-receipt-page'),
-        backgroundColor: const Color(0xFFF8F8F8),
+        backgroundColor: const Color(0xFFF7F7F7),
         body: SafeArea(
-          child: Stack(
-            children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 0,
-                child: IgnorePointer(
-                  child: RepaintBoundary(
-                    key: _savedReceiptKey,
-                    child: _SavedReceipt(data: widget.data),
+          bottom: false,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final scale = constraints.maxWidth / _receiptScreenReferenceWidth;
+              return Column(
+                children: [
+                  _ReceiptNavigation(
+                    height: _receiptNavigationHeight * scale,
+                    scale: scale,
                   ),
-                ),
-              ),
-              Positioned.fill(
-                child: ColoredBox(
-                  color: const Color(0xFFF8F8F8),
-                  child: SingleChildScrollView(
-                    child: _ReferenceTemplate(
-                      asset: _receiptTemplate,
-                      referenceHeight: _successTemplateHeight,
-                      childrenBuilder: (scale) => [
-                        ..._receiptFields(
+                  Expanded(
+                    child: SingleChildScrollView(
+                      key: const Key('receipt-content-scroll-view'),
+                      child: RepaintBoundary(
+                        key: _savedReceiptKey,
+                        child: _SavedReceipt(
                           data: widget.data,
-                          scale: scale,
-                          topOffset: -15,
+                          hideCardNumbers: _hideCardNumbers,
                         ),
-                        _hotspot(
-                          scale: scale,
-                          left: 0,
-                          top: 0,
-                          width: 155,
-                          height: 180,
-                          semanticLabel: '返回',
-                          onTap: Get.back,
-                        ),
-                        _hotspot(
-                          scale: scale,
-                          left: 45,
-                          top: 2475,
-                          width: 590,
-                          height: 190,
-                          semanticLabel: _isSaving ? '正在保存图片' : '保存图片',
-                          onTap: _saveReceipt,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                  _ReceiptFooter(
+                    hideCardNumbers: _hideCardNumbers,
+                    isSaving: _isSaving,
+                    onToggleCardNumbers: () {
+                      setState(() => _hideCardNumbers = !_hideCardNumbers);
+                    },
+                    onSave: _saveReceipt,
+                    onNotifyWechatFriend: widget.onNotifyWechatFriend ?? () {},
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -421,20 +420,172 @@ class _AccountTransferReceiptPageState
   }
 }
 
+class _ReceiptNavigation extends StatelessWidget {
+  const _ReceiptNavigation({
+    required this.height,
+    required this.scale,
+  });
+
+  final double height;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: const Key('receipt-fixed-navigation'),
+      width: double.infinity,
+      height: height,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              _receiptNavigationTemplate,
+              fit: BoxFit.fill,
+            ),
+          ),
+          Positioned(
+            left: 0,
+            top: 0,
+            width: 180 * scale,
+            height: height,
+            child: Semantics(
+              button: true,
+              label: '返回',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: Get.back,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReceiptFooter extends StatelessWidget {
+  const _ReceiptFooter({
+    required this.hideCardNumbers,
+    required this.isSaving,
+    required this.onToggleCardNumbers,
+    required this.onSave,
+    required this.onNotifyWechatFriend,
+  });
+
+  final bool hideCardNumbers;
+  final bool isSaving;
+  final VoidCallback onToggleCardNumbers;
+  final VoidCallback onSave;
+  final VoidCallback onNotifyWechatFriend;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final scale = width / _receiptScreenReferenceWidth;
+        return SizedBox(
+          key: const Key('receipt-fixed-footer'),
+          width: width,
+          height: _receiptFooterHeight * scale,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  hideCardNumbers
+                      ? _receiptFooterChecked
+                      : _receiptFooterUnchecked,
+                  fit: BoxFit.fill,
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                height: 100 * scale,
+                child: Semantics(
+                  button: true,
+                  checked: hideCardNumbers,
+                  label: '隐藏收付款卡号',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onToggleCardNumbers,
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+              _footerHotspot(
+                scale: scale,
+                left: 44,
+                top: 397,
+                width: 538,
+                height: 150,
+                semanticLabel: isSaving ? '正在保存图片' : '保存图片',
+                onTap: onSave,
+              ),
+              _footerHotspot(
+                scale: scale,
+                left: 625,
+                top: 397,
+                width: 537,
+                height: 150,
+                semanticLabel: '通知微信好友',
+                onTap: onNotifyWechatFriend,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+Widget _footerHotspot({
+  required double scale,
+  required double left,
+  required double top,
+  required double width,
+  required double height,
+  required String semanticLabel,
+  required VoidCallback onTap,
+}) {
+  return Positioned(
+    left: left * scale,
+    top: top * scale,
+    width: width * scale,
+    height: height * scale,
+    child: Semantics(
+      button: true,
+      label: semanticLabel,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: const SizedBox.expand(),
+      ),
+    ),
+  );
+}
+
 class _SavedReceipt extends StatelessWidget {
-  const _SavedReceipt({required this.data});
+  const _SavedReceipt({
+    required this.data,
+    required this.hideCardNumbers,
+  });
 
   final AccountTransferResultData data;
+  final bool hideCardNumbers;
 
   @override
   Widget build(BuildContext context) {
     return _ReferenceTemplate(
-      asset: _savedReceiptTemplate,
-      referenceHeight: _savedReceiptHeight,
+      asset: _receiptBodyTemplate,
+      referenceWidth: _receiptScreenReferenceWidth,
+      referenceHeight: _receiptBodyHeight,
       childrenBuilder: (scale) => _receiptFields(
         data: data,
         scale: scale,
-        topOffset: -150,
+        hideCardNumbers: hideCardNumbers,
       ),
     );
   }
@@ -443,11 +594,13 @@ class _SavedReceipt extends StatelessWidget {
 class _ReferenceTemplate extends StatelessWidget {
   const _ReferenceTemplate({
     required this.asset,
+    required this.referenceWidth,
     required this.referenceHeight,
     required this.childrenBuilder,
   });
 
   final String asset;
+  final double referenceWidth;
   final double referenceHeight;
   final List<Widget> Function(double scale) childrenBuilder;
 
@@ -458,7 +611,7 @@ class _ReferenceTemplate extends StatelessWidget {
         final width = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : MediaQuery.sizeOf(context).width;
-        final scale = width / _referenceWidth;
+        final scale = width / referenceWidth;
         return SizedBox(
           width: width,
           height: referenceHeight * scale,
@@ -480,21 +633,21 @@ class _ReferenceTemplate extends StatelessWidget {
 List<Widget> _receiptFields({
   required AccountTransferResultData data,
   required double scale,
-  required double topOffset,
+  required bool hideCardNumbers,
 }) {
   Widget field({
     required Key key,
     required double top,
     required String text,
     Color color = _receiptInk,
-    double fontSize = 45,
+    double fontSize = 48,
   }) {
     return Positioned(
       key: key,
-      top: (top + topOffset) * scale,
-      right: 105 * scale,
+      top: top * scale,
+      right: 102 * scale,
       width: 850 * scale,
-      height: 78 * scale,
+      height: 64 * scale,
       child: Align(
         alignment: Alignment.centerRight,
         child: FittedBox(
@@ -518,70 +671,74 @@ List<Widget> _receiptFields({
   return [
     field(
       key: const Key('receipt-recipient-name'),
-      top: 425,
+      top: 238,
       text: data.recipientName,
     ),
     field(
       key: const Key('receipt-recipient-account'),
-      top: 523,
-      text: data.recipientAccountMasked,
+      top: 334,
+      text: hideCardNumbers
+          ? data.recipientAccountMasked
+          : data.recipientAccountFull,
+      fontSize: hideCardNumbers ? 49 : 48,
     ),
     field(
       key: const Key('receipt-recipient-bank'),
-      top: 620,
+      top: 430,
       text: data.recipientBank,
     ),
     field(
       key: const Key('receipt-transfer-amount'),
-      top: 716,
+      top: 524,
       text: '${data.amountText}元',
     ),
     field(
       key: const Key('receipt-uppercase-amount'),
-      top: 812,
+      top: 620,
       text: data.uppercaseAmount,
       color: const Color(0xFFBD8459),
-      fontSize: 43,
+      fontSize: 48,
     ),
     field(
       key: const Key('receipt-payer-name'),
-      top: 1073,
+      top: 883,
       text: data.payerName,
     ),
     field(
       key: const Key('receipt-payer-account'),
-      top: 1169,
-      text: data.payerAccountMasked,
+      top: 979,
+      text: hideCardNumbers ? data.payerAccountMasked : data.payerAccountFull,
+      fontSize: hideCardNumbers ? 49 : 48,
     ),
     field(
       key: const Key('receipt-payer-bank'),
-      top: 1265,
+      top: 1075,
       text: data.payerBank,
     ),
     field(
       key: const Key('receipt-serial-number'),
-      top: 1402,
+      top: 1228,
       text: data.displaySerialNumber,
-      fontSize: 42,
+      fontSize: 48,
     ),
     field(
       key: const Key('receipt-transaction-time'),
-      top: 1500,
+      top: 1324,
       text: data.transactionTimeText,
-      fontSize: 43,
+      fontSize: 48,
     ),
     field(
       key: const Key('receipt-arrival-time'),
-      top: 1597,
+      top: 1420,
       text: data.arrivalText,
-      fontSize: 43,
+      fontSize: 48,
     ),
     if (data.purpose.trim().isNotEmpty)
       field(
         key: const Key('receipt-purpose'),
-        top: 1693,
+        top: 1516,
         text: data.purpose.trim(),
-        fontSize: 42,
+        fontSize: 48,
       ),
   ];
 }
@@ -677,6 +834,15 @@ String _maskReceiptCard(String value) {
   final digits = value.replaceAll(RegExp(r'\D'), '');
   if (digits.length <= 8) return digits;
   return '${digits.substring(0, 6)}****${digits.substring(digits.length - 4)}';
+}
+
+String _formatReceiptCard(String value) {
+  final digits = value.replaceAll(RegExp(r'\D'), '');
+  if (digits.isEmpty) return '';
+  return RegExp(r'.{1,4}')
+      .allMatches(digits)
+      .map((match) => match.group(0)!)
+      .join(' ');
 }
 
 String _lastFour(String value) {
