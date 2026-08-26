@@ -14,9 +14,14 @@ import 'component/comprehensive_bill_note_sheet.dart';
 import '../ledger/component/ledger_period_picker_sheet.dart';
 import 'asset_bill_view.dart';
 import '../account_asset/account_asset_view.dart';
+import '../profit_center/profit_center_logic.dart';
 import '../profit_center/profit_center_view.dart';
 import '../ledger/ledger_view.dart';
 import 'income_bill_view.dart';
+
+ProfitPeriod profitPeriodForComprehensiveBillMode(int periodMode) {
+  return periodMode == 1 ? ProfitPeriod.year : ProfitPeriod.month;
+}
 
 class ComprehensiveBillPage extends BaseStateless {
   ComprehensiveBillPage({
@@ -628,9 +633,13 @@ class ComprehensiveBillPage extends BaseStateless {
               const Spacer(),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () => {
-                  Get.to(() => ProfitCenterPage())
-                },
+                onTap: () => Get.to(
+                  () => ProfitCenterPage(
+                    initialPeriod: profitPeriodForComprehensiveBillMode(
+                      logic.periodMode.value,
+                    ),
+                  ),
+                ),
                 child: const BaseText(
                   text: '收益中心', color: Color(0xFF0875ED), fontSize: 14),
               ),

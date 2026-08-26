@@ -244,9 +244,12 @@ class _AccountContent extends StatelessWidget {
                       .bankBalance
                       : '****',
                   fontWeight: FontWeight.w500,
+                  textAlign: TextAlign.end,
                   fontSize: 18,
                   color: Colors.black,
-                ),
+                ).withContainer(width: 1.sw - position1.getX(280)).withOnTap(onTap: (){
+                  Get.toNamed(Routes.transactionDetail);
+                }),
               ),
               Positioned(
                 right: position1.getX(310),
