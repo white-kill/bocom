@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../../routes/app_pages.dart';
 import 'transfer_record_detail_view.dart';
@@ -1252,6 +1253,8 @@ class _TransferRecordList extends StatelessWidget {
   final bool loadingMore;
   final ValueChanged<TransferRecordItem> onRecordTap;
 
+  static final NumberFormat _amountFormat = NumberFormat('#,##0.00');
+
   @override
   Widget build(BuildContext context) {
     final sections = <String, List<TransferRecordItem>>{};
@@ -1282,12 +1285,19 @@ class _TransferRecordList extends StatelessWidget {
                       fontSize: 15.5 * unit,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    '共  ${summaryAmount.toStringAsFixed(2)} 元',
-                    style: TextStyle(
-                      color: const Color(0xFF333333),
-                      fontSize: 15.5 * unit,
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '共  ${_amountFormat.format(summaryAmount)} 元',
+                          style: TextStyle(
+                            color: const Color(0xFF333333),
+                            fontSize: 15.5 * unit,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
