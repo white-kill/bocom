@@ -65,6 +65,7 @@ void main() {
             'id': 10001,
             'title': '服务端交易标题',
             'excerpt': '转账',
+            'detailTemplate': 'PAYMENT_WITH_OPPOSITE',
             'oppositeName': '张三',
             'amount': '500.00',
             'accountBalance': '8,000.00',
@@ -83,10 +84,13 @@ void main() {
               'transactionCategory': '快捷支付',
               'transactionDescription': '其他商家消费',
               'merchantName': '拼多多平台商户',
+              'transactionAccount': '支付宝',
+              'merchantBranch': '拼多多平台商户',
               'oppositeName': '拼多多平台商户',
               'postscriptno': 'ORDER-10001',
               'transactionLogno': 'FLOW-10001',
               'excerpt': '网上支付',
+              'remark': '测试摘要',
             },
           },
         ],
@@ -115,9 +119,13 @@ void main() {
     expect(page.entries.single.detail?.postscriptno, 'ORDER-10001');
     expect(page.entries.single.detail?.transactionLogno, 'FLOW-10001');
     expect(page.entries.single.detail?.excerpt, '网上支付');
+    expect(page.entries.single.detail?.detailTemplate, 'PAYMENT_WITH_OPPOSITE');
+    expect(page.entries.single.detail?.transactionAccount, '支付宝');
+    expect(page.entries.single.detail?.merchantBranch, '拼多多平台商户');
+    expect(page.entries.single.detail?.remark, '测试摘要');
     expect(
       page.entries.single.detail?.kind,
-      TransactionBillDetailKind.onlinePayment,
+      TransactionBillDetailKind.paymentWithOpposite,
     );
   });
 
@@ -128,17 +136,21 @@ void main() {
         'amount': -35,
         'accountBalance': '1,044.00',
         'type': 2,
+        'detailTemplate': 'ONLINE_PAYMENT',
+        'transactionDescription': '其他商家消费',
         'billDetail': {
           'bankCard': '622262****2910',
           'transactionTime': '2026-08-15 12:54:23',
           'transactionChannel': '支付宝',
           'transactionCategory': '快捷支付',
-          'transactionDescription': '其他商家消费',
           'merchantName': '拼多多平台商户',
+          'transactionAccount': '支付宝',
+          'merchantBranch': '拼多多平台商户',
           'oppositeName': '拼多多平台商户',
           'postscriptno': '20260815110100010539160975713552',
           'transactionLogno': '2026081506840308560516090110306',
           'excerpt': '网上支付',
+          'remark': '周末购物',
         },
       },
     });
@@ -151,21 +163,29 @@ void main() {
     expect(detail.postscriptno, '20260815110100010539160975713552');
     expect(detail.transactionChannel, '支付宝');
     expect(detail.excerpt, '网上支付');
+    expect(detail.detailTemplate, 'ONLINE_PAYMENT');
+    expect(detail.transactionAccount, '支付宝');
+    expect(detail.merchantBranch, '拼多多平台商户');
+    expect(detail.remark, '周末购物');
     expect(detail.kind, TransactionBillDetailKind.onlinePayment);
   });
 
-  test('excerpt 只负责详情分类且未知值走通用模板', () {
+  test('detailTemplate 是唯一模板来源且未知值回落普通支付模板', () {
     expect(
-      TransactionBillDetailKind.fromExcerpt('转账汇款'),
-      TransactionBillDetailKind.transferRemittance,
+      TransactionBillDetailKind.fromTemplate('PAYMENT_WITH_OPPOSITE'),
+      TransactionBillDetailKind.paymentWithOpposite,
     );
     expect(
-      TransactionBillDetailKind.fromExcerpt('网上支付'),
+      TransactionBillDetailKind.fromTemplate('TRANSFER_OUT'),
+      TransactionBillDetailKind.transferOut,
+    );
+    expect(
+      TransactionBillDetailKind.fromTemplate('TRANSFER_IN'),
+      TransactionBillDetailKind.transferIn,
+    );
+    expect(
+      TransactionBillDetailKind.fromTemplate('未来新增模板'),
       TransactionBillDetailKind.onlinePayment,
-    );
-    expect(
-      TransactionBillDetailKind.fromExcerpt('未来新增场景'),
-      TransactionBillDetailKind.unknown,
     );
   });
 }

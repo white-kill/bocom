@@ -32,6 +32,7 @@ class TransactionDetailPage extends StatefulWidget {
     this.onFilterTap,
     this.onExportTap,
     this.billLoader,
+    this.billDetailLoader,
     this.today,
   });
 
@@ -39,6 +40,7 @@ class TransactionDetailPage extends StatefulWidget {
   final VoidCallback? onFilterTap;
   final VoidCallback? onExportTap;
   final TransactionBillPageLoader? billLoader;
+  final TransactionBillDetailLoader? billDetailLoader;
   final DateTime? today;
 
   @override
@@ -164,6 +166,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       () => TransactionBillDetailPage(
         billId: entry?.id ?? 0,
         initialDetail: initialDetail,
+        detailLoader: widget.billDetailLoader,
       ),
     );
   }

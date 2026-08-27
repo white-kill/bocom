@@ -41,16 +41,16 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
   void initState() {
     super.initState();
     _detail = widget.initialDetail;
-    if (_detail == null) _loadDetail();
+    _loadDetail();
   }
 
   Future<void> _loadDetail() async {
     if (widget.billId <= 0) {
-      setState(() => _failed = true);
+      if (_detail == null) setState(() => _failed = true);
       return;
     }
     setState(() {
-      _loading = true;
+      _loading = _detail == null;
       _failed = false;
     });
     try {
@@ -66,7 +66,7 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _failed = true;
+        _failed = _detail == null;
       });
     }
   }
@@ -146,7 +146,7 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
     return SingleChildScrollView(
       key: const ValueKey('transaction_bill_detail_scroll'),
       physics: const ClampingScrollPhysics(),
-      padding: EdgeInsets.only(top: 12.w, bottom: 38.w),
+      padding: EdgeInsets.only(top: 9.w, bottom: 38.w),
       child: Column(
         children: [
           Padding(
@@ -172,31 +172,28 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
               ),
             ),
           ),
-          if (_detail!.kind !=
-              TransactionBillDetailKind.transferRemittance) ...[
-            SizedBox(height: 62.w),
-            Semantics(
-              button: true,
-              label: '对此交易有疑问',
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: widget.onQuestionTap,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 24.w,
-                    vertical: 12.w,
-                  ),
-                  child: Text(
-                    '对此交易有疑问?',
-                    style: TextStyle(
-                      color: const Color(0xFF0075E5),
-                      fontSize: 17.sp,
-                    ),
+          SizedBox(height: 62.w),
+          Semantics(
+            button: true,
+            label: '对此交易有疑问',
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onQuestionTap,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 24.w,
+                  vertical: 6.w,
+                ),
+                child: Text(
+                  '对此交易有疑问?',
+                  style: TextStyle(
+                    color: const Color(0xFF0075E5),
+                    fontSize: 17.sp,
                   ),
                 ),
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -278,71 +275,73 @@ class _BillDetailCard extends StatelessWidget {
     return amount;
   }
 
-  String _value(String value) => value.trim().isEmpty ? '--' : value.trim();
+  _BillDetailRowData? _row(String label, String value) {
+    final text = value.trim();
+    return text.isEmpty ? null : _BillDetailRowData(label, text);
+  }
 
-  List<_BillDetailRowData> get _baseRows => [
-        _BillDetailRowData('交易卡号', _value(detail.bankCard)),
-        _BillDetailRowData(
-          '交易时间',
-          detail.transactionTime == null
-              ? '--'
-              : _dateFormat.format(detail.transactionTime!),
-        ),
-        _BillDetailRowData(
-          '交易渠道',
-          _value(detail.transactionChannel),
-        ),
-        _BillDetailRowData(
-          '交易类型',
-          _value(detail.transactionCategory),
-        ),
-      ];
+  List<_BillDetailRowData> _compact(
+    Iterable<_BillDetailRowData?> rows,
+  ) =>
+      rows.whereType<_BillDetailRowData>().toList(growable: false);
+
+  String get _transactionTimeText => detail.transactionTime == null
+      ? ''
+      : _dateFormat.format(detail.transactionTime!);
+
+  _BillDetailRowData? get _remarkRow => _row('摘要', detail.remark);
 
   List<_BillDetailRowData> get _rows {
     return switch (detail.kind) {
-      TransactionBillDetailKind.onlinePayment => [
-          ..._baseRows,
-          _BillDetailRowData(
-            '交易说明',
-            _value(detail.transactionDescription),
-          ),
-          _BillDetailRowData('交易商户', _value(detail.merchantName)),
-          if (detail.oppositeName.trim().isNotEmpty)
-            _BillDetailRowData('对方户名', detail.oppositeName.trim()),
-          _BillDetailRowData('订单编号', _value(detail.postscriptno)),
-          _BillDetailRowData('交易流水号', _value(detail.transactionLogno)),
-          _BillDetailRowData('交易场景', _value(detail.excerpt)),
-        ],
-      TransactionBillDetailKind.transferRemittance => [
-          ..._baseRows,
-          _BillDetailRowData('对方户名', _value(detail.oppositeName)),
-          _BillDetailRowData('对方账户', _value(detail.oppositeAccount)),
-          _BillDetailRowData('对方开户行', _value(detail.oppositeBankName)),
-          _BillDetailRowData('交易场景', _value(detail.excerpt)),
-        ],
-      TransactionBillDetailKind.unknown => [
-          ..._baseRows,
-          if (detail.transactionDescription.trim().isNotEmpty)
-            _BillDetailRowData(
-              '交易说明',
-              detail.transactionDescription.trim(),
-            ),
-          if (detail.merchantName.trim().isNotEmpty)
-            _BillDetailRowData('交易商户', detail.merchantName.trim()),
-          if (detail.oppositeName.trim().isNotEmpty)
-            _BillDetailRowData('对方户名', detail.oppositeName.trim()),
-          if (detail.oppositeAccount.trim().isNotEmpty)
-            _BillDetailRowData('对方账户', detail.oppositeAccount.trim()),
-          if (detail.oppositeBankName.trim().isNotEmpty)
-            _BillDetailRowData('对方开户行', detail.oppositeBankName.trim()),
-          if (detail.postscriptno.trim().isNotEmpty)
-            _BillDetailRowData('订单编号', detail.postscriptno.trim()),
-          if (detail.transactionLogno.trim().isNotEmpty)
-            _BillDetailRowData('交易流水号', detail.transactionLogno.trim()),
-          if (detail.excerpt.trim().isNotEmpty)
-            _BillDetailRowData('交易场景', detail.excerpt.trim()),
-        ],
+      TransactionBillDetailKind.onlinePayment => _onlinePaymentRows(),
+      TransactionBillDetailKind.paymentWithOpposite =>
+        _onlinePaymentRows(showOppositeName: true),
+      TransactionBillDetailKind.transferOut => _compact([
+          _row('交易卡号', detail.bankCard),
+          _row('交易时间', _transactionTimeText),
+          _row('交易渠道', detail.transactionChannel),
+          _row('交易类型', detail.transactionCategory),
+          _row('对方户名', detail.oppositeName),
+          _row('对方账户', detail.oppositeAccount),
+          _row('对方开户行', detail.oppositeBankName),
+          _row('交易场景', detail.merchantBranch),
+          _remarkRow,
+        ]),
+      TransactionBillDetailKind.transferIn => _compact([
+          _row('交易卡号', detail.bankCard),
+          _row('交易时间', _transactionTimeText),
+          _row('交易渠道', detail.transactionChannel),
+          _row('对方户名', detail.oppositeName),
+          _row('对方账户', detail.oppositeAccount),
+          _row('对方开户行', detail.oppositeBankName),
+          _remarkRow,
+        ]),
     };
+  }
+
+  List<_BillDetailRowData> _onlinePaymentRows({
+    bool showOppositeName = false,
+  }) {
+    return _compact([
+      _row('交易卡号', detail.bankCard),
+      _row('交易时间', _transactionTimeText),
+      _row('交易渠道', detail.transactionChannel),
+      _row('交易类型', detail.transactionCategory),
+      _row('交易说明', detail.transactionDescription),
+      _row('交易商户', detail.merchantBranch),
+      if (showOppositeName) _row('对方户名', detail.oppositeName),
+      _row('订单编号', detail.postscriptno),
+      _row('交易流水号', detail.transactionLogno),
+      _row('交易场景', detail.excerpt),
+      _remarkRow,
+    ]);
+  }
+
+  bool get _showTransferAction {
+    if (detail.kind == TransactionBillDetailKind.transferOut) return true;
+    if (detail.kind != TransactionBillDetailKind.transferIn) return false;
+    return detail.oppositeName.trim().isNotEmpty ||
+        detail.oppositeAccount.trim().isNotEmpty;
   }
 
   @override
@@ -350,7 +349,12 @@ class _BillDetailCard extends StatelessWidget {
     return Container(
       key: const ValueKey('transaction_bill_detail_card'),
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(14.w, 40.w, 14.w, 22.w),
+      padding: EdgeInsets.fromLTRB(
+        14.w,
+        31.w,
+        14.w,
+        _showTransferAction ? 7.w : 22.w,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.w),
@@ -367,7 +371,7 @@ class _BillDetailCard extends StatelessWidget {
               fontSize: 17.sp,
             ),
           ),
-          SizedBox(height: 19.w),
+          SizedBox(height: 16.w),
           Text(
             _amountText,
             key: const ValueKey('transaction_bill_detail_amount'),
@@ -389,13 +393,13 @@ class _BillDetailCard extends StatelessWidget {
               fontSize: 17.sp,
             ),
           ),
-          SizedBox(height: 43.w),
+          SizedBox(height: 36.w),
           for (final row in _rows)
             _BillDetailRow(
               label: row.label,
               value: row.value,
             ),
-          if (detail.kind == TransactionBillDetailKind.transferRemittance) ...[
+          if (_showTransferAction) ...[
             SizedBox(height: 17.w),
             Container(
               key: const ValueKey('transaction_bill_detail_transfer_tip'),

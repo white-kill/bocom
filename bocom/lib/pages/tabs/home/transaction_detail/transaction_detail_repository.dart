@@ -215,14 +215,16 @@ class TransactionBillEntry {
 
 enum TransactionBillDetailKind {
   onlinePayment,
-  transferRemittance,
-  unknown;
+  paymentWithOpposite,
+  transferOut,
+  transferIn;
 
-  factory TransactionBillDetailKind.fromExcerpt(String excerpt) {
-    return switch (excerpt.trim()) {
-      '网上支付' => TransactionBillDetailKind.onlinePayment,
-      '转账汇款' => TransactionBillDetailKind.transferRemittance,
-      _ => TransactionBillDetailKind.unknown,
+  factory TransactionBillDetailKind.fromTemplate(String detailTemplate) {
+    return switch (detailTemplate.trim().toUpperCase()) {
+      'PAYMENT_WITH_OPPOSITE' => TransactionBillDetailKind.paymentWithOpposite,
+      'TRANSFER_OUT' => TransactionBillDetailKind.transferOut,
+      'TRANSFER_IN' => TransactionBillDetailKind.transferIn,
+      _ => TransactionBillDetailKind.onlinePayment,
     };
   }
 }
@@ -244,6 +246,10 @@ class TransactionBillDetail {
     required this.postscriptno,
     required this.transactionLogno,
     required this.excerpt,
+    this.detailTemplate = 'ONLINE_PAYMENT',
+    this.transactionAccount = '',
+    this.merchantBranch = '',
+    this.remark = '',
   });
 
   final int id;
@@ -261,15 +267,24 @@ class TransactionBillDetail {
   final String postscriptno;
   final String transactionLogno;
   final String excerpt;
+  final String detailTemplate;
+  final String transactionAccount;
+  final String merchantBranch;
+  final String remark;
 
   TransactionBillDetailKind get kind =>
-      TransactionBillDetailKind.fromExcerpt(excerpt);
+      TransactionBillDetailKind.fromTemplate(detailTemplate);
 
   String get displayName {
-    final values = kind == TransactionBillDetailKind.transferRemittance
-        ? [oppositeName, merchantName, excerpt]
-        : [merchantName, oppositeName, excerpt];
-    return _firstText(values, fallback: '交易');
+    return switch (kind) {
+      TransactionBillDetailKind.onlinePayment ||
+      TransactionBillDetailKind.paymentWithOpposite =>
+        _firstText([transactionAccount], fallback: '交易'),
+      TransactionBillDetailKind.transferOut =>
+        _firstText([oppositeName], fallback: '交易'),
+      TransactionBillDetailKind.transferIn =>
+        _firstText([excerpt], fallback: '交易'),
+    };
   }
 
   factory TransactionBillDetail.fromJson(Map<String, dynamic> json) {
@@ -302,12 +317,7 @@ class TransactionBillDetail {
     ]);
     return TransactionBillDetail(
       id: _int(source['id']) ?? _int(detail['id']) ?? 0,
-      merchantName: merchantName.isNotEmpty
-          ? merchantName
-          : TransactionBillDetailKind.fromExcerpt(excerpt) ==
-                  TransactionBillDetailKind.transferRemittance
-              ? ''
-              : oppositeName,
+      merchantName: merchantName,
       amount: amount,
       balance: _number(source['accountBalance']) ??
           _number(detail['accountBalance']) ??
@@ -326,6 +336,8 @@ class TransactionBillDetail {
       transactionChannel: _firstText([
         detail['transactionChannel'],
         source['transactionChannel'],
+        detail['transactionAccount'],
+        source['transactionAccount'],
         detail['merchantBranch'],
         source['merchantBranch'],
         detail['paymentChannel'],
@@ -338,8 +350,8 @@ class TransactionBillDetail {
         detail['billType'],
       ]),
       transactionDescription: _firstText([
-        detail['transactionDescription'],
         source['transactionDescription'],
+        detail['transactionDescription'],
       ]),
       oppositeName: oppositeName,
       oppositeAccount: _firstText([
@@ -367,6 +379,19 @@ class TransactionBillDetail {
         detail['flowNo'],
       ]),
       excerpt: excerpt,
+      detailTemplate: _firstText(
+        [source['detailTemplate'], detail['detailTemplate']],
+        fallback: 'ONLINE_PAYMENT',
+      ),
+      transactionAccount: _firstText([
+        detail['transactionAccount'],
+        source['transactionAccount'],
+      ]),
+      merchantBranch: _firstText([
+        detail['merchantBranch'],
+        source['merchantBranch'],
+      ]),
+      remark: _firstText([detail['remark'], source['remark']]),
     );
   }
 
@@ -387,6 +412,10 @@ class TransactionBillDetail {
         postscriptno: '',
         transactionLogno: '',
         excerpt: '',
+        detailTemplate: 'ONLINE_PAYMENT',
+        transactionAccount: record.channel,
+        merchantBranch: record.title,
+        remark: '',
       );
 
   static String _firstText(

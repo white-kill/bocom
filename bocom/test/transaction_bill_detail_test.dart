@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
 void main() {
-  testWidgets('传入列表详情时直接展示且不重复请求', (tester) async {
+  testWidgets('传入列表预览时仍按 billId 刷新完整详情', (tester) async {
     var loadCount = 0;
     await _pumpPage(
       tester,
@@ -22,28 +22,44 @@ void main() {
       ),
     );
 
-    expect(loadCount, 0);
+    expect(loadCount, 1);
     expect(find.text('明细详情'), findsOneWidget);
     expect(find.text('拼多多平台商户'), findsNWidgets(2));
     expect(find.text('-35.00'), findsOneWidget);
     expect(find.text('余额： 1,044.00'), findsOneWidget);
     expect(find.text('622262****2910'), findsOneWidget);
     expect(find.text('网上支付'), findsOneWidget);
+    _expectVisibleFieldLabels(tester, const [
+      '交易卡号',
+      '交易时间',
+      '交易渠道',
+      '交易类型',
+      '交易说明',
+      '交易商户',
+      '订单编号',
+      '交易流水号',
+      '交易场景',
+    ]);
+    expect(
+      find.byKey(const ValueKey('transaction_bill_detail_transfer_tip')),
+      findsNothing,
+    );
   });
 
   testWidgets('入账金额显示加号并使用列表同款红色', (tester) async {
     await _pumpPage(
       tester,
-      const TransactionBillDetailPage(
+      TransactionBillDetailPage(
         billId: 12,
         initialDetail: _incomeDetail,
+        detailLoader: (_) async => _incomeDetail,
       ),
     );
 
     final amount = tester.widget<Text>(
       find.byKey(const ValueKey('transaction_bill_detail_amount')),
     );
-    expect(amount.data, '+253.15');
+    expect(amount.data, '+1.00');
     expect(amount.style?.color, const Color(0xFFFF5C5C));
   });
 
@@ -100,6 +116,7 @@ void main() {
       TransactionBillDetailPage(
         billId: 9,
         initialDetail: _detail,
+        detailLoader: (_) async => _detail,
       ),
     );
 
@@ -134,6 +151,7 @@ void main() {
       TransactionBillDetailPage(
         billId: 10,
         initialDetail: _wechatDetail,
+        detailLoader: (_) async => _wechatDetail,
       ),
     );
 
@@ -142,6 +160,18 @@ void main() {
     expect(find.text('微信支付'), findsNWidgets(2));
     expect(find.text(_wechatDetail.postscriptno), findsOneWidget);
     expect(find.text(_wechatDetail.transactionLogno), findsOneWidget);
+    _expectVisibleFieldLabels(tester, const [
+      '交易卡号',
+      '交易时间',
+      '交易渠道',
+      '交易类型',
+      '交易说明',
+      '交易商户',
+      '对方户名',
+      '订单编号',
+      '交易流水号',
+      '交易场景',
+    ]);
 
     final orderText = tester.widget<Text>(
       find.byKey(
@@ -165,6 +195,7 @@ void main() {
       TransactionBillDetailPage(
         billId: 9,
         initialDetail: _detail,
+        detailLoader: (_) async => _detail,
       ),
     );
 
@@ -178,6 +209,7 @@ void main() {
       TransactionBillDetailPage(
         billId: 11,
         initialDetail: _transferDetail,
+        detailLoader: (_) async => _transferDetail,
         onTransferTap: () => transferTapped = true,
       ),
     );
@@ -190,7 +222,17 @@ void main() {
     expect(find.text('交易商户'), findsNothing);
     expect(find.text('订单编号'), findsNothing);
     expect(find.text('交易流水号'), findsNothing);
-    expect(find.text('对此交易有疑问?'), findsNothing);
+    expect(find.text('对此交易有疑问?'), findsOneWidget);
+    _expectVisibleFieldLabels(tester, const [
+      '交易卡号',
+      '交易时间',
+      '交易渠道',
+      '交易类型',
+      '对方户名',
+      '对方账户',
+      '对方开户行',
+      '交易场景',
+    ]);
     expect(
       find.byKey(const ValueKey('transaction_bill_detail_transfer_tip')),
       findsOneWidget,
@@ -203,6 +245,128 @@ void main() {
     );
     expect(transferTapped, isTrue);
   });
+
+  testWidgets('转入模板严格隐藏交易类型和交易场景并展示转账操作', (tester) async {
+    await _pumpPage(
+      tester,
+      TransactionBillDetailPage(
+        billId: 12,
+        initialDetail: _incomeDetail,
+        detailLoader: (_) async => _incomeDetail,
+      ),
+    );
+
+    expect(find.text('跨行汇款'), findsOneWidget);
+    expect(find.text('交易卡号'), findsOneWidget);
+    expect(find.text('交易时间'), findsOneWidget);
+    expect(find.text('交易渠道'), findsOneWidget);
+    expect(find.text('对方户名'), findsOneWidget);
+    expect(find.text('对方账户'), findsOneWidget);
+    expect(find.text('对方开户行'), findsOneWidget);
+    expect(find.text('交易类型'), findsNothing);
+    expect(find.text('交易场景'), findsNothing);
+    expect(find.text('交易说明'), findsNothing);
+    expect(find.text('交易商户'), findsNothing);
+    expect(find.text('订单编号'), findsNothing);
+    expect(find.text('交易流水号'), findsNothing);
+    expect(find.text('对此交易有疑问?'), findsOneWidget);
+    _expectVisibleFieldLabels(tester, const [
+      '交易卡号',
+      '交易时间',
+      '交易渠道',
+      '对方户名',
+      '对方账户',
+      '对方开户行',
+    ]);
+    expect(
+      find.byKey(const ValueKey('transaction_bill_detail_transfer_tip')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('transaction_bill_detail_transfer_button')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('remark 为空时不展示摘要行', (tester) async {
+    await _pumpPage(
+      tester,
+      TransactionBillDetailPage(
+        billId: 9,
+        initialDetail: _detail,
+        detailLoader: (_) async => _detail,
+      ),
+    );
+    expect(find.text('摘要'), findsNothing);
+    expect(find.text('--'), findsNothing);
+  });
+
+  testWidgets('remark 有值时展示摘要行', (tester) async {
+    await _pumpPage(
+      tester,
+      TransactionBillDetailPage(
+        billId: 13,
+        initialDetail: _detailWithRemark,
+        detailLoader: (_) async => _detailWithRemark,
+      ),
+    );
+    expect(find.text('摘要'), findsOneWidget);
+    expect(find.text('周末购物'), findsOneWidget);
+  });
+
+  testWidgets('所有模板都隐藏空字段而不是显示占位符', (tester) async {
+    await _pumpPage(
+      tester,
+      TransactionBillDetailPage(
+        billId: 14,
+        initialDetail: _sparseDetail,
+        detailLoader: (_) async => _sparseDetail,
+      ),
+    );
+
+    expect(find.text('交易卡号'), findsNothing);
+    expect(find.text('交易时间'), findsNothing);
+    expect(find.text('交易说明'), findsNothing);
+    expect(find.text('订单编号'), findsNothing);
+    expect(find.text('--'), findsNothing);
+  });
+}
+
+const _allFieldLabels = [
+  '交易卡号',
+  '交易时间',
+  '交易渠道',
+  '交易类型',
+  '交易说明',
+  '交易商户',
+  '对方户名',
+  '对方账户',
+  '对方开户行',
+  '订单编号',
+  '交易流水号',
+  '交易场景',
+  '摘要',
+];
+
+void _expectVisibleFieldLabels(
+  WidgetTester tester,
+  List<String> expected,
+) {
+  for (final label in _allFieldLabels) {
+    expect(
+      find.text(label),
+      expected.contains(label) ? findsOneWidget : findsNothing,
+      reason: '字段 $label 的模板可见性不正确',
+    );
+  }
+  final positions = expected
+      .map((label) => tester.getTopLeft(find.text(label)).dy)
+      .toList(growable: false);
+  expect(
+    positions,
+    orderedEquals([...positions]..sort()),
+    reason: '详情字段顺序必须与参考图一致',
+  );
 }
 
 Future<void> _pumpPage(
@@ -240,24 +404,29 @@ final _detail = TransactionBillDetail(
   postscriptno: '20260815110100010539160975713552',
   transactionLogno: '2026081506840308560516090110306',
   excerpt: '网上支付',
+  detailTemplate: 'ONLINE_PAYMENT',
+  transactionAccount: '拼多多平台商户',
+  merchantBranch: '拼多多平台商户',
 );
 
-const _incomeDetail = TransactionBillDetail(
+final _incomeDetail = TransactionBillDetail(
   id: 12,
-  merchantName: '退款入账',
-  amount: 253.15,
-  balance: 1297.15,
+  merchantName: '',
+  amount: 1,
+  balance: 37.53,
   bankCard: '622262****2910',
-  transactionTime: null,
-  transactionChannel: '手机银行',
-  transactionCategory: '入账',
+  transactionTime: DateTime(2026, 8, 25, 14, 4, 47),
+  transactionChannel: '支付平台',
+  transactionCategory: '',
   transactionDescription: '',
-  oppositeName: '',
-  oppositeAccount: '',
-  oppositeBankName: '',
+  oppositeName: '沈光德',
+  oppositeAccount: '621700****2353',
+  oppositeBankName: '中国建设银行合肥市金寨南路分理处',
   postscriptno: '',
   transactionLogno: '',
-  excerpt: '',
+  excerpt: '跨行汇款',
+  detailTemplate: 'TRANSFER_IN',
+  transactionAccount: '支付平台',
 );
 
 final _wechatDetail = TransactionBillDetail(
@@ -276,6 +445,9 @@ final _wechatDetail = TransactionBillDetail(
   postscriptno: '532607285515509565658',
   transactionLogno: '0728632781945346',
   excerpt: '网上支付',
+  detailTemplate: 'PAYMENT_WITH_OPPOSITE',
+  transactionAccount: '微信转账',
+  merchantBranch: '微信转账',
 );
 
 final _transferDetail = TransactionBillDetail(
@@ -294,4 +466,51 @@ final _transferDetail = TransactionBillDetail(
   postscriptno: '',
   transactionLogno: '',
   excerpt: '转账汇款',
+  detailTemplate: 'TRANSFER_OUT',
+  transactionAccount: '手机银行',
+  merchantBranch: '转账汇款',
+);
+
+final _detailWithRemark = TransactionBillDetail(
+  id: 13,
+  merchantName: _detail.merchantName,
+  amount: _detail.amount,
+  balance: _detail.balance,
+  bankCard: _detail.bankCard,
+  transactionTime: _detail.transactionTime,
+  transactionChannel: _detail.transactionChannel,
+  transactionCategory: _detail.transactionCategory,
+  transactionDescription: _detail.transactionDescription,
+  oppositeName: _detail.oppositeName,
+  oppositeAccount: _detail.oppositeAccount,
+  oppositeBankName: _detail.oppositeBankName,
+  postscriptno: _detail.postscriptno,
+  transactionLogno: _detail.transactionLogno,
+  excerpt: _detail.excerpt,
+  detailTemplate: _detail.detailTemplate,
+  transactionAccount: _detail.transactionAccount,
+  merchantBranch: _detail.merchantBranch,
+  remark: '周末购物',
+);
+
+const _sparseDetail = TransactionBillDetail(
+  id: 14,
+  merchantName: '',
+  amount: -1,
+  balance: 10,
+  bankCard: '',
+  transactionTime: null,
+  transactionChannel: '',
+  transactionCategory: '',
+  transactionDescription: '',
+  oppositeName: '',
+  oppositeAccount: '',
+  oppositeBankName: '',
+  postscriptno: '',
+  transactionLogno: '',
+  excerpt: '',
+  detailTemplate: 'ONLINE_PAYMENT',
+  transactionAccount: '',
+  merchantBranch: '',
+  remark: '',
 );
