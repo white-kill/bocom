@@ -29,7 +29,7 @@ class Apis {
   static const transfer = '/servicecomm/bill/transfer';
 
   ///单笔账单详情
-  static const billDetail = '/serviceboc/bill/detail';
+  static const billDetail = '/servicecomm/bill/detail';
 
   ///分页查询账单打印申请列表
   static const applyPageList = '/servicecomm/flowExport/applyPage';
