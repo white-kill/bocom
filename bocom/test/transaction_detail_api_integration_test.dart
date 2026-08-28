@@ -175,7 +175,7 @@ void main() {
     );
   });
 
-  testWidgets('点击列表记录把已有详情直接传入详情页', (tester) async {
+  testWidgets('点击列表记录先展示预览并刷新完整详情', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(375, 812);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -185,7 +185,10 @@ void main() {
       ScreenUtilInit(
         designSize: const Size(375, 750),
         builder: (_, child) => GetMaterialApp(home: child),
-        child: TransactionDetailPage(billLoader: (_) async => _billPage()),
+        child: TransactionDetailPage(
+          billLoader: (_) async => _billPage(),
+          billDetailLoader: (_) async => _billPage().entries.single.detail!,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -227,6 +230,9 @@ TransactionBillPage _billPage() {
           postscriptno: 'ORDER-1',
           transactionLogno: 'FLOW-1',
           excerpt: '网上支付',
+          detailTemplate: 'ONLINE_PAYMENT',
+          transactionAccount: '接口商户',
+          merchantBranch: '接口商户',
         ),
         monthIncomeTotal: 0,
         monthExpensesTotal: 50,

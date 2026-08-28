@@ -13,8 +13,10 @@ void main() {
   testWidgets('收支账本和账单保留独立点击事件', (tester) async {
     tester.view.physicalSize = const Size(402, 874);
     tester.view.devicePixelRatio = 1;
+    tester.view.padding = const FakeViewPadding(top: 24);
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPadding);
 
     var ledgerTapCount = 0;
     var billTapCount = 0;
@@ -34,6 +36,10 @@ void main() {
     );
     await tester.pump();
 
+    expect(
+      tester.getSize(find.byKey(const Key('home-status-bar-placeholder'))),
+      const Size(402, 24),
+    );
     expect(find.bySemanticsLabel('收支账本'), findsOneWidget);
     expect(find.bySemanticsLabel('账单'), findsOneWidget);
 

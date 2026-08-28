@@ -153,27 +153,66 @@ class HomePage extends BaseStateless {
         },
         child: ListView.builder(
           padding: EdgeInsets.zero,
-          itemCount: _sectionAssets.length,
+          itemCount: _sectionAssets.length + 1,
           itemBuilder: (_, index) {
             if (index == 0) {
-              return _HomeAccountAssetSection(
-                assetPath: _sectionAssets[index],
+              return _HomeStatusBarPlaceholder(
+                assetPath: _sectionAssets.first,
               );
             }
-            if (index == 1) {
+            final assetIndex = index - 1;
+            if (assetIndex == 0) {
+              return _HomeAccountAssetSection(
+                assetPath: _sectionAssets[assetIndex],
+              );
+            }
+            if (assetIndex == 1) {
               return _HomeTransferSection(
-                assetPath: _sectionAssets[index],
+                assetPath: _sectionAssets[assetIndex],
                 onIncomeExpenseLedgerTap: onIncomeExpenseLedgerTap,
                 onBillTap: onBillTap,
               );
             }
             return Image.asset(
-              _sectionAssets[index],
+              _sectionAssets[assetIndex],
               width: 1.sw,
               fit: BoxFit.fitWidth,
               gaplessPlayback: true,
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeStatusBarPlaceholder extends StatelessWidget {
+  const _HomeStatusBarPlaceholder({required this.assetPath});
+
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    final statusBarHeight = MediaQuery.paddingOf(context).top;
+    return SizedBox(
+      key: const Key('home-status-bar-placeholder'),
+      width: 1.sw,
+      height: statusBarHeight,
+      child: ClipRect(
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: Image.asset(
+                assetPath,
+                width: 1.sw,
+                fit: BoxFit.fitWidth,
+                gaplessPlayback: true,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -228,12 +267,12 @@ class _HomeTransferSection extends StatelessWidget {
       _HomeFeatureDestination(
         hotspotKey: const Key('home-income-expense-ledger-hotspot'),
         semanticsLabel: '收支账本',
-        open: () => Get.toNamed(Routes.ledgerPage),
+        open: onIncomeExpenseLedgerTap ?? () => Get.toNamed(Routes.ledgerPage),
       ),
       _HomeFeatureDestination(
         hotspotKey: const Key('home-bill-hotspot'),
         semanticsLabel: '账单',
-        open: () => Get.toNamed(Routes.comprehensiveBillPage),
+        open: onBillTap ?? () => Get.toNamed(Routes.comprehensiveBillPage),
       ),
     ];
 
@@ -368,8 +407,6 @@ class _HomeFeatureDestination {
   final VoidCallback open;
   final Key? hotspotKey;
 }
-
-void _reservedHomeFeatureTap() {}
 
 class _HomeSearchBar extends StatelessWidget {
   const _HomeSearchBar({required this.isDark});

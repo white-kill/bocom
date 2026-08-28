@@ -105,7 +105,7 @@ void main() {
               total: 5,
               pages: 1,
               incomeTotal: 0,
-              expensesTotal: 4.77,
+              expensesTotal: 1000000,
             );
           },
           detailLoader: (_) async => null,
@@ -122,7 +122,7 @@ void main() {
       'bankCard': '6222620000002910',
     });
     expect(find.text('成功  5 笔'), findsOneWidget);
-    expect(find.text('共  4.77 元'), findsOneWidget);
+    expect(find.text('共  1,000,000.00 元'), findsOneWidget);
     expect(find.text('沈光德(**2353)'), findsOneWidget);
     expect(find.text('借记卡(**2910)'), findsOneWidget);
 
