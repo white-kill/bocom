@@ -301,7 +301,7 @@ class _HomeAccountAssetSection extends StatelessWidget {
   static final List<_HomeFeatureDestination> _destinations = [
     _HomeFeatureDestination(
       semanticsLabel: '账户资产，进入我的账户',
-      open: () => Get.to(() => AccountAssetPage(initialTabIndex: 0)),
+      open: () => Get.to(() => AccountAssetPage(initialTabIndex: 1)),
     ),
     _HomeFeatureDestination(
       semanticsLabel: '信用卡，进入爱宠信用卡',
