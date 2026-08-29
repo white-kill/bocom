@@ -153,28 +153,30 @@ class HomePage extends BaseStateless {
         },
         child: ListView.builder(
           padding: EdgeInsets.zero,
-          itemCount: _sectionAssets.length + 1,
+          itemCount: _sectionAssets.length,
           itemBuilder: (_, index) {
             if (index == 0) {
-              return _HomeStatusBarPlaceholder(
-                assetPath: _sectionAssets.first,
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _HomeStatusBarPlaceholder(
+                    assetPath: _sectionAssets.first,
+                  ),
+                  _HomeAccountAssetSection(
+                    assetPath: _sectionAssets.first,
+                  ),
+                ],
               );
             }
-            final assetIndex = index - 1;
-            if (assetIndex == 0) {
-              return _HomeAccountAssetSection(
-                assetPath: _sectionAssets[assetIndex],
-              );
-            }
-            if (assetIndex == 1) {
+            if (index == 1) {
               return _HomeTransferSection(
-                assetPath: _sectionAssets[assetIndex],
+                assetPath: _sectionAssets[index],
                 onIncomeExpenseLedgerTap: onIncomeExpenseLedgerTap,
                 onBillTap: onBillTap,
               );
             }
             return Image.asset(
-              _sectionAssets[assetIndex],
+              _sectionAssets[index],
               width: 1.sw,
               fit: BoxFit.fitWidth,
               gaplessPlayback: true,
@@ -191,30 +193,45 @@ class _HomeStatusBarPlaceholder extends StatelessWidget {
 
   final String assetPath;
 
+  static const double _sourceWidth = 1080;
+  static const double _sourceStatusBarHeight = 72;
+  static const double _similarHeightTolerance = 2;
+
   @override
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.paddingOf(context).top;
-    return SizedBox(
-      key: const Key('home-status-bar-placeholder'),
-      width: 1.sw,
-      height: statusBarHeight,
-      child: ClipRect(
-        child: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              child: Image.asset(
-                assetPath,
-                width: 1.sw,
-                fit: BoxFit.fitWidth,
-                gaplessPlayback: true,
-              ),
+    return LayoutBuilder(
+      builder: (_, constraints) {
+        final embeddedStatusBarHeight =
+            constraints.maxWidth * _sourceStatusBarHeight / _sourceWidth;
+        final statusBarDifference = statusBarHeight - embeddedStatusBarHeight;
+        final placeholderHeight = statusBarDifference > _similarHeightTolerance
+            ? statusBarDifference
+            : 0.0;
+
+        return SizedBox(
+          key: const Key('home-status-bar-placeholder'),
+          width: constraints.maxWidth,
+          height: placeholderHeight,
+          child: ClipRect(
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  child: Image.asset(
+                    assetPath,
+                    width: constraints.maxWidth,
+                    fit: BoxFit.fitWidth,
+                    gaplessPlayback: true,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -339,8 +356,8 @@ class _HomeAccountAssetSection extends StatelessWidget {
 
   static final List<_HomeFeatureDestination> _destinations = [
     _HomeFeatureDestination(
-      semanticsLabel: '账户资产，进入我的账户',
-      open: () => Get.to(() => AccountAssetPage(initialTabIndex: 0)),
+      semanticsLabel: '账户资产，进入我的资产',
+      open: () => Get.to(() => AccountAssetPage(initialTabIndex: 1)),
     ),
     _HomeFeatureDestination(
       semanticsLabel: '信用卡，进入爱宠信用卡',

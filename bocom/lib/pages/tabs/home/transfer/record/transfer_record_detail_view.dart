@@ -294,7 +294,7 @@ class _TransferRecordDetailPageState extends State<TransferRecordDetailPage> {
                               _DetailRowData('收款人银行', _data.recipientBank),
                             ],
                           ),
-                          SizedBox(height: 12 * unit),
+                          SizedBox(height: 10 * unit),
                           _TransferInformationCard(
                             unit: unit,
                             rows: [
@@ -341,7 +341,7 @@ class _TransferDetailNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 56 * unit,
+      height: 44 * unit,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -349,7 +349,7 @@ class _TransferDetailNavigation extends StatelessWidget {
             '转账记录详情',
             style: TextStyle(
               color: const Color(0xFF111111),
-              fontSize: 18 * unit,
+              fontSize: 19 * unit,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -437,7 +437,7 @@ class _TransferOverviewCard extends StatelessWidget {
     return Container(
       key: const ValueKey('transfer_record_detail_overview_card'),
       width: double.infinity,
-      height: 234 * unit,
+      height: 254 * unit,
       padding: EdgeInsets.fromLTRB(
         15 * unit,
         29.7 * unit,
@@ -455,7 +455,7 @@ class _TransferOverviewCard extends StatelessWidget {
             key: const ValueKey('transfer_record_detail_amount'),
             style: TextStyle(
               color: const Color(0xFF292929),
-              fontSize: 32 * unit,
+              fontSize: 36 * unit,
               height: 1,
             ),
           ),
@@ -465,12 +465,12 @@ class _TransferOverviewCard extends StatelessWidget {
             key: const ValueKey('transfer_record_detail_status'),
             style: TextStyle(
               color: _detailMuted,
-              fontSize: 16 * unit,
+              fontSize: 17 * unit,
             ),
           ),
           const Spacer(),
           for (final row in rows)
-            _TransferDetailRow(unit: unit, row: row, height: 32 * unit),
+            _TransferDetailRow(unit: unit, row: row, height: 34 * unit),
         ],
       ),
     );
@@ -488,7 +488,7 @@ class _TransferInformationCard extends StatelessWidget {
     return Container(
       key: const ValueKey('transfer_record_detail_information_card'),
       width: double.infinity,
-      height: 294 * unit,
+      constraints: BoxConstraints(minHeight: 316 * unit),
       padding: EdgeInsets.fromLTRB(
         15 * unit,
         12.5 * unit,
@@ -505,7 +505,7 @@ class _TransferInformationCard extends StatelessWidget {
             _TransferDetailRow(
               unit: unit,
               row: row,
-              height: row.copyable ? 52 * unit : 32 * unit,
+              height: row.copyable ? 52 * unit : 34 * unit,
             ),
         ],
       ),
@@ -539,32 +539,32 @@ class _TransferDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: height),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: (row.copyable ? 135 : 112) * unit,
+            width: 112 * unit,
             child: Text(
               row.label,
               style: TextStyle(
                 color: _detailMuted,
-                fontSize: 16 * unit,
+                fontSize: 17 * unit,
                 height: 1.35,
               ),
             ),
           ),
           Expanded(
             child: Text(
-              row.value,
+              row.copyable ? _serialNumberDisplayText(row.value) : row.value,
               key: ValueKey('transfer_record_detail_${row.label}'),
-              maxLines: row.copyable ? 2 : 1,
-              overflow: TextOverflow.ellipsis,
+              maxLines: row.copyable ? null : 1,
+              overflow: row.copyable ? null : TextOverflow.ellipsis,
               textAlign: TextAlign.right,
               style: TextStyle(
                 color: const Color(0xFF303030),
-                fontSize: 16 * unit,
+                fontSize: 17 * unit,
                 height: 1.35,
               ),
             ),
@@ -579,8 +579,8 @@ class _TransferDetailRow extends StatelessWidget {
                 onTap: _copy,
                 child: Container(
                   key: const ValueKey('transfer_record_detail_copy'),
-                  width: 62 * unit,
-                  height: 27 * unit,
+                  width: 67 * unit,
+                  height: 29 * unit,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     border: Border.all(color: _detailBlue, width: unit),
@@ -621,7 +621,7 @@ class _TransferDetailActions extends StatelessWidget {
           15 * unit,
           7.5 * unit,
           15 * unit,
-          56 * unit,
+          7.5 * unit,
         ),
         child: Row(
           children: [
@@ -674,7 +674,7 @@ class _BottomActionButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          height: 48 * unit,
+          height: 52 * unit,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: filled ? _detailBlue : Colors.white,
@@ -685,7 +685,7 @@ class _BottomActionButton extends StatelessWidget {
             label,
             style: TextStyle(
               color: filled ? Colors.white : _detailBlue,
-              fontSize: 17 * unit,
+              fontSize: 18 * unit,
             ),
           ),
         ),
@@ -700,6 +700,14 @@ String _firstText(Iterable<dynamic> values, {String fallback = ''}) {
     if (text.isNotEmpty) return text;
   }
   return fallback;
+}
+
+String _serialNumberDisplayText(String value) {
+  const firstLineLength = 14;
+  final text = value.trim();
+  if (text.length <= firstLineLength || text.contains('\n')) return text;
+  return '${text.substring(0, firstLineLength)}\n'
+      '${text.substring(firstLineLength)}';
 }
 
 double? _number(dynamic value) => switch (value) {
