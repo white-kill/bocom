@@ -21,7 +21,7 @@ class _TransferRecordDetailDemoApp extends StatelessWidget {
       home: TransferRecordDetailPage(
         data: TransferRecordDetailData(
           amount: -1,
-          recipientName: '沈田田',
+          recipientName: '小明',
           recipientAccount: '6217 8563 0006 0589 317',
           recipientBank: '中国银行',
           transferredAt: DateTime(2026, 8, 26, 10, 45, 26),
