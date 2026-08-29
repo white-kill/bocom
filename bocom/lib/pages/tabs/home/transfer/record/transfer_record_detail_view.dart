@@ -32,7 +32,7 @@ class TransferRecordDetailData {
     this.status = '转账成功',
     this.postscript = '',
     this.billId = 0,
-    this.payerName = '沈田田',
+    this.payerName = '小明',
     this.payerAccount = '6222620000002910',
     this.payerBank = '交通银行',
   });

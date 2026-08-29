@@ -78,7 +78,7 @@ void main() {
     tester.view.physicalSize = const Size(800, 1400);
     addTearDown(tester.view.resetPhysicalSize);
     final contact = ContactsModel()
-      ..name = '沈光德'
+      ..name = '小光'
       ..bankName = '中国建设银行'
       ..bankCard = '6217001630076962353';
 
@@ -89,8 +89,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('沈光德'), findsOneWidget);
-    await tester.tap(find.text('沈光德'));
+    expect(find.text('小光'), findsOneWidget);
+    await tester.tap(find.text('小光'));
     await tester.pumpAndSettle();
 
     final page = tester.widget<HomeAccountTransferPage>(
@@ -98,7 +98,7 @@ void main() {
     );
     expect(page.entryMode, AccountTransferEntryMode.quickRecipient);
     expect(find.byKey(const Key('quick-recipient-card')), findsOneWidget);
-    expect(find.text('沈光德'), findsOneWidget);
+    expect(find.text('小光'), findsOneWidget);
   });
 
   testWidgets('常用收款人不会截断为第一条且有加载状态', (tester) async {

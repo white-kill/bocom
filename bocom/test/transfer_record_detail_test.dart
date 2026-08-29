@@ -11,7 +11,7 @@ void main() {
 
   final detail = TransferRecordDetailData(
     amount: -1,
-    recipientName: '沈光德',
+    recipientName: '小光',
     recipientAccount: '6217 0016 3007 6962 353',
     recipientBank: '中国建设银行',
     transferredAt: DateTime(2026, 8, 12, 11, 43, 23),
@@ -39,7 +39,7 @@ void main() {
 
     expect(find.text('转账记录详情'), findsOneWidget);
     expect(find.text('-1.00'), findsOneWidget);
-    expect(find.text('沈光德'), findsOneWidget);
+    expect(find.text('小光'), findsOneWidget);
     expect(find.text('6217 0016 3007 6962 353'), findsOneWidget);
     expect(find.text('2026-08-12 11:43:23'), findsOneWidget);
     expect(find.text('2005000420260812436002416952'), findsOneWidget);
@@ -65,7 +65,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('沈光德(**2353)').first);
+    await tester.tap(find.text('小光(**2353)').first);
     await tester.pumpAndSettle();
 
     expect(
@@ -127,7 +127,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AccountTransferReceiptPage), findsOneWidget);
-    expect(find.text('沈光德'), findsOneWidget);
+    expect(find.text('小光'), findsOneWidget);
     expect(find.text('621700****2353'), findsOneWidget);
     expect(find.text('1.00元'), findsOneWidget);
     expect(find.text('2005000420260812436002416952'), findsOneWidget);
@@ -145,7 +145,7 @@ void main() {
 
     expect(find.byType(HomeAccountTransferPage), findsOneWidget);
     final fields = find.byType(TextField);
-    expect(tester.widget<TextField>(fields.at(0)).controller?.text, '沈光德');
+    expect(tester.widget<TextField>(fields.at(0)).controller?.text, '小光');
     expect(
       tester.widget<TextField>(fields.at(1)).controller?.text,
       '6217001630076962353',

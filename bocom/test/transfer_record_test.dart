@@ -28,7 +28,7 @@ void main() {
     expect(find.text('转账记录'), findsOneWidget);
     expect(find.text('成功  5 笔'), findsOneWidget);
     expect(find.text('共  4.77 元'), findsOneWidget);
-    expect(find.text('沈光德(**2353)'), findsNWidgets(5));
+    expect(find.text('小光(**2353)'), findsNWidgets(5));
     expect(find.text('温馨提示'), findsOneWidget);
   });
 

@@ -32,12 +32,12 @@ void main() {
 
   void registerMember() {
     final logic = Get.put(BocLogic());
-    logic.memberInfo.realName = '沈田田';
+    logic.memberInfo.realName = '小明';
     logic.memberInfo.bankList = [
       MemberInfoBankList()
         ..bankCard = '6222620000002910'
         ..bankName = '交通银行'
-        ..realName = '沈田田'
+        ..realName = '小明'
         ..cardType = '借记卡',
     ];
   }
@@ -50,7 +50,7 @@ void main() {
             'id': 10020,
             'bankCard': '6222620000002910',
             'amount': '-1.00',
-            'oppositeName': '沈光德',
+            'oppositeName': '小光',
             'oppositeAccount': '6217001630076962353',
             'oppositeBankName': '中国建设银行',
             'icon': 'http://img.chinajianse.com/bank/icon/CCB.png',
@@ -98,7 +98,7 @@ void main() {
               records: [
                 entry(
                   id: 10020,
-                  name: '沈光德',
+                  name: '小光',
                   time: DateTime(2026, 8, 12, 11, 43, 23),
                 ),
               ],
@@ -123,16 +123,16 @@ void main() {
     });
     expect(find.text('成功  5 笔'), findsOneWidget);
     expect(find.text('共  1,000,000.00 元'), findsOneWidget);
-    expect(find.text('沈光德(**2353)'), findsOneWidget);
+    expect(find.text('小光(**2353)'), findsOneWidget);
     expect(find.text('借记卡(**2910)'), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const ValueKey('transfer_record_search')),
-      '沈光德',
+      '小光',
     );
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
-    expect(requests.last['keyword'], '沈光德');
+    expect(requests.last['keyword'], '小光');
   });
 
   testWidgets('转账记录滚动到底加载下一页', (tester) async {
@@ -155,7 +155,7 @@ void main() {
                     for (var index = 0; index < 10; index++)
                       entry(
                         id: 10020 - index,
-                        name: '沈光德',
+                        name: '小光',
                         time: DateTime(2026, 8, 12, 11, 43 - index),
                       ),
                   ]

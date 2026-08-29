@@ -33,7 +33,7 @@ class LedgerState {
         week: '周五',
         incomeTotal: '0.00',
         expensesTotal: '3,330.28',
-        title: '跨行汇款-杨路',
+        title: '跨行汇款-小明',
         amount: '3500.00',
         type: '1',
         time: '5-26 16:01',
