@@ -121,18 +121,20 @@ class LedgerWaterTab extends StatelessWidget {
                   ),
                   Positioned(
                     left: _position.getX(80),
-                    top: _position.getX(70),
+                    top: _position.getY(70),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        BaseText(
-                          text: '${DateTime.now().year}年',
-                          fontSize: 14,
-                          color: const Color(0xFF333333),
-                          fontWeight: FontWeight.w500,
-                        ),
-                        const BaseText(text: '共', fontSize: 14, color: Color(0xFF999999))
-                            .marginOnly(left: 13.w),
+                        if(logic.periodMode.value == 1 && logic.waterBeginTime.value.isNullOrEmpty) ...[
+                          BaseText(
+                            text: '${DateTime.now().year}年',
+                            fontSize: 16,
+                            color: const Color(0xFF333333),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          SizedBox(width: 13.w,),
+                        ],
+                        const BaseText(text: '共', fontSize: 14, color: Color(0xFF999999)),
                         BaseText(text: '${model.total}', fontSize: 14, color: const Color(0xFF333333))
                             .marginOnly(left: 2.w),
                         const BaseText(text: '笔', fontSize: 14, color: Color(0xFF999999))

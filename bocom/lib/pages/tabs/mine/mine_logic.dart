@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bocom/pages/other/change_nav/change_nav_view.dart';
 import './children/account_manage/account_manage_view.dart';
+import './children/user_info_manage/user_info_manage_view.dart';
 
 import 'mine_state.dart';
 
@@ -35,6 +36,8 @@ class MineLogic extends GetxController {
         'defTitleColor': Colors.transparent,
         'showBackgroundColor': false,
       });
+    }else if(index == 2) {
+      Get.to(() => UserInfoManagePage());
     }else if(index == 3) {
       Get.to(() => AccountManagePage());
     }

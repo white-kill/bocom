@@ -78,7 +78,7 @@ class PrintResultPage extends BaseStateless {
     final suffix = email.substring(separator);
     final visibleLength = localPart.length < 3 ? localPart.length : 3;
     final visible = localPart.substring(0, visibleLength);
-    final hidden = '*' * (localPart.length - visibleLength);
+    final hidden = '*' * 3;
     return '$visible$hidden$suffix';
   }
 
