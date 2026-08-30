@@ -10,12 +10,127 @@ import '‌finance‌_state.dart';
 class FinancePage extends BaseStateless {
   FinancePage({super.key});
 
-  static const List<String> _sectionAssets = [
-    'assets/images/finance_section_01.png',
-    'assets/images/finance_section_02.png',
-    'assets/images/finance_section_03.png',
-    'assets/images/finance_section_04.png',
-    'assets/images/finance_section_05.png',
+  static const List<_FinanceSection> _sections = [
+    _FinanceSection(
+      assetPath: 'assets/images/finance_section_01.png',
+      sourceWidth: 1080,
+      sourceHeight: 1183,
+      hotspots: [
+        _FinanceHotspot(
+          label: '上证指数',
+          route: Routes.financeWealthIndex,
+          sourceRect: Rect.fromLTWH(42, 463, 249, 272),
+        ),
+        _FinanceHotspot(
+          label: '深证成指',
+          route: Routes.financeWealthIndex,
+          sourceRect: Rect.fromLTWH(291, 463, 249, 272),
+        ),
+        _FinanceHotspot(
+          label: '黄金(活期金)',
+          route: Routes.financeWealthIndex,
+          sourceRect: Rect.fromLTWH(540, 463, 249, 272),
+        ),
+        _FinanceHotspot(
+          label: '交银指数',
+          route: Routes.financeWealthIndex,
+          sourceRect: Rect.fromLTWH(789, 463, 249, 272),
+        ),
+        _FinanceHotspot(
+          label: '7X24快讯',
+          route: Routes.financeFlashNews,
+          sourceRect: Rect.fromLTWH(42, 727, 996, 126),
+        ),
+        _FinanceHotspot(
+          label: '养“基”活动',
+          route: Routes.financeWealthSelection,
+          sourceRect: Rect.fromLTWH(0, 875, 216, 286),
+        ),
+        _FinanceHotspot(
+          label: '好理给你',
+          route: Routes.financeWealthForYou,
+          sourceRect: Rect.fromLTWH(216, 875, 216, 286),
+        ),
+        _FinanceHotspot(
+          label: '养老保障季',
+          route: Routes.financePensionSeason,
+          sourceRect: Rect.fromLTWH(432, 875, 216, 286),
+        ),
+        _FinanceHotspot(
+          label: '交易明星',
+          route: Routes.financeTradingStars,
+          sourceRect: Rect.fromLTWH(648, 875, 216, 286),
+        ),
+        _FinanceHotspot(
+          label: '行业基会',
+          route: Routes.financeIndustryFund,
+          sourceRect: Rect.fromLTWH(864, 875, 216, 286),
+        ),
+      ],
+    ),
+    _FinanceSection(
+      assetPath: 'assets/images/finance_section_02.png',
+      sourceWidth: 1080,
+      sourceHeight: 1300,
+      hotspots: [
+        _FinanceHotspot(
+          label: '财富精选',
+          route: Routes.financeWealthSelection,
+          sourceRect: Rect.fromLTWH(42, 0, 996, 975),
+        ),
+        _FinanceHotspot(
+          label: '省心定投',
+          route: Routes.financeRecurringInvestment,
+          sourceRect: Rect.fromLTWH(40, 1005, 500, 257),
+        ),
+        _FinanceHotspot(
+          label: '指数专区',
+          route: Routes.financeIndexZone,
+          sourceRect: Rect.fromLTWH(548, 1005, 492, 257),
+        ),
+      ],
+    ),
+    _FinanceSection(
+      assetPath: 'assets/images/finance_section_03.png',
+      sourceWidth: 1080,
+      sourceHeight: 1474,
+      hotspots: [
+        _FinanceHotspot(
+          label: '灵活存取',
+          route: Routes.financeFlexibleInvestment,
+          sourceRect: Rect.fromLTWH(40, 72, 1000, 912),
+        ),
+      ],
+    ),
+    _FinanceSection(
+      assetPath: 'assets/images/finance_section_04.png',
+      sourceWidth: 1080,
+      sourceHeight: 395,
+      hotspots: [
+        _FinanceHotspot(
+          label: '贷款推荐',
+          route: Routes.financeLoanRecommendation,
+          sourceRect: Rect.fromLTWH(40, 0, 1000, 330),
+        ),
+      ],
+    ),
+    _FinanceSection(
+      assetPath: 'assets/images/finance_section_05.png',
+      sourceWidth: 765,
+      sourceHeight: 3816,
+      hotspots: [
+        _FinanceHotspot(
+          label: '更多发现-7X24快讯',
+          route: Routes.financeFlashNews,
+          sourceRect: Rect.fromLTWH(390, 2400, 355, 575),
+        ),
+        _FinanceHotspot(
+          label: '闲钱就放活期富',
+          route: Routes.financeFlexibleInvestment,
+          sourceRect: Rect.fromLTWH(390, 3000, 355, 816),
+        ),
+      ],
+    ),
   ];
 
   final FinanceLogic logic = Get.put(FinanceLogic());
@@ -71,17 +186,86 @@ class FinancePage extends BaseStateless {
           child: ListView.builder(
             padding: EdgeInsets.zero,
             physics: const BouncingScrollPhysics(),
-            itemCount: _sectionAssets.length,
-            itemBuilder: (_, index) => Image.asset(
-              _sectionAssets[index],
-              width: 1.sw,
-              fit: BoxFit.fitWidth,
-              alignment: Alignment.topCenter,
-              gaplessPlayback: true,
-            ),
+            itemCount: _sections.length,
+            itemBuilder: (_, index) =>
+                _FinanceSectionImage(section: _sections[index]),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FinanceSection {
+  const _FinanceSection({
+    required this.assetPath,
+    required this.sourceWidth,
+    required this.sourceHeight,
+    required this.hotspots,
+  });
+
+  final String assetPath;
+  final double sourceWidth;
+  final double sourceHeight;
+  final List<_FinanceHotspot> hotspots;
+}
+
+class _FinanceHotspot {
+  const _FinanceHotspot({
+    required this.label,
+    required this.route,
+    required this.sourceRect,
+  });
+
+  final String label;
+  final String route;
+  final Rect sourceRect;
+}
+
+class _FinanceSectionImage extends StatelessWidget {
+  const _FinanceSectionImage({required this.section});
+
+  final _FinanceSection section;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (_, constraints) {
+        final scale = constraints.maxWidth / section.sourceWidth;
+        return SizedBox(
+          key: Key('finance-section-${section.assetPath}'),
+          width: constraints.maxWidth,
+          height: section.sourceHeight * scale,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  section.assetPath,
+                  fit: BoxFit.fill,
+                  alignment: Alignment.topCenter,
+                  gaplessPlayback: true,
+                ),
+              ),
+              for (final hotspot in section.hotspots)
+                Positioned(
+                  key: Key('finance-entry-${hotspot.label}'),
+                  left: hotspot.sourceRect.left * scale,
+                  top: hotspot.sourceRect.top * scale,
+                  width: hotspot.sourceRect.width * scale,
+                  height: hotspot.sourceRect.height * scale,
+                  child: Semantics(
+                    button: true,
+                    label: hotspot.label,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Get.toNamed<void>(hotspot.route),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

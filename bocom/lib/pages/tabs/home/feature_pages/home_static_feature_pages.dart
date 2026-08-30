@@ -50,7 +50,7 @@ class HomePreferredProductsPage extends StatelessWidget {
 }
 
 // 活动中心页
-// 说明：当前页面保留 Slice 中的定制导航，返回和搜索区域由 Flutter 提供真实交互。
+// 说明：首屏保留 Slice 中的沉浸式导航，滚出源导航后显示固定白色导航栏。
 class HomeActivityCenterPage extends StatelessWidget {
   const HomeActivityCenterPage({super.key});
 
@@ -61,6 +61,9 @@ class HomeActivityCenterPage extends StatelessWidget {
       assetPath: 'assets/images/home_activity_center_page.png',
       sourceWidth: 944,
       sourceHeight: 4096,
+      title: '活动中心',
+      pinnedNavigationKey: Key('home-activity-center-pinned-navigation'),
+      pinnedAction: _PinnedNavigationAction.search,
       backgroundColor: Color(0xFFF4FAFC),
       backWidth: 110,
       navigationHeight: 150,
@@ -71,7 +74,7 @@ class HomeActivityCenterPage extends StatelessWidget {
 }
 
 // 交行福利季页
-// 说明：当前页面保留 Slice 中的紫色定制导航，返回区域由 Flutter 提供真实交互。
+// 说明：首屏保留 Slice 中的紫色沉浸式导航，滚出源导航后显示固定白色导航栏。
 class HomeWelfareSeasonPage extends StatelessWidget {
   const HomeWelfareSeasonPage({super.key});
 
@@ -82,6 +85,8 @@ class HomeWelfareSeasonPage extends StatelessWidget {
       assetPath: 'assets/images/home_welfare_season_page.png',
       sourceWidth: 730,
       sourceHeight: 4096,
+      title: '交行福利季',
+      pinnedNavigationKey: Key('home-welfare-season-pinned-navigation'),
       backgroundColor: Color(0xFFD88EFF),
       backWidth: 100,
       navigationHeight: 140,
@@ -91,7 +96,7 @@ class HomeWelfareSeasonPage extends StatelessWidget {
 }
 
 // 一站式授信页
-// 说明：当前页面保留 Slice 中的沉浸式导航，返回和客服区域由 Flutter 提供真实交互。
+// 说明：首屏保留 Slice 中的沉浸式导航，滚出源导航后显示固定白色导航栏。
 class HomeOneStopCreditPage extends StatelessWidget {
   const HomeOneStopCreditPage({super.key});
 
@@ -102,6 +107,9 @@ class HomeOneStopCreditPage extends StatelessWidget {
       assetPath: 'assets/images/home_one_stop_credit_page.png',
       sourceWidth: 1080,
       sourceHeight: 2376,
+      title: '一站式授信',
+      pinnedNavigationKey: Key('home-one-stop-credit-pinned-navigation'),
+      pinnedAction: _PinnedNavigationAction.service,
       backgroundColor: Color(0xFFEAF7FF),
       backWidth: 150,
       navigationHeight: 220,
@@ -113,7 +121,7 @@ class HomeOneStopCreditPage extends StatelessWidget {
 }
 
 // 养老专区页
-// 说明：当前页面保留 Slice 中的定制导航，返回和分享区域由 Flutter 提供真实交互。
+// 说明：首屏保留 Slice 中的沉浸式导航，滚出源导航后显示固定白色导航栏。
 class HomePensionZonePage extends StatelessWidget {
   const HomePensionZonePage({super.key});
 
@@ -124,6 +132,9 @@ class HomePensionZonePage extends StatelessWidget {
       assetPath: 'assets/images/home_pension_zone_page.png',
       sourceWidth: 575,
       sourceHeight: 4096,
+      title: '养老专区',
+      pinnedNavigationKey: Key('home-pension-zone-pinned-navigation'),
+      pinnedAction: _PinnedNavigationAction.share,
       backgroundColor: Color(0xFFF7F7F7),
       backWidth: 78,
       navigationHeight: 118,
@@ -134,7 +145,7 @@ class HomePensionZonePage extends StatelessWidget {
 }
 
 // 交薪通专区页
-// 说明：当前页面保留 Slice 中的蓝色定制导航，返回和分享区域由 Flutter 提供真实交互。
+// 说明：首屏保留 Slice 中的蓝色沉浸式导航，滚出源导航后显示固定白色导航栏。
 class HomeSalaryZonePage extends StatelessWidget {
   const HomeSalaryZonePage({super.key});
 
@@ -145,6 +156,9 @@ class HomeSalaryZonePage extends StatelessWidget {
       assetPath: 'assets/images/home_salary_zone_page.png',
       sourceWidth: 711,
       sourceHeight: 4096,
+      title: '交薪通',
+      pinnedNavigationKey: Key('home-salary-zone-pinned-navigation'),
+      pinnedAction: _PinnedNavigationAction.share,
       backgroundColor: Color(0xFFF6F6F6),
       backWidth: 95,
       navigationHeight: 140,
@@ -312,7 +326,7 @@ class HomeNewsPage extends StatelessWidget {
 }
 
 // 领券中心页
-// 说明：当前页面保留参考图中的红色导航栏，导航与长内容一起滑动。
+// 说明：首屏保留参考图中的红色沉浸式导航，滚出源导航后显示固定白色导航栏。
 class HomeCouponCenterPage extends StatelessWidget {
   const HomeCouponCenterPage({super.key});
 
@@ -323,6 +337,9 @@ class HomeCouponCenterPage extends StatelessWidget {
       assetPath: 'assets/images/home_coupon_center_page.png',
       sourceWidth: 612,
       sourceHeight: 4096,
+      title: '领券中心',
+      pinnedNavigationKey: Key('home-coupon-center-pinned-navigation'),
+      pinnedAction: _PinnedNavigationAction.share,
       backgroundColor: Color(0xFFFFF7F5),
       backWidth: 92,
       navigationHeight: 150,
@@ -333,17 +350,20 @@ class HomeCouponCenterPage extends StatelessWidget {
   }
 }
 
-class _ImmersiveCampaignPage extends StatelessWidget {
+class _ImmersiveCampaignPage extends StatefulWidget {
   const _ImmersiveCampaignPage({
     required this.pageKey,
     required this.assetPath,
     required this.sourceWidth,
     required this.sourceHeight,
+    required this.title,
+    required this.pinnedNavigationKey,
     required this.backgroundColor,
     required this.backWidth,
     required this.navigationHeight,
     this.trailingLabel,
     this.trailingWidth = 0,
+    this.pinnedAction,
     this.lightStatusBar = false,
     this.trailingOpensCustomerService = false,
   });
@@ -352,84 +372,157 @@ class _ImmersiveCampaignPage extends StatelessWidget {
   final String assetPath;
   final double sourceWidth;
   final double sourceHeight;
+  final String title;
+  final Key pinnedNavigationKey;
   final Color backgroundColor;
   final double backWidth;
   final double navigationHeight;
   final String? trailingLabel;
   final double trailingWidth;
+  final _PinnedNavigationAction? pinnedAction;
   final bool lightStatusBar;
   final bool trailingOpensCustomerService;
+
+  @override
+  State<_ImmersiveCampaignPage> createState() => _ImmersiveCampaignPageState();
+}
+
+class _ImmersiveCampaignPageState extends State<_ImmersiveCampaignPage> {
+  late final ScrollController _scrollController;
+  bool _showPinnedNavigation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController(keepScrollOffset: false)
+      ..addListener(_handleScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_handleScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    if (!_scrollController.hasClients) return;
+    final sourceScale = MediaQuery.sizeOf(context).width / widget.sourceWidth;
+    final sourceNavigationHeight = widget.navigationHeight * sourceScale;
+    final shouldShow = _scrollController.offset >= sourceNavigationHeight;
+    if (shouldShow == _showPinnedNavigation) return;
+    setState(() => _showPinnedNavigation = shouldShow);
+  }
 
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            lightStatusBar ? Brightness.light : Brightness.dark,
-        statusBarBrightness:
-            lightStatusBar ? Brightness.dark : Brightness.light,
-        systemNavigationBarColor: backgroundColor,
+        statusBarIconBrightness: _showPinnedNavigation
+            ? Brightness.dark
+            : widget.lightStatusBar
+                ? Brightness.light
+                : Brightness.dark,
+        statusBarBrightness: _showPinnedNavigation
+            ? Brightness.light
+            : widget.lightStatusBar
+                ? Brightness.dark
+                : Brightness.light,
+        systemNavigationBarColor: widget.backgroundColor,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: backgroundColor,
+        backgroundColor: widget.backgroundColor,
         extendBodyBehindAppBar: true,
-        body: LayoutBuilder(
-          builder: (_, constraints) {
-            final scale = constraints.maxWidth / sourceWidth;
-            return SingleChildScrollView(
-              key: pageKey,
-              padding: EdgeInsets.zero,
-              physics: const ClampingScrollPhysics(),
-              child: SizedBox(
-                width: constraints.maxWidth,
-                height: sourceHeight * scale,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Image.asset(
-                        assetPath,
-                        fit: BoxFit.fill,
-                        gaplessPlayback: true,
-                      ),
-                    ),
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      width: backWidth * scale,
-                      height: navigationHeight * scale,
-                      child: Semantics(
-                        button: true,
-                        label: '返回',
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: Get.back,
+        body: SizedBox.expand(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: LayoutBuilder(
+                  builder: (_, constraints) {
+                    final scale = constraints.maxWidth / widget.sourceWidth;
+                    return SingleChildScrollView(
+                      key: widget.pageKey,
+                      controller: _scrollController,
+                      padding: EdgeInsets.zero,
+                      physics: const ClampingScrollPhysics(),
+                      child: SizedBox(
+                        width: constraints.maxWidth,
+                        height: widget.sourceHeight * scale,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Image.asset(
+                                widget.assetPath,
+                                fit: BoxFit.fill,
+                                gaplessPlayback: true,
+                              ),
+                            ),
+                            Positioned(
+                              left: 0,
+                              top: 0,
+                              width: widget.backWidth * scale,
+                              height: widget.navigationHeight * scale,
+                              child: Semantics(
+                                button: true,
+                                label: '返回',
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: Get.back,
+                                ),
+                              ),
+                            ),
+                            if (widget.trailingLabel != null)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                width: widget.trailingWidth * scale,
+                                height: widget.navigationHeight * scale,
+                                child: Semantics(
+                                  button: true,
+                                  label: widget.trailingLabel,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: widget.trailingOpensCustomerService
+                                        ? () => Get.toNamed(
+                                              Routes.customerService,
+                                            )
+                                        : widget.trailingLabel == '搜索'
+                                            ? () => Get.toNamed(
+                                                  Routes.search,
+                                                )
+                                            : () {},
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                    ),
-                    if (trailingLabel != null)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        width: trailingWidth * scale,
-                        height: navigationHeight * scale,
-                        child: Semantics(
-                          button: true,
-                          label: trailingLabel,
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: trailingOpensCustomerService
-                                ? () => Get.toNamed(Routes.customerService)
-                                : () {},
-                          ),
-                        ),
-                      ),
-                  ],
+                    );
+                  },
                 ),
               ),
-            );
-          },
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                child: IgnorePointer(
+                  ignoring: !_showPinnedNavigation,
+                  child: AnimatedOpacity(
+                    key: widget.pinnedNavigationKey,
+                    opacity: _showPinnedNavigation ? 1 : 0,
+                    duration: const Duration(milliseconds: 140),
+                    child: _PinnedWhiteNavigation(
+                      title: widget.title,
+                      action: widget.pinnedAction,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -725,7 +818,7 @@ class _PinnedWhiteNavigation extends StatelessWidget {
   });
 
   final String title;
-  final _PinnedNavigationAction action;
+  final _PinnedNavigationAction? action;
 
   @override
   Widget build(BuildContext context) {
@@ -785,20 +878,25 @@ class _PinnedWhiteNavigation extends StatelessWidget {
   Widget _buildAction() {
     switch (action) {
       case _PinnedNavigationAction.share:
-        return const _PinnedIconAction(
+        return _PinnedIconAction(
           semanticLabel: '分享',
           icon: Icons.ios_share_outlined,
+          onTap: () {},
         );
       case _PinnedNavigationAction.search:
-        return const _PinnedIconAction(
+        return _PinnedIconAction(
           semanticLabel: '搜索',
           icon: Icons.search_rounded,
+          onTap: () => Get.toNamed(Routes.search),
         );
       case _PinnedNavigationAction.service:
-        return const _PinnedAssetAction(
+        return _PinnedAssetAction(
           semanticLabel: '客服',
           assetPath: 'assets/images/finance_nav_service.png',
+          onTap: () => Get.toNamed(Routes.customerService),
         );
+      case null:
+        return const SizedBox(width: 48);
     }
   }
 }
@@ -807,19 +905,25 @@ class _PinnedIconAction extends StatelessWidget {
   const _PinnedIconAction({
     required this.semanticLabel,
     required this.icon,
+    required this.onTap,
   });
 
   final String semanticLabel;
   final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      image: true,
+      button: true,
       label: semanticLabel,
-      child: SizedBox(
-        width: 48,
-        child: Icon(icon, size: 25, color: const Color(0xFF1D1D1D)),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox(
+          width: 48,
+          child: Icon(icon, size: 25, color: const Color(0xFF1D1D1D)),
+        ),
       ),
     );
   }
@@ -829,24 +933,30 @@ class _PinnedAssetAction extends StatelessWidget {
   const _PinnedAssetAction({
     required this.semanticLabel,
     required this.assetPath,
+    required this.onTap,
   });
 
   final String semanticLabel;
   final String assetPath;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      image: true,
+      button: true,
       label: semanticLabel,
-      child: SizedBox(
-        width: 48,
-        child: Center(
-          child: Image.asset(
-            assetPath,
-            width: 24,
-            height: 24,
-            fit: BoxFit.contain,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox(
+          width: 48,
+          child: Center(
+            child: Image.asset(
+              assetPath,
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ),

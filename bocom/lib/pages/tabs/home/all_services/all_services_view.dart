@@ -3,7 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../../routes/app_pages.dart';
+import '../../mine/children/account_asset/account_asset_view.dart';
+import '../../mine/children/profit_center/profit_center_view.dart';
+import '../../mine/children/user_info_manage/user_info_manage_view.dart';
+import '../transfer/account_transfer/account_transfer_support_pages.dart';
 
+// 全部服务页
+// 说明：服务内容使用分类切图，导航、分类联动和已实现服务的跳转热区由 Flutter 绘制。
 class AllServicesPage extends StatefulWidget {
   const AllServicesPage({super.key});
 
@@ -17,6 +23,8 @@ class _AllServicesPageState extends State<AllServicesPage> {
   static const double _menuSourceWidth = 272;
   static const double _menuItemSourceHeight = 142;
   static const double _menuContentOffsetSource = 16;
+  static const double _serviceGridTop = 76;
+  static const double _serviceRowExtent = 210;
 
   static const List<_ServiceSection> _sections = [
     _ServiceSection(
@@ -24,48 +32,123 @@ class _AllServicesPageState extends State<AllServicesPage> {
       title: '最近使用',
       assets: ['assets/images/all_services/recent.png'],
       sourceHeights: [671],
+      hotspots: [
+        _ServiceHotspot('转账', 0, 0, _ServiceDestination.transfer),
+        _ServiceHotspot('账户/资产', 0, 1, _ServiceDestination.accountAsset),
+        _ServiceHotspot('收支账本', 0, 2, _ServiceDestination.ledger),
+        _ServiceHotspot(
+          '交易明细',
+          1,
+          0,
+          _ServiceDestination.transactionDetail,
+        ),
+        _ServiceHotspot('账单', 1, 1, _ServiceDestination.bill),
+        _ServiceHotspot('存款', 1, 2, _ServiceDestination.deposit),
+      ],
     ),
     _ServiceSection(
       id: 'query',
       title: '查询',
       assets: ['assets/images/all_services/query.png'],
       sourceHeights: [1034],
+      hotspots: [
+        _ServiceHotspot('账户/资产', 0, 0, _ServiceDestination.accountAsset),
+        _ServiceHotspot(
+          '交易明细',
+          0,
+          1,
+          _ServiceDestination.transactionDetail,
+        ),
+        _ServiceHotspot('收支账本', 0, 2, _ServiceDestination.ledger),
+        _ServiceHotspot('账单', 1, 0, _ServiceDestination.bill),
+        _ServiceHotspot('收益中心', 1, 1, _ServiceDestination.profitCenter),
+        _ServiceHotspot('安心付Pro', 3, 1, _ServiceDestination.familyPay),
+      ],
     ),
     _ServiceSection(
       id: 'account-management',
       title: '账户管理',
       assets: ['assets/images/all_services/account_management.png'],
       sourceHeights: [394],
+      hotspots: [
+        _ServiceHotspot(
+          '账户申请',
+          0,
+          0,
+          _ServiceDestination.accountApplication,
+        ),
+        _ServiceHotspot(
+          '卡片激活',
+          0,
+          2,
+          _ServiceDestination.accountActivation,
+        ),
+      ],
     ),
     _ServiceSection(
       id: 'transfer',
       title: '转账',
       assets: ['assets/images/all_services/transfer.png'],
       sourceHeights: [822],
+      hotspots: [
+        _ServiceHotspot('转账', 0, 0, _ServiceDestination.transfer),
+        _ServiceHotspot('账号转账', 0, 1, _ServiceDestination.accountTransfer),
+        _ServiceHotspot('手机号转账', 0, 2, _ServiceDestination.phoneTransfer),
+        _ServiceHotspot(
+          '单笔资金转入',
+          1,
+          1,
+          _ServiceDestination.fundsTransfer,
+        ),
+        _ServiceHotspot('全部收款人', 2, 0, _ServiceDestination.recipients),
+        _ServiceHotspot('转账记录', 2, 1, _ServiceDestination.transferRecord),
+      ],
     ),
     _ServiceSection(
       id: 'payment',
       title: '支付',
       assets: ['assets/images/all_services/payment.png'],
       sourceHeights: [823],
+      hotspots: [
+        _ServiceHotspot('扫一扫', 0, 1, _ServiceDestination.scan),
+        _ServiceHotspot('付款码', 0, 2, _ServiceDestination.paymentCode),
+      ],
     ),
     _ServiceSection(
       id: 'investment',
       title: '投资理财',
       assets: ['assets/images/all_services/investment.png'],
       sourceHeights: [1876],
+      hotspots: [
+        _ServiceHotspot('理财', 0, 1, _ServiceDestination.preferredProducts),
+        _ServiceHotspot('存款', 1, 0, _ServiceDestination.deposit),
+        _ServiceHotspot('活期盈', 2, 0, _ServiceDestination.demandDepositPlus),
+        _ServiceHotspot('交薪通', 7, 1, _ServiceDestination.salaryZone),
+      ],
     ),
     _ServiceSection(
       id: 'loan',
       title: '贷款',
       assets: ['assets/images/all_services/loan.png'],
       sourceHeights: [1670],
+      hotspots: [
+        _ServiceHotspot('惠民贷', 2, 0, _ServiceDestination.consumerLoan),
+        _ServiceHotspot(
+          '综合授信',
+          4,
+          2,
+          _ServiceDestination.oneStopCredit,
+        ),
+      ],
     ),
     _ServiceSection(
       id: 'credit-card',
       title: '信用卡',
       assets: ['assets/images/all_services/credit_card.png'],
       sourceHeights: [1242],
+      hotspots: [
+        _ServiceHotspot('信用卡', 0, 0, _ServiceDestination.creditCard),
+      ],
     ),
     _ServiceSection(
       id: 'cross-border',
@@ -78,6 +161,9 @@ class _AllServicesPageState extends State<AllServicesPage> {
       title: '养老金融',
       assets: ['assets/images/all_services/pension.png'],
       sourceHeights: [395],
+      hotspots: [
+        _ServiceHotspot('养老专区', 0, 0, _ServiceDestination.pensionZone),
+      ],
     ),
     _ServiceSection(
       id: 'cloud-bank',
@@ -105,6 +191,12 @@ class _AllServicesPageState extends State<AllServicesPage> {
       title: '活动权益',
       assets: ['assets/images/all_services/benefits.png'],
       sourceHeights: [819],
+      hotspots: [
+        _ServiceHotspot('活动中心', 0, 0, _ServiceDestination.activityCenter),
+        _ServiceHotspot('交行福利季', 0, 1, _ServiceDestination.welfareSeason),
+        _ServiceHotspot('城市专区', 1, 0, _ServiceDestination.cityZone),
+        _ServiceHotspot('领券中心', 1, 1, _ServiceDestination.couponCenter),
+      ],
     ),
     _ServiceSection(
       id: 'premium',
@@ -117,6 +209,11 @@ class _AllServicesPageState extends State<AllServicesPage> {
       title: '工具',
       assets: ['assets/images/all_services/tools.png'],
       sourceHeights: [1932],
+      hotspots: [
+        _ServiceHotspot('个人信息', 0, 1, _ServiceDestination.personalInfo),
+        _ServiceHotspot('我的安全', 0, 2, _ServiceDestination.security),
+        _ServiceHotspot('资讯', 3, 0, _ServiceDestination.news),
+      ],
     ),
   ];
 
@@ -359,23 +456,68 @@ class _AllServicesPageState extends State<AllServicesPage> {
           key: Key('all-services-section-${section.id}'),
           width: _contentSourceWidth * _scale,
           height: section.sourceHeight * _scale,
-          child: Column(
+          child: Stack(
             children: [
-              for (var assetIndex = 0;
-                  assetIndex < section.assets.length;
-                  assetIndex++)
-                Image.asset(
-                  section.assets[assetIndex],
-                  width: _contentSourceWidth * _scale,
-                  height: section.sourceHeights[assetIndex] * _scale,
-                  fit: BoxFit.fill,
-                  gaplessPlayback: true,
+              Positioned.fill(
+                child: Column(
+                  children: [
+                    for (var assetIndex = 0;
+                        assetIndex < section.assets.length;
+                        assetIndex++)
+                      Image.asset(
+                        section.assets[assetIndex],
+                        width: _contentSourceWidth * _scale,
+                        height: section.sourceHeights[assetIndex] * _scale,
+                        fit: BoxFit.fill,
+                        gaplessPlayback: true,
+                      ),
+                  ],
                 ),
+              ),
+              for (final hotspot in section.hotspots)
+                _buildServiceHotspot(section, hotspot),
             ],
           ),
         );
       },
     );
+  }
+
+  Widget _buildServiceHotspot(
+    _ServiceSection section,
+    _ServiceHotspot hotspot,
+  ) {
+    const columnWidth = _contentSourceWidth / 3;
+    return Positioned(
+      key: Key('all-services-service-${section.id}-${hotspot.label}'),
+      left: hotspot.column * columnWidth * _scale,
+      top: (_serviceGridTop + hotspot.row * _serviceRowExtent) * _scale,
+      width: columnWidth * _scale,
+      height: _serviceRowExtent * _scale,
+      child: Semantics(
+        button: true,
+        label: hotspot.label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _openService(hotspot.destination),
+        ),
+      ),
+    );
+  }
+
+  void _openService(_ServiceDestination destination) {
+    switch (destination) {
+      case _ServiceDestination.accountAsset:
+        Get.to<void>(() => AccountAssetPage(initialTabIndex: 1));
+      case _ServiceDestination.profitCenter:
+        Get.to<void>(() => ProfitCenterPage());
+      case _ServiceDestination.recipients:
+        Get.to<void>(() => const AccountTransferRecipientsPage());
+      case _ServiceDestination.personalInfo:
+        Get.to<void>(() => UserInfoManagePage());
+      default:
+        Get.toNamed<void>(destination.routeName!);
+    }
   }
 }
 
@@ -500,13 +642,67 @@ class _ServiceSection {
     required this.title,
     required this.assets,
     required this.sourceHeights,
+    this.hotspots = const [],
   });
 
   final String id;
   final String title;
   final List<String> assets;
   final List<double> sourceHeights;
+  final List<_ServiceHotspot> hotspots;
 
   double get sourceHeight =>
       sourceHeights.fold(0, (total, height) => total + height);
+}
+
+class _ServiceHotspot {
+  const _ServiceHotspot(
+    this.label,
+    this.row,
+    this.column,
+    this.destination,
+  );
+
+  final String label;
+  final int row;
+  final int column;
+  final _ServiceDestination destination;
+}
+
+enum _ServiceDestination {
+  transfer(Routes.homeTransfer),
+  accountAsset(),
+  ledger(Routes.ledgerPage),
+  transactionDetail(Routes.transactionDetail),
+  bill(Routes.comprehensiveBillPage),
+  deposit(Routes.homeDeposit),
+  profitCenter(),
+  familyPay(Routes.accountFamilyPay),
+  accountApplication(Routes.accountApplication),
+  accountActivation(Routes.accountActivation),
+  accountTransfer(Routes.homeAccountTransfer),
+  phoneTransfer(Routes.homePhoneTransfer),
+  fundsTransfer(Routes.accountFundsTransfer),
+  recipients(),
+  transferRecord(Routes.homeTransferRecord),
+  scan(Routes.scan),
+  paymentCode(Routes.homePaymentCode),
+  preferredProducts(Routes.homePreferredProducts),
+  demandDepositPlus(Routes.homeDemandDepositPlus),
+  salaryZone(Routes.homeSalaryZone),
+  consumerLoan(Routes.homeConsumerLoan),
+  oneStopCredit(Routes.homeOneStopCredit),
+  creditCard(Routes.homeCreditCard),
+  pensionZone(Routes.homePensionZone),
+  activityCenter(Routes.homeActivityCenter),
+  welfareSeason(Routes.homeWelfareSeason),
+  cityZone(Routes.homeCityZone),
+  couponCenter(Routes.homeCouponCenter),
+  personalInfo(),
+  security(Routes.homeSecurity),
+  news(Routes.homeNews);
+
+  const _ServiceDestination([this.routeName]);
+
+  final String? routeName;
 }

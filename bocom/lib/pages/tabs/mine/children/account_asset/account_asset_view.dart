@@ -131,7 +131,7 @@ class AccountAssetPage extends BaseStateless {
       };
 
   @override
-  Color? get background => Colors.white;
+  Color? get background => const Color(0xFFF7F7F7);
 
   @override
   Widget initBody(BuildContext context) {
@@ -314,6 +314,22 @@ class _AccountContent extends StatelessWidget {
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () => Get.toNamed(Routes.accountFundsTransfer),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: position1.getX(790),
+                    top: position1.getY(530),
+                    width: position1.getWidth(250),
+                    height: position1.getHeight(125),
+                    child: Semantics(
+                      button: true,
+                      label: '明细清单',
+                      child: GestureDetector(
+                        key: const Key('account-detail-list-hotspot'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => Get.toNamed(Routes.printPage),
+                        child: const SizedBox.expand(),
                       ),
                     ),
                   ),

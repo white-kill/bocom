@@ -133,6 +133,116 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('沉浸式二级页按参考图导航高度切换固定 AppBar', (tester) async {
+    final pages = <({
+      Widget page,
+      Key pageKey,
+      Key pinnedKey,
+      String title,
+      double sourceWidth,
+      double navigationHeight,
+    })>[
+      (
+        page: const HomeActivityCenterPage(),
+        pageKey: const Key('home-activity-center-page'),
+        pinnedKey: const Key('home-activity-center-pinned-navigation'),
+        title: '活动中心',
+        sourceWidth: 944,
+        navigationHeight: 150,
+      ),
+      (
+        page: const HomeWelfareSeasonPage(),
+        pageKey: const Key('home-welfare-season-page'),
+        pinnedKey: const Key('home-welfare-season-pinned-navigation'),
+        title: '交行福利季',
+        sourceWidth: 730,
+        navigationHeight: 140,
+      ),
+      (
+        page: const HomeOneStopCreditPage(),
+        pageKey: const Key('home-one-stop-credit-page'),
+        pinnedKey: const Key('home-one-stop-credit-pinned-navigation'),
+        title: '一站式授信',
+        sourceWidth: 1080,
+        navigationHeight: 220,
+      ),
+      (
+        page: const HomePensionZonePage(),
+        pageKey: const Key('home-pension-zone-page'),
+        pinnedKey: const Key('home-pension-zone-pinned-navigation'),
+        title: '养老专区',
+        sourceWidth: 575,
+        navigationHeight: 118,
+      ),
+      (
+        page: const HomeSalaryZonePage(),
+        pageKey: const Key('home-salary-zone-page'),
+        pinnedKey: const Key('home-salary-zone-pinned-navigation'),
+        title: '交薪通',
+        sourceWidth: 711,
+        navigationHeight: 140,
+      ),
+      (
+        page: const HomeCouponCenterPage(),
+        pageKey: const Key('home-coupon-center-page'),
+        pinnedKey: const Key('home-coupon-center-pinned-navigation'),
+        title: '领券中心',
+        sourceWidth: 612,
+        navigationHeight: 150,
+      ),
+    ];
+
+    for (final item in pages) {
+      await tester.pumpWidget(GetMaterialApp(home: item.page));
+      await tester.pumpAndSettle();
+
+      final pinnedFinder = find.byKey(item.pinnedKey);
+      expect(
+        tester.widget<AnimatedOpacity>(pinnedFinder).opacity,
+        0,
+        reason: '${item.title} 首屏不应覆盖原图沉浸式导航',
+      );
+      expect(tester.getTopLeft(find.byKey(item.pageKey)).dy, 0);
+
+      final scrollable = tester.state<ScrollableState>(
+        find.descendant(
+          of: find.byKey(item.pageKey),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      final sourceScale =
+          tester.getSize(find.byKey(item.pageKey)).width / item.sourceWidth;
+      final revealOffset = item.navigationHeight * sourceScale;
+
+      scrollable.position.jumpTo(revealOffset - 0.5);
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<AnimatedOpacity>(pinnedFinder).opacity,
+        0,
+        reason: '${item.title} 在源图导航尚未完全滚出时不应显示 AppBar',
+      );
+
+      scrollable.position.jumpTo(revealOffset + 0.5);
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<AnimatedOpacity>(pinnedFinder).opacity,
+        1,
+        reason: '${item.title} 滚出原图导航后应显示固定 AppBar',
+      );
+      expect(find.text(item.title), findsOneWidget);
+      final pinnedTop = tester.getTopLeft(pinnedFinder).dy;
+
+      scrollable.position.jumpTo(revealOffset + 300);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getTopLeft(pinnedFinder).dy,
+        pinnedTop,
+        reason: '${item.title} 的 AppBar 应固定在屏幕顶部',
+      );
+    }
+  });
 }
 
 class _TestBocLogic extends BocLogic {
