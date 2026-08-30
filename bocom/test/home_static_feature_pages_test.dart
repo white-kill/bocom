@@ -38,7 +38,10 @@ void main() {
     final cityText = tester.widget<Text>(
       find.byKey(const Key('home-city-zone-account-city')),
     );
-    expect(cityText.style?.fontSize, 17);
+    final logicalWidth =
+        tester.view.physicalSize.width / tester.view.devicePixelRatio;
+    expect(
+        cityText.style?.fontSize, closeTo(42.5 * logicalWidth / 1080, 0.001));
     expect(cityText.style?.fontWeight, FontWeight.w400);
     expect(cityText.style?.color, const Color(0xFF222222));
 
@@ -87,6 +90,46 @@ void main() {
         find.byKey(const Key('home-deposit-service-action')), findsOneWidget);
     expect(
       find.byKey(const Key('home-deposit-fixed-navigation')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('新增首页二级页逐页保留返回导航和各自操作', (tester) async {
+    final pages = <Widget>[
+      const HomeActivityCenterPage(),
+      const HomePreferredProductsPage(),
+      const HomeWelfareSeasonPage(),
+      const HomeOneStopCreditPage(),
+      const HomePensionZonePage(),
+      const HomeSalaryZonePage(),
+      const HomeCouponCenterPage(),
+    ];
+
+    for (final page in pages) {
+      await tester.pumpWidget(GetMaterialApp(home: page));
+      await tester.pump();
+      expect(find.bySemanticsLabel('返回'), findsOneWidget);
+    }
+
+    await tester.pumpWidget(
+      const GetMaterialApp(home: HomeActivityCenterPage()),
+    );
+    await tester.pump();
+    expect(find.bySemanticsLabel('搜索'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const GetMaterialApp(home: HomeOneStopCreditPage()),
+    );
+    await tester.pump();
+    expect(find.bySemanticsLabel('客服'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const GetMaterialApp(home: HomePreferredProductsPage()),
+    );
+    await tester.pump();
+    expect(find.text('全部理财产品'), findsOneWidget);
+    expect(
+      find.byKey(const Key('home-preferred-products-search-action')),
       findsOneWidget,
     );
   });

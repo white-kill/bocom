@@ -17,6 +17,7 @@ import '../pages/tabs/home/transfer/phone_transfer/home_phone_transfer_view.dart
 import '../pages/tabs/home/transfer/record/transfer_record_view.dart';
 import '../pages/tabs/mine/children/ledger/ledger_view.dart';
 import '../pages/tabs/mine/children/comprehensive_bill/comprehensive_bill_view.dart';
+import '../pages/tabs/mine/children/account_asset/account_secondary_pages.dart';
 import '../config/model/contacts_model.dart';
 
 part 'app_routes.dart';
@@ -76,6 +77,62 @@ class AppPages {
     GetPage(
       name: Routes.homeCouponCenter,
       page: () => const HomeCouponCenterPage(),
+    ),
+    GetPage(
+      name: Routes.homeActivityCenter,
+      page: () => const HomeActivityCenterPage(),
+    ),
+    GetPage(
+      name: Routes.homePreferredProducts,
+      page: () => const HomePreferredProductsPage(),
+    ),
+    GetPage(
+      name: Routes.homeWelfareSeason,
+      page: () => const HomeWelfareSeasonPage(),
+    ),
+    GetPage(
+      name: Routes.homeOneStopCredit,
+      page: () => const HomeOneStopCreditPage(),
+    ),
+    GetPage(
+      name: Routes.homePensionZone,
+      page: () => const HomePensionZonePage(),
+    ),
+    GetPage(
+      name: Routes.homeSalaryZone,
+      page: () => const HomeSalaryZonePage(),
+    ),
+    GetPage(
+      name: Routes.accountFundsTransfer,
+      page: () => const AccountFundsTransferPage(),
+    ),
+    GetPage(
+      name: Routes.accountLoss,
+      page: () => const AccountLossPage(),
+    ),
+    GetPage(
+      name: Routes.accountMoreFunctions,
+      page: () => const AccountMoreFunctionsPage(),
+    ),
+    GetPage(
+      name: Routes.accountApplication,
+      page: () => const AccountApplicationPage(),
+    ),
+    GetPage(
+      name: Routes.accountActivation,
+      page: () => const AccountActivationPage(),
+    ),
+    GetPage(
+      name: Routes.accountUnbind,
+      page: () => const AccountUnbindPage(),
+    ),
+    GetPage(
+      name: Routes.accountSort,
+      page: () => const AccountSortPage(),
+    ),
+    GetPage(
+      name: Routes.accountFamilyPay,
+      page: () => const AccountFamilyPayPage(),
     ),
     GetPage(
       name: Routes.transactionDetail,

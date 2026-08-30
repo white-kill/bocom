@@ -29,6 +29,34 @@ class Routes {
 
   static const homeCouponCenter = '/homeCouponCenter';
 
+  static const homeActivityCenter = '/homeActivityCenter';
+
+  static const homePreferredProducts = '/homePreferredProducts';
+
+  static const homeWelfareSeason = '/homeWelfareSeason';
+
+  static const homeOneStopCredit = '/homeOneStopCredit';
+
+  static const homePensionZone = '/homePensionZone';
+
+  static const homeSalaryZone = '/homeSalaryZone';
+
+  static const accountFundsTransfer = '/accountFundsTransfer';
+
+  static const accountLoss = '/accountLoss';
+
+  static const accountMoreFunctions = '/accountMoreFunctions';
+
+  static const accountApplication = '/accountApplication';
+
+  static const accountActivation = '/accountActivation';
+
+  static const accountUnbind = '/accountUnbind';
+
+  static const accountSort = '/accountSort';
+
+  static const accountFamilyPay = '/accountFamilyPay';
+
   static const transactionDetail = '/transactionDetail';
 
   static const homeCreditCard = '/homeCreditCard';

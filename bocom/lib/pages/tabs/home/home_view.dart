@@ -175,6 +175,111 @@ class HomePage extends BaseStateless {
                 onBillTap: onBillTap,
               );
             }
+            if (index == 3) {
+              return _HomeReferenceHotspotSection(
+                assetPath: _sectionAssets[index],
+                sourceHeight: 1917,
+                hotspots: [
+                  _HomeReferenceHotspot(
+                    key: const Key('home-activity-center-hotspot'),
+                    label: '点击去活动中心',
+                    left: 39,
+                    top: 0,
+                    width: 488,
+                    height: 697,
+                    onTap: () => Get.toNamed(Routes.homeActivityCenter),
+                  ),
+                  _HomeReferenceHotspot(
+                    key: const Key('home-city-zone-card-hotspot'),
+                    label: '分行专享',
+                    left: 553,
+                    top: 0,
+                    width: 488,
+                    height: 697,
+                    onTap: () => Get.toNamed(Routes.homeCityZone),
+                  ),
+                  _HomeReferenceHotspot(
+                    key: const Key('home-preferred-products-hotspot'),
+                    label: '优选好品',
+                    left: 39,
+                    top: 728,
+                    width: 1002,
+                    height: 1189,
+                    onTap: () => Get.toNamed(Routes.homePreferredProducts),
+                  ),
+                ],
+              );
+            }
+            if (index == 4) {
+              return _HomeReferenceHotspotSection(
+                assetPath: _sectionAssets[index],
+                sourceHeight: 1242,
+                hotspots: [
+                  _HomeReferenceHotspot(
+                    key: const Key('home-one-stop-credit-hotspot'),
+                    label: '一站式授信',
+                    left: 39,
+                    top: 31,
+                    width: 1002,
+                    height: 524,
+                    onTap: () => Get.toNamed(Routes.homeOneStopCredit),
+                  ),
+                  _HomeReferenceHotspot(
+                    key: const Key('home-activity-banner-hotspot'),
+                    label: '活动中心',
+                    left: 39,
+                    top: 586,
+                    width: 1002,
+                    height: 404,
+                    onTap: () => Get.toNamed(Routes.homeActivityCenter),
+                  ),
+                  _HomeReferenceHotspot(
+                    key: const Key('home-coupon-center-card-hotspot'),
+                    label: '领券中心',
+                    left: 78,
+                    top: 991,
+                    width: 450,
+                    height: 213,
+                    onTap: () => Get.toNamed(Routes.homeCouponCenter),
+                  ),
+                  _HomeReferenceHotspot(
+                    key: const Key('home-welfare-season-hotspot'),
+                    label: '交行福利季',
+                    left: 552,
+                    top: 991,
+                    width: 450,
+                    height: 213,
+                    onTap: () => Get.toNamed(Routes.homeWelfareSeason),
+                  ),
+                ],
+              );
+            }
+            if (index == 5) {
+              return _HomeReferenceHotspotSection(
+                assetPath: _sectionAssets[index],
+                sourceHeight: 1659,
+                hotspots: [
+                  _HomeReferenceHotspot(
+                    key: const Key('home-pension-zone-hotspot'),
+                    label: '养老专区',
+                    left: 39,
+                    top: 31,
+                    width: 1002,
+                    height: 820,
+                    onTap: () => Get.toNamed(Routes.homePensionZone),
+                  ),
+                  _HomeReferenceHotspot(
+                    key: const Key('home-salary-zone-hotspot'),
+                    label: '交薪通专区',
+                    left: 39,
+                    top: 884,
+                    width: 1002,
+                    height: 775,
+                    onTap: () => Get.toNamed(Routes.homeSalaryZone),
+                  ),
+                ],
+              );
+            }
             return Image.asset(
               _sectionAssets[index],
               width: 1.sw,
@@ -186,6 +291,74 @@ class HomePage extends BaseStateless {
       ),
     );
   }
+}
+
+class _HomeReferenceHotspotSection extends StatelessWidget {
+  const _HomeReferenceHotspotSection({
+    required this.assetPath,
+    required this.sourceHeight,
+    required this.hotspots,
+  });
+
+  final String assetPath;
+  final double sourceHeight;
+  final List<_HomeReferenceHotspot> hotspots;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (_, constraints) {
+        final scale = constraints.maxWidth / 1080;
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: sourceHeight * scale,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(assetPath, fit: BoxFit.fill),
+              ),
+              for (final hotspot in hotspots)
+                Positioned(
+                  key: hotspot.key,
+                  left: hotspot.left * scale,
+                  top: hotspot.top * scale,
+                  width: hotspot.width * scale,
+                  height: hotspot.height * scale,
+                  child: Semantics(
+                    button: true,
+                    label: hotspot.label,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: hotspot.onTap,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _HomeReferenceHotspot {
+  const _HomeReferenceHotspot({
+    required this.key,
+    required this.label,
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
+    required this.onTap,
+  });
+
+  final Key key;
+  final String label;
+  final double left;
+  final double top;
+  final double width;
+  final double height;
+  final VoidCallback onTap;
 }
 
 class _HomeStatusBarPlaceholder extends StatelessWidget {
