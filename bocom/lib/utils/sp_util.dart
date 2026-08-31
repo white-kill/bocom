@@ -31,6 +31,12 @@ class SpKey{
 
   static const String accountAlias = "account_alias";
 
+  /// 基本身份信息页本地编辑内容。
+  static const String userBaseInfoDate = "user_base_info_date";
+  static const String userBaseInfoPinyin = "user_base_info_pinyin";
+
+  static const String userIdcardInfoAddress = "user_idcard_info_address";
+
   /// 关联银行卡号（纯数字，每手机号仅一条；再次保存会覆盖）
   static const String accountLinkCard = "account_link_card_";
 
@@ -72,6 +78,15 @@ extension SpExtension on String{
   void get saveAccountAlias =>
       SpUtil.putString(SpKey.accountAlias, this);
 
+  void get saveUserBaseInfoDate =>
+      SpUtil.putString(SpKey.userBaseInfoDate, this);
+
+  void get saveUserBaseInfoPinyin =>
+      SpUtil.putString(SpKey.userBaseInfoPinyin, this);
+
+  void get saveUserIdcardInfoAddress =>
+      SpUtil.putString(SpKey.userIdcardInfoAddress, this);
+
   void get saveAccountLinkCard => SpUtil.putString(
         SpKey.accountLinkCard + AppConfig.config.abcLogic.phone(),
         this,
@@ -109,10 +124,17 @@ String get nickNameValue => SpUtil.getString(SpKey.settingNickName + AppConfig.c
 String get accountAliasValue =>
     SpUtil.getString(SpKey.accountAlias) ?? '';
 
+String get userBaseInfoDateValue =>
+    SpUtil.getString(SpKey.userBaseInfoDate) ?? '';
+
+String get userBaseInfoPinyinValue =>
+    SpUtil.getString(SpKey.userBaseInfoPinyin) ?? '';
+
+String get userIdcardInfoAddressValue =>
+    SpUtil.getString(SpKey.userIdcardInfoAddress) ?? '';
+
 String get accountLinkCardValue =>
     SpUtil.getString(SpKey.accountLinkCard + AppConfig.config.abcLogic.phone()) ??
     '';
-
-
 
 

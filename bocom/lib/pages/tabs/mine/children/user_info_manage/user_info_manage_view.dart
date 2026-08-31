@@ -8,6 +8,10 @@ import 'package:wb_base_widget/wb_base_widget.dart';
 
 import 'user_info_manage_logic.dart';
 import 'user_info_manage_state.dart';
+import 'user_base_info/user_base_info_view.dart';
+import 'user_idcard_info/user_idcard_info_view.dart';
+import 'user_phone_info/user_phone_info_view.dart';
+
 
 class UserInfoManagePage extends BaseStateless {
   UserInfoManagePage({super.key}) : super(title: '个人信息管理');
@@ -117,6 +121,42 @@ class UserInfoManagePage extends BaseStateless {
                 color: Color(0xFF777777),
               ),
             ),
+            // Positioned(
+            //   right: position.getX(0),
+            //   top: position.getY(360),
+            //   height: position.getHeight(120),
+            //   width: 1.sw,
+            //   child: Container(color: Colors.red.withAlpha(50),).withOnTap(onTap: (){
+            //     Get.to(() => UserBaseInfoPage());
+            //   }),
+            // ),
+            // Positioned(
+            //   right: position.getX(0),
+            //   top: position.getY(480),
+            //   height: position.getHeight(120),
+            //   width: 1.sw,
+            //   child: Container(color: Colors.blue.withAlpha(50),).withOnTap(onTap: (){
+            //     Get.to(() => UserIdcardInfoPage());
+            //   }),
+            // ),
+            // Positioned(
+            //   right: position.getX(0),
+            //   top: position.getY(600),
+            //   height: position.getHeight(120),
+            //   width: 1.sw,
+            //   child: Container(color: Colors.orange.withAlpha(50),).withOnTap(onTap: (){
+            //     Get.to(() => UserPhoneInfoPage());
+            //   }),
+            // ),
+            // Positioned(
+            //   right: position.getX(0),
+            //   top: position.getY(720),
+            //   height: position.getHeight(120),
+            //   width: 1.sw,
+            //   child: Container(color: Colors.green.withAlpha(50),).withOnTap(onTap: (){
+            //     Get.to(() => UserPhoneInfoPage());
+            //   }),
+            // ),
           ],
         ),
       ],

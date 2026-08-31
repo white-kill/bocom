@@ -12,6 +12,7 @@ import 'children/comprehensive_bill/comprehensive_bill_view.dart';
 import 'children/ledger/ledger_view.dart';
 import 'children/user_info/user_info_view.dart';
 import 'children/profit_center/profit_center_view.dart';
+import 'children/settting/setting_view.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
 
@@ -77,7 +78,9 @@ class MinePage extends BaseStateless {
           image: 'nav_right_set'.png,
           width: 22.w,
           height: 22.w,
-        ),
+        ).withOnTap(onTap: (){
+          Get.to(() => SettingPage());
+        }),
         SizedBox(
           width: 15.w,
         ),
