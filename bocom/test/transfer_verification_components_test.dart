@@ -17,7 +17,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SmsVerificationCodeSheet(
-            phone: '13800138958',
+            phone: '13113113113',
             codeSender: () async => '428799',
           ),
         ),
@@ -30,7 +30,7 @@ void main() {
       find.byKey(const Key('sms-verification-input')),
     );
     expect(input.keyboardType, TextInputType.phone);
-    expect(find.text('已发送至尾号(**8958)的手机'), findsOneWidget);
+    expect(find.text('已发送至尾号(**3113)的手机'), findsOneWidget);
     expect(find.text('5分钟内有效'), findsOneWidget);
     expect(find.text('收不到短信?'), findsOneWidget);
     expect(
@@ -71,7 +71,7 @@ void main() {
             alignment: Alignment.bottomCenter,
             child: PasswordKeyboardSheet(
               transaction: TransactionPasswordContext(
-                payeeName: '沈光德',
+                payeeName: '小光',
                 amountDisplay: '10.00',
                 bankName: '中国建设银行',
                 accountNumber: '6217001630076962353',
@@ -82,7 +82,7 @@ void main() {
       ),
     );
 
-    expect(find.text('转给 沈光德 10.00'), findsOneWidget);
+    expect(find.text('转给 小光 10.00'), findsOneWidget);
     expect(find.text('中国建设银行 6217 0016 3007 6962 353'), findsOneWidget);
     expect(
       tester.getSize(find.byKey(const Key('password-keyboard-sheet'))).height,
@@ -140,7 +140,7 @@ void main() {
               onPressed: () async {
                 result = await showSmsVerificationCode(
                   context,
-                  phone: '13800138958',
+                  phone: '13113113113',
                   codeSender: () async => '428799',
                 );
               },

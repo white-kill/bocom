@@ -1,4 +1,5 @@
 import 'package:bocom/pages/tabs/home/all_services/all_services_view.dart';
+import 'package:bocom/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -12,7 +13,10 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      const GetMaterialApp(home: AllServicesPage()),
+      GetMaterialApp(
+        getPages: AppPages.routes,
+        home: const AllServicesPage(),
+      ),
     );
     await tester.pump();
   }
@@ -52,7 +56,7 @@ void main() {
 
     await tester.drag(
       find.byKey(const Key('all-services-content')),
-      const Offset(0, -1100),
+      const Offset(0, -1300),
     );
     await tester.pumpAndSettle();
 
@@ -74,5 +78,41 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(menuText(tester, '工具').style?.color, const Color(0xFF0878F9));
+  });
+
+  testWidgets('已实现的服务入口会在对应切图上提供热点', (tester) async {
+    await pumpPage(tester);
+
+    expect(
+      find.byKey(const Key('all-services-service-recent-账户/资产')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('all-services-service-recent-交易明细')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('转账'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('all-services-service-transfer-账号转账')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('all-services-service-transfer-全部收款人')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('点击服务热点会进入现有目标页', (tester) async {
+    await pumpPage(tester);
+
+    await tester.tap(
+      find.byKey(const Key('all-services-service-recent-存款')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(Get.currentRoute, Routes.homeDeposit);
   });
 }

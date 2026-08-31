@@ -38,7 +38,10 @@ void main() {
     final cityText = tester.widget<Text>(
       find.byKey(const Key('home-city-zone-account-city')),
     );
-    expect(cityText.style?.fontSize, 17);
+    final logicalWidth =
+        tester.view.physicalSize.width / tester.view.devicePixelRatio;
+    expect(
+        cityText.style?.fontSize, closeTo(42.5 * logicalWidth / 1080, 0.001));
     expect(cityText.style?.fontWeight, FontWeight.w400);
     expect(cityText.style?.color, const Color(0xFF222222));
 
@@ -89,6 +92,156 @@ void main() {
       find.byKey(const Key('home-deposit-fixed-navigation')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('新增首页二级页逐页保留返回导航和各自操作', (tester) async {
+    final pages = <Widget>[
+      const HomeActivityCenterPage(),
+      const HomePreferredProductsPage(),
+      const HomeWelfareSeasonPage(),
+      const HomeOneStopCreditPage(),
+      const HomePensionZonePage(),
+      const HomeSalaryZonePage(),
+      const HomeCouponCenterPage(),
+    ];
+
+    for (final page in pages) {
+      await tester.pumpWidget(GetMaterialApp(home: page));
+      await tester.pump();
+      expect(find.bySemanticsLabel('返回'), findsOneWidget);
+    }
+
+    await tester.pumpWidget(
+      const GetMaterialApp(home: HomeActivityCenterPage()),
+    );
+    await tester.pump();
+    expect(find.bySemanticsLabel('搜索'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const GetMaterialApp(home: HomeOneStopCreditPage()),
+    );
+    await tester.pump();
+    expect(find.bySemanticsLabel('客服'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const GetMaterialApp(home: HomePreferredProductsPage()),
+    );
+    await tester.pump();
+    expect(find.text('全部理财产品'), findsOneWidget);
+    expect(
+      find.byKey(const Key('home-preferred-products-search-action')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('沉浸式二级页按参考图导航高度切换固定 AppBar', (tester) async {
+    final pages = <({
+      Widget page,
+      Key pageKey,
+      Key pinnedKey,
+      String title,
+      double sourceWidth,
+      double navigationHeight,
+    })>[
+      (
+        page: const HomeActivityCenterPage(),
+        pageKey: const Key('home-activity-center-page'),
+        pinnedKey: const Key('home-activity-center-pinned-navigation'),
+        title: '活动中心',
+        sourceWidth: 944,
+        navigationHeight: 150,
+      ),
+      (
+        page: const HomeWelfareSeasonPage(),
+        pageKey: const Key('home-welfare-season-page'),
+        pinnedKey: const Key('home-welfare-season-pinned-navigation'),
+        title: '交行福利季',
+        sourceWidth: 730,
+        navigationHeight: 140,
+      ),
+      (
+        page: const HomeOneStopCreditPage(),
+        pageKey: const Key('home-one-stop-credit-page'),
+        pinnedKey: const Key('home-one-stop-credit-pinned-navigation'),
+        title: '一站式授信',
+        sourceWidth: 1080,
+        navigationHeight: 220,
+      ),
+      (
+        page: const HomePensionZonePage(),
+        pageKey: const Key('home-pension-zone-page'),
+        pinnedKey: const Key('home-pension-zone-pinned-navigation'),
+        title: '养老专区',
+        sourceWidth: 575,
+        navigationHeight: 118,
+      ),
+      (
+        page: const HomeSalaryZonePage(),
+        pageKey: const Key('home-salary-zone-page'),
+        pinnedKey: const Key('home-salary-zone-pinned-navigation'),
+        title: '交薪通',
+        sourceWidth: 711,
+        navigationHeight: 140,
+      ),
+      (
+        page: const HomeCouponCenterPage(),
+        pageKey: const Key('home-coupon-center-page'),
+        pinnedKey: const Key('home-coupon-center-pinned-navigation'),
+        title: '领券中心',
+        sourceWidth: 612,
+        navigationHeight: 150,
+      ),
+    ];
+
+    for (final item in pages) {
+      await tester.pumpWidget(GetMaterialApp(home: item.page));
+      await tester.pumpAndSettle();
+
+      final pinnedFinder = find.byKey(item.pinnedKey);
+      expect(
+        tester.widget<AnimatedOpacity>(pinnedFinder).opacity,
+        0,
+        reason: '${item.title} 首屏不应覆盖原图沉浸式导航',
+      );
+      expect(tester.getTopLeft(find.byKey(item.pageKey)).dy, 0);
+
+      final scrollable = tester.state<ScrollableState>(
+        find.descendant(
+          of: find.byKey(item.pageKey),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      final sourceScale =
+          tester.getSize(find.byKey(item.pageKey)).width / item.sourceWidth;
+      final revealOffset = item.navigationHeight * sourceScale;
+
+      scrollable.position.jumpTo(revealOffset - 0.5);
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<AnimatedOpacity>(pinnedFinder).opacity,
+        0,
+        reason: '${item.title} 在源图导航尚未完全滚出时不应显示 AppBar',
+      );
+
+      scrollable.position.jumpTo(revealOffset + 0.5);
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<AnimatedOpacity>(pinnedFinder).opacity,
+        1,
+        reason: '${item.title} 滚出原图导航后应显示固定 AppBar',
+      );
+      expect(find.text(item.title), findsOneWidget);
+      final pinnedTop = tester.getTopLeft(pinnedFinder).dy;
+
+      scrollable.position.jumpTo(revealOffset + 300);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getTopLeft(pinnedFinder).dy,
+        pinnedTop,
+        reason: '${item.title} 的 AppBar 应固定在屏幕顶部',
+      );
+    }
   });
 }
 

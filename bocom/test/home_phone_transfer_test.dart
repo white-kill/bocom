@@ -43,11 +43,11 @@ void main() {
 
     await tester.enterText(
       find.byKey(const Key('phone-transfer-name-field')),
-      '沈光德',
+      '小光',
     );
     await tester.enterText(
       find.byKey(const Key('phone-transfer-phone-field')),
-      '1380013800',
+      '1311311311',
     );
     await tester.enterText(
       find.byKey(const Key('transfer-amount-field')),
@@ -62,7 +62,7 @@ void main() {
 
     await tester.enterText(
       find.byKey(const Key('phone-transfer-phone-field')),
-      '13800138000',
+      '13113113113',
     );
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pump();

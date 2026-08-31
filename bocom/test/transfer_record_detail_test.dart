@@ -11,7 +11,7 @@ void main() {
 
   final detail = TransferRecordDetailData(
     amount: -1,
-    recipientName: '沈光德',
+    recipientName: '小光',
     recipientAccount: '6217 0016 3007 6962 353',
     recipientBank: '中国建设银行',
     transferredAt: DateTime(2026, 8, 12, 11, 43, 23),
@@ -25,6 +25,13 @@ void main() {
   );
 
   testWidgets('转账记录详情展示动态key/value并响应底部操作', (tester) async {
+    tester.view.physicalSize = const Size(402, 874);
+    tester.view.devicePixelRatio = 1;
+    tester.view.padding = const FakeViewPadding(top: 24);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPadding);
+
     var receiptTapped = false;
     var transferAgainTapped = false;
     await tester.pumpWidget(
@@ -39,10 +46,48 @@ void main() {
 
     expect(find.text('转账记录详情'), findsOneWidget);
     expect(find.text('-1.00'), findsOneWidget);
-    expect(find.text('沈光德'), findsOneWidget);
+    expect(find.text('小光'), findsOneWidget);
     expect(find.text('6217 0016 3007 6962 353'), findsOneWidget);
     expect(find.text('2026-08-12 11:43:23'), findsOneWidget);
-    expect(find.text('2005000420260812436002416952'), findsOneWidget);
+    expect(find.text('20050004202608\n12436002416952'), findsOneWidget);
+
+    expect(
+      tester
+          .getSize(
+            find.byKey(const ValueKey('transfer_record_detail_overview_card')),
+          )
+          .height,
+      254,
+    );
+    expect(
+      tester
+          .getSize(
+            find.byKey(
+                const ValueKey('transfer_record_detail_information_card')),
+          )
+          .height,
+      greaterThanOrEqualTo(316),
+    );
+
+    final amount = tester.widget<Text>(
+      find.byKey(const ValueKey('transfer_record_detail_amount')),
+    );
+    final serialNumber = tester.widget<Text>(
+      find.byKey(const ValueKey('transfer_record_detail_流水号')),
+    );
+    expect(amount.style?.fontSize, 36);
+    expect(serialNumber.style?.fontSize, 17);
+    expect(serialNumber.data, '20050004202608\n12436002416952');
+    expect(serialNumber.maxLines, isNull);
+    expect(serialNumber.overflow, isNull);
+    expect(
+      tester
+          .getSize(
+            find.byKey(const ValueKey('transfer_record_detail_流水号')),
+          )
+          .height,
+      greaterThan(30),
+    );
 
     await tester.tap(
       find.byKey(const ValueKey('transfer_record_detail_receipt')),
@@ -65,7 +110,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('沈光德(**2353)').first);
+    await tester.tap(find.text('小光(**2353)').first);
     await tester.pumpAndSettle();
 
     expect(
@@ -112,7 +157,7 @@ void main() {
     expect(find.text('超级网银快速汇款'), findsOneWidget);
     expect(find.text('0.00'), findsOneWidget);
     expect(find.text('预计实时到账'), findsOneWidget);
-    expect(find.text('DETAIL20260812120102'), findsOneWidget);
+    expect(find.text('DETAIL20260812\n120102'), findsOneWidget);
     expect(find.text('测试附言'), findsOneWidget);
   });
 
@@ -127,7 +172,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AccountTransferReceiptPage), findsOneWidget);
-    expect(find.text('沈光德'), findsOneWidget);
+    expect(find.text('小光'), findsOneWidget);
     expect(find.text('621700****2353'), findsOneWidget);
     expect(find.text('1.00元'), findsOneWidget);
     expect(find.text('2005000420260812436002416952'), findsOneWidget);
@@ -145,7 +190,7 @@ void main() {
 
     expect(find.byType(HomeAccountTransferPage), findsOneWidget);
     final fields = find.byType(TextField);
-    expect(tester.widget<TextField>(fields.at(0)).controller?.text, '沈光德');
+    expect(tester.widget<TextField>(fields.at(0)).controller?.text, '小光');
     expect(
       tester.widget<TextField>(fields.at(1)).controller?.text,
       '6217001630076962353',

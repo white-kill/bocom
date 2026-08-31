@@ -72,7 +72,7 @@ void main() {
 
   testWidgets('快捷联系人模式使用固定收款人卡片且保留提交数据', (tester) async {
     final recipient = ContactsModel()
-      ..name = '沈光德'
+      ..name = '小光'
       ..bankName = '中国建设银行'
       ..bankCard = '6217001630076962353';
 
@@ -86,7 +86,7 @@ void main() {
     );
 
     expect(find.byKey(const Key('quick-recipient-card')), findsOneWidget);
-    expect(find.text('沈光德'), findsOneWidget);
+    expect(find.text('小光'), findsOneWidget);
     expect(
       find.text('中国建设银行 (6217 0016 3007 6962 353)'),
       findsOneWidget,

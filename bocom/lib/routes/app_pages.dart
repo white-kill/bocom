@@ -17,6 +17,9 @@ import '../pages/tabs/home/transfer/phone_transfer/home_phone_transfer_view.dart
 import '../pages/tabs/home/transfer/record/transfer_record_view.dart';
 import '../pages/tabs/mine/children/ledger/ledger_view.dart';
 import '../pages/tabs/mine/children/comprehensive_bill/comprehensive_bill_view.dart';
+import '../pages/tabs/mine/children/account_asset/account_secondary_pages.dart';
+import '../pages/tabs/life/life_secondary_pages.dart';
+import '../pages/tabs/‌finance‌/finance_secondary_pages.dart';
 import '../config/model/contacts_model.dart';
 
 part 'app_routes.dart';
@@ -78,6 +81,62 @@ class AppPages {
       page: () => const HomeCouponCenterPage(),
     ),
     GetPage(
+      name: Routes.homeActivityCenter,
+      page: () => const HomeActivityCenterPage(),
+    ),
+    GetPage(
+      name: Routes.homePreferredProducts,
+      page: () => const HomePreferredProductsPage(),
+    ),
+    GetPage(
+      name: Routes.homeWelfareSeason,
+      page: () => const HomeWelfareSeasonPage(),
+    ),
+    GetPage(
+      name: Routes.homeOneStopCredit,
+      page: () => const HomeOneStopCreditPage(),
+    ),
+    GetPage(
+      name: Routes.homePensionZone,
+      page: () => const HomePensionZonePage(),
+    ),
+    GetPage(
+      name: Routes.homeSalaryZone,
+      page: () => const HomeSalaryZonePage(),
+    ),
+    GetPage(
+      name: Routes.accountFundsTransfer,
+      page: () => const AccountFundsTransferPage(),
+    ),
+    GetPage(
+      name: Routes.accountLoss,
+      page: () => const AccountLossPage(),
+    ),
+    GetPage(
+      name: Routes.accountMoreFunctions,
+      page: () => const AccountMoreFunctionsPage(),
+    ),
+    GetPage(
+      name: Routes.accountApplication,
+      page: () => const AccountApplicationPage(),
+    ),
+    GetPage(
+      name: Routes.accountActivation,
+      page: () => const AccountActivationPage(),
+    ),
+    GetPage(
+      name: Routes.accountUnbind,
+      page: () => const AccountUnbindPage(),
+    ),
+    GetPage(
+      name: Routes.accountSort,
+      page: () => const AccountSortPage(),
+    ),
+    GetPage(
+      name: Routes.accountFamilyPay,
+      page: () => const AccountFamilyPayPage(),
+    ),
+    GetPage(
       name: Routes.transactionDetail,
       page: () => const TransactionDetailPage(),
     ),
@@ -131,6 +190,122 @@ class AppPages {
     GetPage(
       name: Routes.homePhoneTransfer,
       page: () => const HomePhoneTransferPage(),
+    ),
+    GetPage(
+      name: Routes.lifePayment,
+      page: () => const LifePaymentPage(),
+    ),
+    GetPage(
+      name: Routes.lifeMovie,
+      page: () => const LifeMoviePage(),
+    ),
+    GetPage(
+      name: Routes.lifePartyFee,
+      page: () => const LifePartyFeePage(),
+    ),
+    GetPage(
+      name: Routes.lifeVip,
+      page: () => const LifeVipPage(),
+    ),
+    GetPage(
+      name: Routes.lifeSocialSecurity,
+      page: () => const LifeSocialSecurityPage(),
+    ),
+    GetPage(
+      name: Routes.lifeRideCode,
+      page: () => const LifeRideCodePage(),
+    ),
+    GetPage(
+      name: Routes.lifeCultureTourism,
+      page: () => const LifeCultureTourismPage(),
+    ),
+    GetPage(
+      name: Routes.lifeCreditPoints,
+      page: () => const LifeCreditPointsPage(),
+    ),
+    GetPage(
+      name: Routes.lifeTongcheng,
+      page: () => const LifeTongchengPage(),
+    ),
+    GetPage(
+      name: Routes.lifeSupermarket,
+      page: () => const LifeSupermarketPage(),
+    ),
+    GetPage(
+      name: Routes.lifeBookstore,
+      page: () => const LifeBookstorePage(),
+    ),
+    GetPage(
+      name: Routes.lifeJdZone,
+      page: () => const LifeJdZonePage(),
+    ),
+    GetPage(
+      name: Routes.lifeAppliances,
+      page: () => const LifeAppliancesPage(),
+    ),
+    GetPage(
+      name: Routes.lifeTeaZone,
+      page: () => const LifeTeaZonePage(),
+    ),
+    GetPage(
+      name: Routes.lifeNewEnergyPayment,
+      page: () => const LifeNewEnergyPaymentPage(),
+    ),
+    GetPage(
+      name: Routes.lifeFundCollection,
+      page: () => const LifeFundCollectionPage(),
+    ),
+    GetPage(
+      name: Routes.lifeCarbonGlory,
+      page: () => const LifeCarbonGloryPage(),
+    ),
+    GetPage(
+      name: Routes.lifeMoreServices,
+      page: () => const LifeMoreServicesPage(),
+    ),
+    GetPage(
+      name: Routes.financeWealthIndex,
+      page: () => const FinanceWealthIndexPage(),
+    ),
+    GetPage(
+      name: Routes.financeTradingStars,
+      page: () => const FinanceTradingStarsPage(),
+    ),
+    GetPage(
+      name: Routes.financePensionSeason,
+      page: () => const FinancePensionSeasonPage(),
+    ),
+    GetPage(
+      name: Routes.financeWealthForYou,
+      page: () => const FinanceWealthForYouPage(),
+    ),
+    GetPage(
+      name: Routes.financeFlashNews,
+      page: () => const FinanceFlashNewsPage(),
+    ),
+    GetPage(
+      name: Routes.financeFlexibleInvestment,
+      page: () => const FinanceFlexibleInvestmentPage(),
+    ),
+    GetPage(
+      name: Routes.financeIndexZone,
+      page: () => const FinanceIndexZonePage(),
+    ),
+    GetPage(
+      name: Routes.financeRecurringInvestment,
+      page: () => const FinanceRecurringInvestmentPage(),
+    ),
+    GetPage(
+      name: Routes.financeIndustryFund,
+      page: () => const FinanceIndustryFundPage(),
+    ),
+    GetPage(
+      name: Routes.financeWealthSelection,
+      page: () => const FinanceWealthSelectionPage(),
+    ),
+    GetPage(
+      name: Routes.financeLoanRecommendation,
+      page: () => const FinanceLoanRecommendationPage(),
     ),
   ];
 }

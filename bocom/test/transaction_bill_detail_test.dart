@@ -214,7 +214,7 @@ void main() {
       ),
     );
 
-    expect(find.text('沈光德'), findsNWidgets(2));
+    expect(find.text('小光'), findsNWidgets(2));
     expect(find.text('对方账户'), findsOneWidget);
     expect(find.text('621700****2353'), findsOneWidget);
     expect(find.text('对方开户行'), findsOneWidget);
@@ -419,7 +419,7 @@ final _incomeDetail = TransactionBillDetail(
   transactionChannel: '支付平台',
   transactionCategory: '',
   transactionDescription: '',
-  oppositeName: '沈光德',
+  oppositeName: '小光',
   oppositeAccount: '621700****2353',
   oppositeBankName: '中国建设银行合肥市金寨南路分理处',
   postscriptno: '',
@@ -460,7 +460,7 @@ final _transferDetail = TransactionBillDetail(
   transactionChannel: '手机银行',
   transactionCategory: '转账',
   transactionDescription: '',
-  oppositeName: '沈光德',
+  oppositeName: '小光',
   oppositeAccount: '621700****2353',
   oppositeBankName: '中国建设银行总行',
   postscriptno: '',

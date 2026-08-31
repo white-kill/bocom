@@ -3,12 +3,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
-import 'package:wb_base_widget/extension/widget_extension.dart';
 
 import '../config/app_config.dart';
 import '../main/app_plugin.dart';
 import '../routes/app_pages.dart';
-import '../utils/sp_util.dart';
 
 class MyApp extends GetMaterialApp {
   const MyApp({
@@ -40,8 +38,7 @@ class MyApp extends GetMaterialApp {
       [FlutterSmartDialog.observer];
 
   @override
-  Transition? get defaultTransition =>
-      GetPlatform.isAndroid ? Transition.fadeIn : Transition.native;
+  Transition? get defaultTransition => Transition.rightToLeft;
 
   @override
   ThemeData get theme => ThemeData(

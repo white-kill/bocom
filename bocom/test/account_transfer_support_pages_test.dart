@@ -20,7 +20,7 @@ void main() {
       ..name = '安安'
       ..bankName = '中国建设银行'
       ..bankCard = '6222000012345678'
-      ..phone = '13800001111';
+      ..phone = '13113113113';
     final second = ContactsModel()
       ..name = '张三'
       ..bankName = '交通银行'
@@ -84,7 +84,7 @@ void main() {
 
     await tester.enterText(
       find.byKey(const Key('all-recipients-search')),
-      '13800001111',
+      '13113113113',
     );
     await tester.pump();
     expect(find.text('安安'), findsOneWidget);

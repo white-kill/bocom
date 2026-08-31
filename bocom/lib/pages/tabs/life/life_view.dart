@@ -26,6 +26,85 @@ class LifePage extends BaseStateless {
     'assets/images/life_section_02.png',
   ];
 
+  static const List<_LifeHomeHotspot> _primaryHotspots = [
+    _LifeHomeHotspot('生活缴费', 40, 392, 200, 190, Routes.lifePayment),
+    _LifeHomeHotspot('碳星荣耀', 440, 392, 200, 190, Routes.lifeCarbonGlory),
+    _LifeHomeHotspot('淘票票', 640, 392, 200, 190, Routes.lifeMovie),
+    _LifeHomeHotspot('博库商城', 840, 392, 200, 190, Routes.lifeBookstore),
+    _LifeHomeHotspot('京东专区', 40, 582, 200, 190, Routes.lifeJdZone),
+    _LifeHomeHotspot('同程', 240, 582, 200, 190, Routes.lifeTongcheng),
+    _LifeHomeHotspot('商超立减', 440, 582, 200, 190, Routes.lifeSupermarket),
+    _LifeHomeHotspot('文旅专区', 640, 582, 200, 190, Routes.lifeCultureTourism),
+    _LifeHomeHotspot('党费', 840, 582, 200, 190, Routes.lifePartyFee),
+    _LifeHomeHotspot('电影票', 240, 772, 200, 190, Routes.lifeMovie),
+    _LifeHomeHotspot('乘车码', 440, 772, 200, 190, Routes.lifeRideCode),
+    _LifeHomeHotspot('唯品会', 640, 772, 200, 190, Routes.lifeVip),
+    _LifeHomeHotspot('更多', 840, 772, 200, 190, Routes.lifeMoreServices),
+    _LifeHomeHotspot(
+      '智慧文旅用星出游',
+      40,
+      1001,
+      1002,
+      264,
+      Routes.lifeCultureTourism,
+    ),
+    _LifeHomeHotspot('家电数码', 40, 1295, 244, 349, Routes.lifeAppliances),
+    _LifeHomeHotspot(
+      '用星出游',
+      284,
+      1295,
+      245,
+      349,
+      Routes.lifeCultureTourism,
+    ),
+    _LifeHomeHotspot(
+      '新能源缴费',
+      553,
+      1295,
+      244,
+      349,
+      Routes.lifeNewEnergyPayment,
+    ),
+    _LifeHomeHotspot(
+      '资金归集',
+      797,
+      1295,
+      245,
+      349,
+      Routes.lifeFundCollection,
+    ),
+    _LifeHomeHotspot(
+      '精选推荐机场服务',
+      80,
+      1800,
+      230,
+      333,
+      Routes.lifeCultureTourism,
+    ),
+    _LifeHomeHotspot(
+      '精选推荐春秋出行',
+      310,
+      1800,
+      230,
+      333,
+      Routes.lifeCultureTourism,
+    ),
+    _LifeHomeHotspot(
+      '精选推荐商超立减',
+      770,
+      1800,
+      230,
+      333,
+      Routes.lifeSupermarket,
+    ),
+  ];
+
+  static const List<_LifeHomeHotspot> _recommendationHotspots = [
+    _LifeHomeHotspot('推荐文旅专区', 25, 500, 280, 430, Routes.lifeCultureTourism),
+    _LifeHomeHotspot('推荐商超立减', 25, 940, 280, 420, Routes.lifeSupermarket),
+    _LifeHomeHotspot('推荐乘车码', 25, 1370, 280, 420, Routes.lifeRideCode),
+  ];
+
   final LifeLogic logic = Get.put(LifeLogic());
   final LifeState state = Get.find<LifeLogic>().state;
 
@@ -79,33 +158,104 @@ class LifePage extends BaseStateless {
           alignment: Alignment.topCenter,
           gaplessPlayback: true,
         );
-        if (index != 0) return section;
+        if (index != 0) {
+          return AspectRatio(
+            key: const Key('life-home-recommendation-section'),
+            aspectRatio: 609 / 3792,
+            child: LayoutBuilder(
+              builder: (_, constraints) {
+                final sourceScale = constraints.maxWidth / 609;
+                return Stack(
+                  children: [
+                    Positioned.fill(child: section),
+                    for (final hotspot in _recommendationHotspots)
+                      Positioned(
+                        left: hotspot.left * sourceScale,
+                        top: hotspot.top * sourceScale,
+                        width: hotspot.width * sourceScale,
+                        height: hotspot.height * sourceScale,
+                        child: Semantics(
+                          button: true,
+                          label: hotspot.label,
+                          child: GestureDetector(
+                            key: Key('life-home-hotspot-${hotspot.label}'),
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => Get.toNamed<void>(hotspot.route),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          );
+        }
 
         return AspectRatio(
+          key: const Key('life-home-primary-section'),
           aspectRatio: 1080 / 2133,
-          child: Stack(
-            children: [
-              Positioned.fill(child: section),
-              Positioned(
-                left: 20.w,
-                top: 100.w,
-                child: Text(
-                  '${lifeGreetingForHour(DateTime.now().hour)}!',
-                  key: const Key('life-greeting'),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 17.sp,
-                    fontWeight: FontWeight.w400,
-                    height: 1,
+          child: LayoutBuilder(
+            builder: (_, constraints) {
+              final sourceScale = constraints.maxWidth / 1080;
+              return Stack(
+                children: [
+                  Positioned.fill(child: section),
+                  Positioned(
+                    left: 20.w,
+                    top: 100.w,
+                    child: Text(
+                      '${lifeGreetingForHour(DateTime.now().hour)}!',
+                      key: const Key('life-greeting'),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.w400,
+                        height: 1,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                  for (final hotspot in _primaryHotspots)
+                    Positioned(
+                      left: hotspot.left * sourceScale,
+                      top: hotspot.top * sourceScale,
+                      width: hotspot.width * sourceScale,
+                      height: hotspot.height * sourceScale,
+                      child: Semantics(
+                        button: true,
+                        label: hotspot.label,
+                        child: GestureDetector(
+                          key: Key('life-home-hotspot-${hotspot.label}'),
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => Get.toNamed<void>(hotspot.route),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         );
       },
     );
   }
+}
+
+class _LifeHomeHotspot {
+  const _LifeHomeHotspot(
+    this.label,
+    this.left,
+    this.top,
+    this.width,
+    this.height,
+    this.route,
+  );
+
+  final String label;
+  final double left;
+  final double top;
+  final double width;
+  final double height;
+  final String route;
 }
 
 class _LifeCitySelector extends StatelessWidget {
