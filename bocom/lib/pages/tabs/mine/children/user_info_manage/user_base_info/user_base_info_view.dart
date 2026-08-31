@@ -88,20 +88,24 @@ class UserBaseInfoPage extends BaseStateless {
               child: GetBuilder<BocLogic>(
                 id: 'updateUI',
                 builder: (bocLogic) => Obx(
-                  () => GestureDetector(
-                    key: const Key('user-info-manage-date'),
-                    onLongPress: () => _editValue(
-                      title: '出生日期',
-                      initialValue: state.date.value,
-                      save: logic.saveDate,
-                    ),
-                    child: BaseText(
-                      text: state.date.value,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF181818),
-                    ),
-                  ),
+                  () {
+                    final date =
+                        logic.dateValue(bocLogic.memberInfo.birthday);
+                    return GestureDetector(
+                      key: const Key('user-info-manage-date'),
+                      onLongPress: () => _editValue(
+                        title: '出生日期',
+                        initialValue: date,
+                        save: logic.saveDate,
+                      ),
+                      child: BaseText(
+                        text: date,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF181818),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -125,20 +129,24 @@ class UserBaseInfoPage extends BaseStateless {
               child: GetBuilder<BocLogic>(
                 id: 'updateUI',
                 builder: (bocLogic) => Obx(
-                  () => GestureDetector(
-                    key: const Key('user-info-manage-pingyin'),
-                    onLongPress: () => _editValue(
-                      title: '姓名拼音',
-                      initialValue: state.pinyin.value,
-                      save: logic.savePinyin,
-                    ),
-                    child: BaseText(
-                      text: state.pinyin.value,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF181818),
-                    ),
-                  ),
+                  () {
+                    final pinyin =
+                        logic.pinyinValue(bocLogic.memberInfo.namePinyin);
+                    return GestureDetector(
+                      key: const Key('user-info-manage-pingyin'),
+                      onLongPress: () => _editValue(
+                        title: '姓名拼音',
+                        initialValue: pinyin,
+                        save: logic.savePinyin,
+                      ),
+                      child: BaseText(
+                        text: pinyin,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF181818),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

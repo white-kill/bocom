@@ -11,8 +11,6 @@ class UserIdcardInfoLogic extends GetxController {
         _writeAddress =
             writeAddress ?? ((value) => value.saveUserIdcardInfoAddress);
 
-  static const String defaultAddress = '北京市';
-
   final UserIdcardInfoState state = UserIdcardInfoState();
   final String Function() _readAddress;
   final void Function(String) _writeAddress;
@@ -33,10 +31,12 @@ class UserIdcardInfoLogic extends GetxController {
   }
 
   void loadLocalAddress() {
-    final localAddress = _readAddress().trim();
-    state.address.value =
-        localAddress.isEmpty ? defaultAddress : localAddress;
+    state.address.value = _readAddress().trim();
   }
+
+  String addressValue(String memberCity) => state.address.value.isNotEmpty
+      ? state.address.value
+      : memberCity.trim();
 
   bool saveAddress(String value) {
     final trimmed = value.trim();

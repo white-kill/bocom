@@ -10,7 +10,7 @@ void main() {
   tearDown(Get.reset);
 
   group('UserBaseInfoLogic local values', () {
-    test('uses masked defaults when no local values exist', () {
+    test('uses member info values when no local values exist', () {
       final logic = UserBaseInfoLogic(
         readDate: () => '',
         readPinyin: () => '',
@@ -20,8 +20,36 @@ void main() {
 
       logic.loadLocalValues();
 
-      expect(logic.state.date.value, '****.**.**');
-      expect(logic.state.pinyin.value, '***KAN');
+      expect(logic.dateValue('1990-01-02'), '****.**.02');
+      expect(logic.pinyinValue('ZHANG SAN'), '*** SAN');
+    });
+
+    test('uses empty values when local and member info values are empty', () {
+      final logic = UserBaseInfoLogic(
+        readDate: () => '',
+        readPinyin: () => '',
+        writeDate: (_) {},
+        writePinyin: (_) {},
+      );
+
+      logic.loadLocalValues();
+
+      expect(logic.dateValue(''), '');
+      expect(logic.pinyinValue(''), '');
+    });
+
+    test('keeps pinyin spacing after replacing the surname with three stars',
+        () {
+      final logic = UserBaseInfoLogic(
+        readDate: () => '',
+        readPinyin: () => '',
+        writeDate: (_) {},
+        writePinyin: (_) {},
+      );
+      logic.loadLocalValues();
+
+      expect(logic.pinyinValue('YANG LU'), '*** LU');
+      expect(logic.pinyinValue('LI  SI'), '***  SI');
     });
 
     test('loads date and pinyin from local values', () {
@@ -34,8 +62,8 @@ void main() {
 
       logic.loadLocalValues();
 
-      expect(logic.state.date.value, '1990.01.02');
-      expect(logic.state.pinyin.value, 'ZHANG SAN');
+      expect(logic.dateValue('2000-08-30'), '1990.01.02');
+      expect(logic.pinyinValue('LI SI'), 'ZHANG SAN');
     });
 
     test('trims, saves, and exposes edited values', () {
@@ -84,7 +112,9 @@ void main() {
       writePinyin: (_) {},
     );
     logic.loadLocalValues();
-    Get.put(BocLogic());
+    final bocLogic = Get.put(BocLogic());
+    bocLogic.memberInfo.birthday = '1990-01-02';
+    bocLogic.memberInfo.namePinyin = 'ZHANG SAN';
 
     await tester.pumpWidget(
       ScreenUtilInit(
@@ -94,7 +124,7 @@ void main() {
       ),
     );
 
-    expect(find.text('****.**.**'), findsOneWidget);
+    expect(find.text('****.**.02'), findsOneWidget);
     await tester.longPress(find.byKey(const Key('user-info-manage-date')));
     await tester.pumpAndSettle();
 

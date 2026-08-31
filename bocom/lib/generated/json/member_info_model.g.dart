@@ -15,6 +15,14 @@ MemberInfoModel $MemberInfoModelFromJson(Map<String, dynamic> json) {
   if (realName != null) {
     memberInfoModel.realName = realName;
   }
+  final String? namePinyin = jsonConvert.convert<String>(json['namePinyin']);
+  if (namePinyin != null) {
+    memberInfoModel.namePinyin = namePinyin;
+  }
+  final String? birthday = jsonConvert.convert<String>(json['birthday']);
+  if (birthday != null) {
+    memberInfoModel.birthday = birthday;
+  }
   final String? cardAlias = jsonConvert.convert<String>(json['cardAlias']);
   if (cardAlias != null) {
     memberInfoModel.cardAlias = cardAlias;
@@ -134,6 +142,8 @@ Map<String, dynamic> $MemberInfoModelToJson(MemberInfoModel entity) {
   data['id'] = entity.id;
   data['bankId'] = entity.bankId;
   data['realName'] = entity.realName;
+  data['namePinyin'] = entity.namePinyin;
+  data['birthday'] = entity.birthday;
   data['cardAlias'] = entity.cardAlias;
   data['accountBalance'] = entity.accountBalance;
   data['appAccount'] = entity.appAccount;
@@ -167,6 +177,8 @@ extension MemberInfoModelExtension on MemberInfoModel {
     String? id,
     String? bankId,
     String? realName,
+    String? namePinyin,
+    String? birthday,
     String? cardAlias,
     double? accountBalance,
     String? appAccount,
@@ -197,6 +209,8 @@ extension MemberInfoModelExtension on MemberInfoModel {
       ..id = id ?? this.id
       ..bankId = bankId ?? this.bankId
       ..realName = realName ?? this.realName
+      ..namePinyin = namePinyin ?? this.namePinyin
+      ..birthday = birthday ?? this.birthday
       ..cardAlias = cardAlias ?? this.cardAlias
       ..accountBalance = accountBalance ?? this.accountBalance
       ..appAccount = appAccount ?? this.appAccount

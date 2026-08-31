@@ -9,6 +9,8 @@ class MemberInfoModel {
 	String id = '';
 	String bankId = '';
 	String realName = '';
+	String namePinyin = '';
+	String birthday = '';
 	String cardAlias = '';
 	double accountBalance = 0;
 	String appAccount = '';

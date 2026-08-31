@@ -19,10 +19,10 @@ class UserIdcardInfoPage extends BaseStateless {
   final UserIdcardInfoLogic logic;
   UserIdcardInfoState get state => logic.state;
 
-  Future<void> _editAddress() async {
+  Future<void> _editAddress(String initialValue) async {
     final value = await Get.dialog<String>(
       _UserIdcardAddressDialog(
-        initialValue: state.address.value,
+        initialValue: initialValue,
       ),
     );
     if (value != null) logic.saveAddress(value);
@@ -99,16 +99,20 @@ class UserIdcardInfoPage extends BaseStateless {
               child: GetBuilder<BocLogic>(
                 id: 'updateUI',
                 builder: (bocLogic) => Obx(
-                  () => GestureDetector(
-                    key: const Key('user-card-manage-address'),
-                    onLongPress: _editAddress,
-                    child: BaseText(
-                      text: state.address.value,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF181818),
-                    ),
-                  ),
+                  () {
+                    final address =
+                        logic.addressValue(bocLogic.memberInfo.city);
+                    return GestureDetector(
+                      key: const Key('user-card-manage-address'),
+                      onLongPress: () => _editAddress(address),
+                      child: BaseText(
+                        text: address,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF181818),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

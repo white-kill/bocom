@@ -17,7 +17,7 @@ void main() {
       );
     });
 
-    test('uses Beijing when no local address exists', () {
+    test('uses member city when no local address exists', () {
       final logic = UserIdcardInfoLogic(
         readAddress: () => '',
         writeAddress: (_) {},
@@ -25,7 +25,18 @@ void main() {
 
       logic.loadLocalAddress();
 
-      expect(logic.state.address.value, '北京市');
+      expect(logic.addressValue('湖南长沙'), '湖南长沙');
+    });
+
+    test('uses an empty address when local address and city are empty', () {
+      final logic = UserIdcardInfoLogic(
+        readAddress: () => '',
+        writeAddress: (_) {},
+      );
+
+      logic.loadLocalAddress();
+
+      expect(logic.addressValue(''), '');
     });
 
     test('loads a saved local address', () {
@@ -36,7 +47,7 @@ void main() {
 
       logic.loadLocalAddress();
 
-      expect(logic.state.address.value, '湖南长沙');
+      expect(logic.addressValue('北京市'), '湖南长沙');
     });
 
     test('trims, saves, and exposes an edited address', () {
@@ -65,7 +76,7 @@ void main() {
       final saved = logic.saveAddress('   ');
 
       expect(saved, isFalse);
-      expect(logic.state.address.value, '北京市');
+      expect(logic.addressValue('上海市'), '北京市');
       expect(savedAddress, isNull);
     });
   });
@@ -77,7 +88,8 @@ void main() {
       writeAddress: (value) => savedAddress = value,
     );
     logic.loadLocalAddress();
-    Get.put(BocLogic());
+    final bocLogic = Get.put(BocLogic());
+    bocLogic.memberInfo.city = '北京市';
 
     await tester.pumpWidget(
       ScreenUtilInit(
@@ -88,7 +100,7 @@ void main() {
     );
 
     expect(find.text('北京市'), findsOneWidget);
-    await tester.longPress(find.byKey(const Key('user-info-manage-address')));
+    await tester.longPress(find.byKey(const Key('user-card-manage-address')));
     await tester.pumpAndSettle();
 
     expect(find.text('修改地址'), findsOneWidget);
