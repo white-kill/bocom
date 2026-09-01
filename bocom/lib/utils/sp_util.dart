@@ -37,6 +37,9 @@ class SpKey{
 
   static const String userIdcardInfoAddress = "user_idcard_info_address";
 
+  /// 职业及联络信息（按当前用户手机号隔离）。
+  static const String userJobInfo = "user_job_info_";
+
   /// 关联银行卡号（纯数字，每手机号仅一条；再次保存会覆盖）
   static const String accountLinkCard = "account_link_card_";
 
@@ -133,8 +136,14 @@ String get userBaseInfoPinyinValue =>
 String get userIdcardInfoAddressValue =>
     SpUtil.getString(SpKey.userIdcardInfoAddress) ?? '';
 
+Future<bool> saveUserJobInfo(String phone, String value) async {
+  final result = SpUtil.putString(SpKey.userJobInfo + phone, value);
+  return result == null ? false : result;
+}
+
+String userJobInfoValue(String phone) =>
+    SpUtil.getString(SpKey.userJobInfo + phone) ?? '';
+
 String get accountLinkCardValue =>
     SpUtil.getString(SpKey.accountLinkCard + AppConfig.config.abcLogic.phone()) ??
     '';
-
-

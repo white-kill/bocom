@@ -1,11 +1,12 @@
 import 'package:bocom/config/app_config.dart';
-import 'package:bocom/utils/stack_position.dart';
+import 'package:bocom/utils/sp_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
 
 import 'user_job_info_logic.dart';
+import 'user_job_occupation_page.dart';
 import 'user_job_region_sheet.dart';
 
 class UserJobInfoPage extends BaseStateless {
@@ -17,10 +18,9 @@ class UserJobInfoPage extends BaseStateless {
 
   static UserJobInfoLogic _defaultLogic() {
     final phone = AppConfig.config.abcLogic.phone();
-    return UserJobInfoLogic(
-      initialValues: {
-        if (phone.isNotEmpty) UserJobInfoLogic.residencePhoneKey: phone,
-      },
+    return UserJobInfoLogic.fromLocalJson(
+      userJobInfoValue(phone),
+      currentPhone: phone,
     );
   }
 
@@ -30,7 +30,6 @@ class UserJobInfoPage extends BaseStateless {
       label: 'Email地址',
       inputHint: '请输入您的电子邮箱地址',
       pageHint: '',
-      top: 70,
       keyboardType: TextInputType.emailAddress,
       validationKind: _JobValidationKind.email,
     ),
@@ -39,7 +38,6 @@ class UserJobInfoPage extends BaseStateless {
       label: '常住电话',
       inputHint: '请输入区号-固定电话或手机号',
       pageHint: '请输入区号-固定电话或手机号',
-      top: 210,
       keyboardType: TextInputType.phone,
       validationKind: _JobValidationKind.phone,
     ),
@@ -48,7 +46,6 @@ class UserJobInfoPage extends BaseStateless {
       label: '常住详细地址',
       inputHint: '请输入您的详细地址',
       pageHint: '请输入您的详细地址',
-      top: 470,
       validationKind: _JobValidationKind.detailAddress,
     ),
     _JobFieldConfig(
@@ -56,7 +53,6 @@ class UserJobInfoPage extends BaseStateless {
       label: '家庭电话',
       inputHint: '请输入区号-固定电话或手机号',
       pageHint: '请输入区号-固定电话或手机号',
-      top: 650,
       keyboardType: TextInputType.phone,
       validationKind: _JobValidationKind.phone,
     ),
@@ -65,7 +61,6 @@ class UserJobInfoPage extends BaseStateless {
       label: '家庭详细地址',
       inputHint: '请输入您的详细地址',
       pageHint: '请输入您的详细地址',
-      top: 915,
       validationKind: _JobValidationKind.detailAddress,
     ),
     _JobFieldConfig(
@@ -73,14 +68,12 @@ class UserJobInfoPage extends BaseStateless {
       label: '单位名称',
       inputHint: '请输入您的单位名称',
       pageHint: '请输入您的单位名称',
-      top: 1350,
     ),
     _JobFieldConfig(
       keyName: UserJobInfoLogic.companyPhoneKey,
       label: '单位电话',
       inputHint: '请输入区号-固定电话或手机号',
       pageHint: '请输入区号-固定电话或手机号',
-      top: 1480,
       keyboardType: TextInputType.phone,
       validationKind: _JobValidationKind.phone,
     ),
@@ -89,7 +82,6 @@ class UserJobInfoPage extends BaseStateless {
       label: '单位详细地址',
       inputHint: '请输入您的详细地址',
       pageHint: '请输入您的详细地址',
-      top: 1740,
       validationKind: _JobValidationKind.detailAddress,
     ),
   ];
@@ -97,15 +89,16 @@ class UserJobInfoPage extends BaseStateless {
   static const List<_JobRegionConfig> _regionFields = [
     _JobRegionConfig(
       keyName: UserJobInfoLogic.residenceRegionKey,
-      top: 335,
+      label: '常住地址',
+      required: true,
     ),
     _JobRegionConfig(
       keyName: UserJobInfoLogic.familyRegionKey,
-      top: 785,
+      label: '家庭地址',
     ),
     _JobRegionConfig(
       keyName: UserJobInfoLogic.companyRegionKey,
-      top: 1615,
+      label: '单位地址',
     ),
   ];
 
@@ -128,7 +121,7 @@ class UserJobInfoPage extends BaseStateless {
           child: _JobEditSheet(
             key: const Key('user-job-edit-sheet'),
             config: config,
-            currentValue: logic.valueOf(config.keyName),
+            currentValue: logic.displayValue(config.keyName),
           ),
         ),
       ),
@@ -249,6 +242,14 @@ class UserJobInfoPage extends BaseStateless {
     logic.updateRegion(config.keyName, selected.regions);
   }
 
+  Future<void> _selectOccupation(BuildContext context) async {
+    final selected = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const UserJobOccupationPage()),
+    );
+    if (selected != null) logic.selectOccupation(selected);
+  }
+
   @override
   Color? get navColor => const Color(0xFFFFFFFF);
 
@@ -257,105 +258,407 @@ class UserJobInfoPage extends BaseStateless {
 
   @override
   Widget initBody(BuildContext context) {
-    final position = StackPosition(
-      designWidth: 1080,
-      designHeight: 2172,
-      deviceWidth: 1.sw,
-    );
-    return ListView(
-      padding: EdgeInsets.zero,
-      physics: const ClampingScrollPhysics(),
+    final fields = {for (final field in _fields) field.keyName: field};
+    final regions = {
+      for (final region in _regionFields) region.keyName: region,
+    };
+    return Column(
       children: [
-        Stack(
-          children: [
-            Image(
-              image: 'bg_user_job'.png3x,
-              width: 1.sw,
-              fit: BoxFit.fitWidth,
-            ),
-            for (final config in _fields)
-              _positionedField(context, position, config),
-            for (final config in _regionFields)
-              _positionedRegion(context, position, config),
-          ],
+        Expanded(
+          child: ListView(
+            key: const Key('user-job-form-scroll'),
+            padding: EdgeInsets.zero,
+            physics: const ClampingScrollPhysics(),
+            children: [
+              const _SectionGap(),
+              _nativeFieldRow(context, fields[UserJobInfoLogic.emailKey]!),
+              _nativeFieldRow(
+                context,
+                fields[UserJobInfoLogic.residencePhoneKey]!,
+                required: true,
+              ),
+              _nativeRegionRow(
+                context,
+                regions[UserJobInfoLogic.residenceRegionKey]!,
+              ),
+              _nativeFieldRow(
+                context,
+                fields[UserJobInfoLogic.residenceDetailKey]!,
+                allowWrap: true,
+              ),
+              const _SectionGap(),
+              Obx(() {
+                final disabled = logic.sameAsResidence;
+                return Column(
+                  children: [
+                    _nativeFieldRow(
+                      context,
+                      fields[UserJobInfoLogic.familyPhoneKey]!,
+                      disabled: disabled,
+                    ),
+                    _nativeRegionRow(
+                      context,
+                      regions[UserJobInfoLogic.familyRegionKey]!,
+                      disabled: disabled,
+                    ),
+                    _nativeFieldRow(
+                      context,
+                      fields[UserJobInfoLogic.familyDetailKey]!,
+                      allowWrap: true,
+                      disabled: disabled,
+                    ),
+                  ],
+                );
+              }),
+              _sameResidenceRow(),
+              const _SectionGap(),
+              Obx(() {
+                final occupation =
+                    logic.displayValue(UserJobInfoLogic.occupationKey);
+                return Column(
+                  children: [
+                    _NativeFormRow(
+                      key: const Key('user-job-occupation'),
+                      label: '职业',
+                      valueKey: const Key('user-job-occupation-value'),
+                      value: occupation.isEmpty ? '请选择职业类别' : occupation,
+                      required: true,
+                      valueColor: occupation.isEmpty
+                          ? const Color(0xFFB7BCC5)
+                          : const Color(0xFF181818),
+                      showArrow: true,
+                      onTap: () => _selectOccupation(context),
+                    ),
+                    if (logic.showsCompanyFields) ...[
+                      _nativeFieldRow(
+                        context,
+                        fields[UserJobInfoLogic.companyNameKey]!,
+                      ),
+                      _nativeFieldRow(
+                        context,
+                        fields[UserJobInfoLogic.companyPhoneKey]!,
+                      ),
+                      _nativeRegionRow(
+                        context,
+                        regions[UserJobInfoLogic.companyRegionKey]!,
+                      ),
+                      _nativeFieldRow(
+                        context,
+                        fields[UserJobInfoLogic.companyDetailKey]!,
+                        allowWrap: true,
+                      ),
+                    ],
+                  ],
+                );
+              }),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
+        _bottomActions(),
       ],
     );
   }
 
-  Widget _positionedField(
+  Widget _nativeFieldRow(
     BuildContext context,
-    StackPosition position,
-    _JobFieldConfig config,
-  ) {
+    _JobFieldConfig config, {
+    bool required = false,
+    bool allowWrap = false,
+    bool disabled = false,
+  }) {
     final widgetKey = config.keyName.replaceAll('_', '-');
-    return Positioned(
-      left: position.getX(320),
-      right: position.getX(75),
-      top: position.getY(config.top),
-      height: position.getHeight(72),
-      child: GestureDetector(
+    return Obx(() {
+      final value = logic.displayValue(config.keyName);
+      return _NativeFormRow(
         key: Key('user-job-$widgetKey'),
-        behavior: HitTestBehavior.opaque,
-        onTap: () => _editField(context, config),
-        child: ColoredBox(
-          color: Colors.white,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Obx(() {
-              final value = logic.valueOf(config.keyName);
-              return BaseText(
-                key: Key('user-job-$widgetKey-value'),
-                text: value.isEmpty ? config.pageHint : value,
-                color: value.isEmpty
-                    ? const Color(0xFFB7BCC5)
-                    : const Color(0xFF181818),
-                fontSize: 15,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              );
-            }),
+        label: config.validationKind == _JobValidationKind.detailAddress
+            ? ''
+            : config.label,
+        valueKey: Key('user-job-$widgetKey-value'),
+        value: value.isEmpty ? config.pageHint : value,
+        required: required,
+        enabled: !disabled,
+        showArrow: false,
+        allowWrap: allowWrap,
+        valueColor: value.isEmpty
+            ? const Color(0xFFB7BCC5)
+            : disabled
+                ? const Color(0xFF777777)
+                : const Color(0xFF181818),
+        onTap: disabled ? null : () => _editField(context, config),
+      );
+    });
+  }
+
+  Widget _nativeRegionRow(
+    BuildContext context,
+    _JobRegionConfig config, {
+    bool disabled = false,
+  }) {
+    final widgetKey = config.keyName.replaceAll('_', '-');
+    return Obx(() {
+      final value = logic.displayValue(config.keyName);
+      return _NativeFormRow(
+        key: Key('user-job-$widgetKey'),
+        label: config.label,
+        valueKey: Key('user-job-$widgetKey-value'),
+        value: value.isEmpty ? '请选择省、市、区（县）' : value,
+        required: config.required,
+        enabled: !disabled,
+        showArrow: true,
+        allowWrap: true,
+        valueColor: value.isEmpty
+            ? const Color(0xFFB7BCC5)
+            : disabled
+                ? const Color(0xFF777777)
+                : const Color(0xFF181818),
+        onTap: disabled ? null : () => _selectRegion(context, config),
+      );
+    });
+  }
+
+  Widget _sameResidenceRow() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Obx(
+            () => _JobSameResidenceSwitch(
+              key: const Key('user-job-same-residence'),
+              value: logic.sameAsResidence,
+              onChanged: logic.setSameAsResidence,
+            ),
+          ),
+          const SizedBox(width: 8),
+          const BaseText(
+            text: '同居住地',
+            color: Color(0xFF181818),
+            fontSize: 16,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bottomActions() {
+    return Container(
+      key: const Key('user-job-bottom-actions'),
+      color: Colors.white,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 54,
+                  child: OutlinedButton(
+                    onPressed: Get.back,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF0075F6)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const BaseText(
+                      text: '取消',
+                      color: Color(0xFF0075F6),
+                      fontSize: 17,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final phone = AppConfig.config.abcLogic.phone();
+                      await saveUserJobInfo(phone, logic.localSnapshotJson());
+                      Get.back();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: const Color(0xFF0075F6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const BaseText(
+                      text: '提交',
+                      color: Colors.white,
+                      fontSize: 17,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _positionedRegion(
-    BuildContext context,
-    StackPosition position,
-    _JobRegionConfig config,
-  ) {
-    final widgetKey = config.keyName.replaceAll('_', '-');
-    return Positioned(
-      left: position.getX(320),
-      right: position.getX(75),
-      top: position.getY(config.top),
-      height: position.getHeight(72),
-      child: GestureDetector(
-        key: Key('user-job-$widgetKey'),
-        behavior: HitTestBehavior.opaque,
-        onTap: () => _selectRegion(context, config),
-        child: ColoredBox(
-          color: Colors.white,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Obx(() {
-              final value = logic.valueOf(config.keyName);
-              return BaseText(
-                key: Key('user-job-$widgetKey-value'),
-                text: value.isEmpty ? '请选择省、市、区（县）' : value,
-                color: value.isEmpty
-                    ? const Color(0xFFB7BCC5)
-                    : const Color(0xFF181818),
-                fontSize: 15,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              );
-            }),
+class _JobSameResidenceSwitch extends StatelessWidget {
+  const _JobSameResidenceSwitch({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        key: const Key('user-job-same-residence-track'),
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        width: 52,
+        height: 30,
+        padding: const EdgeInsets.all(2),
+        decoration: BoxDecoration(
+          color: value ? const Color(0xFF0075F6) : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: value
+                ? const Color(0xFF0075F6)
+                : const Color(0xFFBFC4CC),
+          ),
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            width: 26,
+            height: 26,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _NativeFormRow extends StatelessWidget {
+  const _NativeFormRow({
+    super.key,
+    required this.label,
+    required this.value,
+    this.valueKey,
+    this.required = false,
+    this.enabled = true,
+    this.showArrow = false,
+    this.allowWrap = false,
+    this.valueColor = const Color(0xFF181818),
+    this.onTap,
+  });
+
+  final String label;
+  final String value;
+  final Key? valueKey;
+  final bool required;
+  final bool enabled;
+  final bool showArrow;
+  final bool allowWrap;
+  final Color valueColor;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 52),
+          margin: const EdgeInsets.symmetric(horizontal: 18),
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: Color(0xFFE8E8E8))),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 100.w,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (required)
+                      const BaseText(
+                        text: '*',
+                        color: Color(0xFFDC1717),
+                        fontSize: 16,
+                      ),
+                    Flexible(
+                      child: BaseText(
+                        text: label,
+                        color: const Color(0xFF181818),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: BaseText(
+                  key: valueKey,
+                  text: value,
+                  color: valueColor,
+                  fontSize: 16,
+                  maxLines: allowWrap ? null : 1,
+                  overflow:
+                      allowWrap ? TextOverflow.visible : TextOverflow.ellipsis,
+                  height: 1.45,
+                ),
+              ),
+              if (showArrow) ...[
+                const SizedBox(width: 8),
+                Image(
+                  image: 'ic_mine_amount_right'.png,
+                  width: 8.w,
+                  fit: BoxFit.fitWidth,
+                  color: const Color(0xFF181818),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionGap extends StatelessWidget {
+  const _SectionGap();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 12,
+      child: ColoredBox(color: Color(0xFFF5F5F5)),
     );
   }
 }
@@ -646,7 +949,6 @@ class _JobFieldConfig {
     required this.label,
     required this.inputHint,
     required this.pageHint,
-    required this.top,
     this.keyboardType = TextInputType.text,
     this.validationKind = _JobValidationKind.none,
   });
@@ -655,16 +957,20 @@ class _JobFieldConfig {
   final String label;
   final String inputHint;
   final String pageHint;
-  final double top;
   final TextInputType keyboardType;
   final _JobValidationKind validationKind;
 }
 
 class _JobRegionConfig {
-  const _JobRegionConfig({required this.keyName, required this.top});
+  const _JobRegionConfig({
+    required this.keyName,
+    required this.label,
+    this.required = false,
+  });
 
   final String keyName;
-  final double top;
+  final String label;
+  final bool required;
 }
 
 enum _JobValidationKind { none, email, phone, detailAddress }
