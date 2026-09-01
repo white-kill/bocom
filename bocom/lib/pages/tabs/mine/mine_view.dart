@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
 import 'package:bocom/pages/other/change_nav/change_nav_view.dart';
+import 'package:bocom/pages/other/fixed_nav/fixed_nav_view.dart';
 import '../../../routes/app_pages.dart';
 import '../../../utils/sp_util.dart';
 import 'children/account_asset/account_asset_view.dart';
@@ -78,7 +79,7 @@ class MinePage extends BaseStateless {
           image: 'nav_right_set'.png,
           width: 22.w,
           height: 22.w,
-        ).withOnTap(onTap: (){
+        ).withOnTap(onTap: () {
           Get.to(() => SettingPage());
         }),
         SizedBox(
@@ -130,6 +131,8 @@ class MinePage extends BaseStateless {
         StackPosition(designWidth: 1080, designHeight: 710, deviceWidth: 1.sw);
     StackPosition position4 =
         StackPosition(designWidth: 1080, designHeight: 532, deviceWidth: 1.sw);
+    StackPosition position5 =
+        StackPosition(designWidth: 1080, designHeight: 1077, deviceWidth: 1.sw);
     return ListView(
       padding: EdgeInsets.zero,
       physics: const ClampingScrollPhysics(),
@@ -168,33 +171,33 @@ class MinePage extends BaseStateless {
                     fit: BoxFit.fill,
                   ),
                 ),
-            Positioned(
-                left: position1.getX(70),
-                top: position1.getY(255) - backgroundCropTop,
-                child: Image(
-                  image: 'mine_user_icon'.png,
-                  width: position1.getWidth(130),
-                  fit: BoxFit.fitWidth,
-                )),
-            Positioned(
-                left: position1.getX(250),
-                top: position1.getY(240) - backgroundCropTop,
-                child: BaseText(
-                  text: AppConfig.config.abcLogic.realName(),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 19,
-                    color: Color(0xFF181818),
-                  ),
-                )),
-            Positioned(
-                left: position1.getX(250),
-                top: position1.getY(330) - backgroundCropTop,
-                child: const BaseText(
-                  text: '开启财富管理之旅',
-                  fontSize: 13,
-                  color: Color(0xFF878787),
-                )),
+                Positioned(
+                    left: position1.getX(70),
+                    top: position1.getY(255) - backgroundCropTop,
+                    child: Image(
+                      image: 'mine_user_icon'.png,
+                      width: position1.getWidth(130),
+                      fit: BoxFit.fitWidth,
+                    )),
+                Positioned(
+                    left: position1.getX(250),
+                    top: position1.getY(240) - backgroundCropTop,
+                    child: BaseText(
+                      text: AppConfig.config.abcLogic.realName(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 19,
+                        color: Color(0xFF181818),
+                      ),
+                    )),
+                Positioned(
+                    left: position1.getX(250),
+                    top: position1.getY(330) - backgroundCropTop,
+                    child: const BaseText(
+                      text: '开启财富管理之旅',
+                      fontSize: 13,
+                      color: Color(0xFF878787),
+                    )),
                 Positioned(
                     left: position1.getX(250),
                     top: position1.getY(330) - backgroundCropTop,
@@ -208,81 +211,101 @@ class MinePage extends BaseStateless {
                     top: position1.getY(230) - backgroundCropTop,
                     width: position1.getWidth(700),
                     height: position1.getHeight(170),
-                    child: Container().withOnTap(onTap: (){
+                    child: Container().withOnTap(onTap: () {
                       Get.to(() => UserInfoPage());
                     })),
-            // 借记卡积分
-            Positioned(
-                left: position1.getX(80),
-                bottom: position1.getY(70),
-                child: SizedBox(
-                  width: position1.getWidth(130),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      BaseText(
-                        text: '0',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        height: 1.0,
-                        strutStyle: StrutStyle(fontSize: 16, height: 1),
-                        color: Color(0xFF181818),
-                      )
-                    ],
-                  ),
-                )),
-            Positioned(
-                left: position1.getX(290),
-                bottom: position1.getY(70),
-                child: SizedBox(
-                  width: position1.getWidth(130),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      BaseText(
-                        text: '0',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        height: 1.0,
-                        strutStyle: StrutStyle(fontSize: 16, height: 1),
-                        color: Color(0xFF181818),
-                      )
-                    ],
-                  ),
-                )),
-            Positioned(
-                left: position1.getX(515),
-                bottom: position1.getY(70),
-                child: SizedBox(
-                  width: position1.getWidth(130),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      BaseText(
-                        text: '0',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        height: 1.0,
-                        strutStyle: StrutStyle(fontSize: 16, height: 1),
-                        color: Color(0xFF181818),
+                // 借记卡积分
+                Positioned(
+                    left: position1.getX(80),
+                    bottom: position1.getY(70),
+                    child: SizedBox(
+                      width: position1.getWidth(130),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          BaseText(
+                            text: '0',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            height: 1.0,
+                            strutStyle: StrutStyle(fontSize: 16, height: 1),
+                            color: Color(0xFF181818),
+                          )
+                        ],
                       ),
-                      SizedBox(
-                        width: 2,
+                    )),
+                // 信用卡积分
+                Positioned(
+                    left: position1.getX(290),
+                    bottom: position1.getY(70),
+                    child: SizedBox(
+                      width: position1.getWidth(130),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          BaseText(
+                            text: '0',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            height: 1.0,
+                            strutStyle: StrutStyle(fontSize: 16, height: 1),
+                            color: Color(0xFF181818),
+                          )
+                        ],
                       ),
-                      BaseText(
-                        text: '张',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        height: 1.0,
-                        strutStyle: StrutStyle(fontSize: 16, height: 1),
-                        color: Color(0xFF181818),
-                      )
-                    ],
-                  ),
-                )),
+                    )),
+                // 优惠券
+                Positioned(
+                    left: position1.getX(515),
+                    bottom: position1.getY(70),
+                    child: SizedBox(
+                      width: position1.getWidth(130),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          BaseText(
+                            text: '0',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            height: 1.0,
+                            strutStyle: StrutStyle(fontSize: 16, height: 1),
+                            color: Color(0xFF181818),
+                          ),
+                          SizedBox(
+                            width: 2,
+                          ),
+                          BaseText(
+                            text: '张',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            height: 1.0,
+                            strutStyle: StrutStyle(fontSize: 16, height: 1),
+                            color: Color(0xFF181818),
+                          )
+                        ],
+                      ),
+                    )),
+                // 更多权益
+                Positioned(
+                    right: position1.getX(230),
+                    bottom: position1.getY(70),
+                    width: position1.getWidth(130),
+                    height: position1.getHeight(140),
+                    child: Container().withOnTap(onTap: () {
+                      Get.toNamed(Routes.homeCouponCenter);
+                    })),
+                // 去领券
+                Positioned(
+                    right: position1.getX(60),
+                    bottom: position1.getY(70),
+                    width: position1.getWidth(130),
+                    height: position1.getHeight(140),
+                    child: Container().withOnTap(onTap: () {
+                      Get.toNamed(Routes.homeCouponCenter);
+                    })),
               ],
             ),
           ),
@@ -518,6 +541,15 @@ class MinePage extends BaseStateless {
                 });
               }),
             ),
+            // 交行福利季
+            Positioned(
+                right: position1.getX(0),
+                bottom: position1.getY(0),
+                width: 1.sw,
+                height: position1.getHeight(100),
+                child: Container().withOnTap(onTap: () {
+                  Get.toNamed(Routes.homeWelfareSeason);
+                })),
           ],
         ),
         Stack(
@@ -593,10 +625,38 @@ class MinePage extends BaseStateless {
             ),
           ],
         ),
-        Image(
-          image: 'bg_mine_5'.png3x,
-          width: 1.sw,
-          fit: BoxFit.fitWidth,
+        Stack(
+          children: [
+            Image(
+              image: 'bg_mine_5'.png3x,
+              width: 1.sw,
+              fit: BoxFit.fitWidth,
+            ),
+            // 惠民贷
+            Positioned(
+                right: position5.getX(0),
+                top: position5.getY(0),
+                width: 1.sw,
+                height: position5.getHeight(350),
+                child: Container().withOnTap(
+                    onTap: () {
+                  Get.toNamed(Routes.homeConsumerLoan);
+                })),
+            // 支付设置
+            Positioned(
+                left: position5.getX(120),
+                top: position5.getY(700),
+                width: position5.getWidth(120),
+                height: position5.getHeight(120),
+                child: Container().withOnTap(
+                    onTap: () {
+                  // 支付设置
+                  Get.to(() => FixedNavPage(), arguments: {
+                    'image': 'bg_set_zfsz',
+                    'title': '支付设置',
+                  });
+                })),
+          ],
         ),
         Image(
           image: 'bg_mine_6'.png3x,

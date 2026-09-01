@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:bocom/routes/app_pages.dart';
 import 'package:bocom/pages/other/change_nav/change_nav_view.dart';
 import 'package:bocom/pages/other/fixed_nav/fixed_nav_view.dart';
 import 'package:wb_base_widget/text_widget/bank_text.dart';
@@ -54,6 +55,7 @@ class MineLogic extends GetxController {
       Get.to(() => AccountManagePage());
     }else if(index == 4) {
       // 活动中心
+      Get.toNamed(Routes.homeActivityCenter);
     }else if(index == 5) {
       // 我的足迹
       Get.to(() => FixedNavPage(), arguments: {
