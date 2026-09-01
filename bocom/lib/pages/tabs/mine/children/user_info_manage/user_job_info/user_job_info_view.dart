@@ -19,7 +19,6 @@ class UserJobInfoPage extends BaseStateless {
     final phone = AppConfig.config.abcLogic.phone();
     return UserJobInfoLogic(
       initialValues: {
-        UserJobInfoLogic.emailKey: '754***@QQ.COM',
         if (phone.isNotEmpty) UserJobInfoLogic.residencePhoneKey: phone,
       },
     );
@@ -30,7 +29,7 @@ class UserJobInfoPage extends BaseStateless {
       keyName: UserJobInfoLogic.emailKey,
       label: 'Email地址',
       inputHint: '请输入您的电子邮箱地址',
-      pageHint: '请输入您的电子邮箱地址',
+      pageHint: '',
       top: 70,
       keyboardType: TextInputType.emailAddress,
       validationKind: _JobValidationKind.email,
