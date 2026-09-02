@@ -764,7 +764,7 @@ class MinePage extends BaseStateless {
                 top: position5.getY(700),
                 width: position5.getWidth(140),
                 height: position5.getHeight(120),
-                child: Container(color: Colors.red.withAlpha(50)).withOnTap(
+                child: Container().withOnTap(
                     onTap: () {
                   // 代扣设置
                   Get.to(() => FixedNavPage(), arguments: {
@@ -777,7 +777,7 @@ class MinePage extends BaseStateless {
                 top: position5.getY(900),
                 width: position5.getWidth(120),
                 height: position5.getHeight(120),
-                child: Container(color: Colors.red.withAlpha(50)).withOnTap(
+                child: Container().withOnTap(
                     onTap: () {
                   // 乘车码
                   Get.to(() => ChangeNavPage(), arguments: {
@@ -796,7 +796,7 @@ class MinePage extends BaseStateless {
                 top: position5.getY(900),
                 width: position5.getWidth(140),
                 height: position5.getHeight(120),
-                child: Container(color: Colors.red.withAlpha(50)).withOnTap(
+                child: Container().withOnTap(
                     onTap: () {
                   // 医保码
                   Get.to(() => FixedNavPage(), arguments: {
@@ -841,7 +841,7 @@ class MinePage extends BaseStateless {
                 top: position6.getY(0),
                 width: 0.5.sw,
                 height: position6.getHeight(600),
-                child: Container(color: Colors.red.withAlpha(50)).withOnTap(
+                child: Container().withOnTap(
                     onTap: () {
                   // 远程办公
                   Get.to(() => YcbgPage());
@@ -851,7 +851,7 @@ class MinePage extends BaseStateless {
                 top: position6.getY(600),
                 width: 0.5.sw,
                 height: position6.getHeight(600),
-                child: Container(color: Colors.blue.withAlpha(50)).withOnTap(
+                child: Container().withOnTap(
                     onTap: () {
                   // 我的安全
                   Get.to(() => WdaqPage());
