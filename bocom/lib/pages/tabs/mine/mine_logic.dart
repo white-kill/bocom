@@ -6,6 +6,7 @@ import 'package:bocom/pages/other/fixed_nav/fixed_nav_view.dart';
 import 'package:wb_base_widget/text_widget/bank_text.dart';
 import './children/account_manage/account_manage_view.dart';
 import './children/user_info_manage/user_info_manage_view.dart';
+import './children/zxzm/zxzm_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'mine_state.dart';
@@ -87,9 +88,37 @@ class MineLogic extends GetxController {
           SizedBox(width: 15.w,),
         ]
       });
+    }else if(index == 7) {
+      // 财富规划
+      Get.to(() => ChangeNavPage(), arguments: {
+        'image': 'bg_mine_cfgh',
+        'title': '',
+        'hideRightAction': true,
+        'isOffset': true,
+        'navColor': Colors.white,
+        'changeTitleColor': Colors.transparent,
+        'defTitleColor': Colors.transparent,
+        'showBackgroundColor': false,
+      });
+    }else if(index == 8) {
+      // 代扣管理
+      Get.to(() => FixedNavPage(), arguments: {
+        'image': 'bg_mine_dkgl',
+        'title': '代扣管理',
+      });
+    }else if(index == 9) {
+      // 我的支付
+    }else if(index == 10) {
+      // 资信证明
+      Get.to(() => ZxzmPage());
+    }else if(index == 11) {
+      // 隐私管理
+      Get.to(() => FixedNavPage(), arguments: {
+        'image': 'bg_set_ysgl',
+        'title': '隐私管理',
+      });
     }
   }
-
 
   void updateFuncScrollProgress(ScrollMetrics metrics) {
     final maxScrollExtent = metrics.maxScrollExtent;

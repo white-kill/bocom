@@ -14,6 +14,9 @@ import 'children/ledger/ledger_view.dart';
 import 'children/user_info/user_info_view.dart';
 import 'children/profit_center/profit_center_view.dart';
 import 'children/settting/setting_view.dart';
+import 'children/ycbg/ycbg_view.dart';
+import 'children/wdaq/wdaq_view.dart';
+import 'children/jjkjf/jjkjf_view.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
 
@@ -89,7 +92,54 @@ class MinePage extends BaseStateless {
           image: 'nav_right_msg'.png,
           width: 22.w,
           height: 22.w,
-        ),
+        ).withOnTap(onTap: () {
+          Get.to(() => FixedNavPage(), arguments: {
+            'image': 'bg_mine_msg',
+            'title': '消息中心',
+            'navColor': const Color(0xFFF5F5F5),
+            'rightWidget': [
+              SizedBox(
+                width: 15.w,
+              ),
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/ic_mine_msg_clear.png',
+                      width: 16.w,
+                      height: 16.w,
+                      color: const Color(0XFF181818),
+                    ),
+                    const BaseText(
+                        text: '清除未读', fontSize: 10, color: Color(0XFF181818)),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 15.w,
+              ),
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/ic_mine_msg_set.png',
+                      width: 16.w,
+                      height: 16.w,
+                      color: const Color(0XFF181818),
+                    ),
+                    const BaseText(
+                        text: '消息设置', fontSize: 10, color: Color(0XFF181818)),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 15.w,
+              ),
+            ]
+          });
+        }),
         SizedBox(
           width: 15.w,
         )
@@ -133,6 +183,8 @@ class MinePage extends BaseStateless {
         StackPosition(designWidth: 1080, designHeight: 532, deviceWidth: 1.sw);
     StackPosition position5 =
         StackPosition(designWidth: 1080, designHeight: 1077, deviceWidth: 1.sw);
+    StackPosition position6 =
+        StackPosition(designWidth: 1080, designHeight: 1562, deviceWidth: 1.sw);
     return ListView(
       padding: EdgeInsets.zero,
       physics: const ClampingScrollPhysics(),
@@ -214,26 +266,46 @@ class MinePage extends BaseStateless {
                     child: Container().withOnTap(onTap: () {
                       Get.to(() => UserInfoPage());
                     })),
+                Positioned(
+                    right: position1.getX(30),
+                    top: position1.getY(230) - backgroundCropTop,
+                    width: position1.getWidth(300),
+                    height: position1.getHeight(170),
+                    child: Container().withOnTap(onTap: () {
+                      // 每日签到
+                      Get.to(() => ChangeNavPage(), arguments: {
+                        'image': 'bg_mine_qiandao',
+                        'title': '',
+                        'hideRightAction': true,
+                        'isOffset': true,
+                        'navColor': Colors.white,
+                        'changeTitleColor': Colors.transparent,
+                        'defTitleColor': Colors.transparent,
+                        'showBackgroundColor': false,
+                      });
+                    })),
                 // 借记卡积分
                 Positioned(
                     left: position1.getX(80),
                     bottom: position1.getY(70),
                     child: SizedBox(
                       width: position1.getWidth(130),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           BaseText(
-                            text: '0',
+                            text: '${AppConfig.config.abcLogic.memberInfo.points}',
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                             height: 1.0,
-                            strutStyle: StrutStyle(fontSize: 16, height: 1),
-                            color: Color(0xFF181818),
+                            strutStyle: const StrutStyle(fontSize: 16, height: 1),
+                            color: const Color(0xFF181818),
                           )
                         ],
-                      ),
+                      ).withOnTap(onTap: () {
+                        Get.to(() => JjkjfPage());
+                      }),
                     )),
                 // 信用卡积分
                 Positioned(
@@ -241,20 +313,31 @@ class MinePage extends BaseStateless {
                     bottom: position1.getY(70),
                     child: SizedBox(
                       width: position1.getWidth(130),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           BaseText(
-                            text: '0',
+                            text: AppConfig.config.abcLogic.memberInfo.credit,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                             height: 1.0,
-                            strutStyle: StrutStyle(fontSize: 16, height: 1),
+                            strutStyle: const StrutStyle(fontSize: 16, height: 1),
                             color: Color(0xFF181818),
                           )
                         ],
-                      ),
+                      ).withOnTap(onTap: () {
+                        Get.to(() => ChangeNavPage(), arguments: {
+                          'image': 'bg_mine_xykjf',
+                          'title': '',
+                          'hideRightAction': true,
+                          'isOffset': true,
+                          'navColor': Colors.white,
+                          'changeTitleColor': Colors.transparent,
+                          'defTitleColor': Colors.transparent,
+                          'showBackgroundColor': false,
+                        });
+                      }),
                     )),
                 // 优惠券
                 Positioned(
@@ -262,22 +345,22 @@ class MinePage extends BaseStateless {
                     bottom: position1.getY(70),
                     child: SizedBox(
                       width: position1.getWidth(130),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           BaseText(
-                            text: '0',
+                            text: '${AppConfig.config.abcLogic.memberInfo.couponsNum}',
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                             height: 1.0,
-                            strutStyle: StrutStyle(fontSize: 16, height: 1),
-                            color: Color(0xFF181818),
+                            strutStyle: const StrutStyle(fontSize: 16, height: 1),
+                            color: const Color(0xFF181818),
                           ),
-                          SizedBox(
+                          const SizedBox(
                             width: 2,
                           ),
-                          BaseText(
+                          const BaseText(
                             text: '张',
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
@@ -286,7 +369,19 @@ class MinePage extends BaseStateless {
                             color: Color(0xFF181818),
                           )
                         ],
-                      ),
+                      ).withOnTap(onTap: () {
+                        // 权益中心
+                        Get.to(() => ChangeNavPage(), arguments: {
+                          'image': 'bg_mine_qyzx',
+                          'title': '',
+                          'hideRightAction': true,
+                          'isOffset': true,
+                          'navColor': Colors.white,
+                          'changeTitleColor': Colors.transparent,
+                          'defTitleColor': Colors.transparent,
+                          'showBackgroundColor': false,
+                        });
+                      }),
                     )),
                 // 更多权益
                 Positioned(
@@ -295,7 +390,17 @@ class MinePage extends BaseStateless {
                     width: position1.getWidth(130),
                     height: position1.getHeight(140),
                     child: Container().withOnTap(onTap: () {
-                      Get.toNamed(Routes.homeCouponCenter);
+                      // 权益中心
+                      Get.to(() => ChangeNavPage(), arguments: {
+                        'image': 'bg_mine_qyzx',
+                        'title': '',
+                        'hideRightAction': true,
+                        'isOffset': true,
+                        'navColor': Colors.white,
+                        'changeTitleColor': Colors.transparent,
+                        'defTitleColor': Colors.transparent,
+                        'showBackgroundColor': false,
+                      });
                     })),
                 // 去领券
                 Positioned(
@@ -638,8 +743,7 @@ class MinePage extends BaseStateless {
                 top: position5.getY(0),
                 width: 1.sw,
                 height: position5.getHeight(350),
-                child: Container().withOnTap(
-                    onTap: () {
+                child: Container().withOnTap(onTap: () {
                   Get.toNamed(Routes.homeConsumerLoan);
                 })),
             // 支付设置
@@ -648,21 +752,112 @@ class MinePage extends BaseStateless {
                 top: position5.getY(700),
                 width: position5.getWidth(120),
                 height: position5.getHeight(120),
-                child: Container().withOnTap(
-                    onTap: () {
+                child: Container().withOnTap(onTap: () {
                   // 支付设置
                   Get.to(() => FixedNavPage(), arguments: {
                     'image': 'bg_set_zfsz',
                     'title': '支付设置',
                   });
                 })),
+            Positioned(
+                left: position5.getX(320),
+                top: position5.getY(700),
+                width: position5.getWidth(140),
+                height: position5.getHeight(120),
+                child: Container(color: Colors.red.withAlpha(50)).withOnTap(
+                    onTap: () {
+                  // 代扣设置
+                  Get.to(() => FixedNavPage(), arguments: {
+                    'image': 'bg_mine_dkgl',
+                    'title': '代扣管理',
+                  });
+                })),
+            Positioned(
+                left: position5.getX(120),
+                top: position5.getY(900),
+                width: position5.getWidth(120),
+                height: position5.getHeight(120),
+                child: Container(color: Colors.red.withAlpha(50)).withOnTap(
+                    onTap: () {
+                  // 乘车码
+                  Get.to(() => ChangeNavPage(), arguments: {
+                    'image': 'bg_mine_ccm',
+                    'title': '',
+                    'hideRightAction': true,
+                    'isOffset': true,
+                    'navColor': Colors.white,
+                    'changeTitleColor': Colors.transparent,
+                    'defTitleColor': Colors.transparent,
+                    'showBackgroundColor': false,
+                  });
+                })),
+            Positioned(
+                left: position5.getX(320),
+                top: position5.getY(900),
+                width: position5.getWidth(140),
+                height: position5.getHeight(120),
+                child: Container(color: Colors.red.withAlpha(50)).withOnTap(
+                    onTap: () {
+                  // 医保码
+                  Get.to(() => FixedNavPage(), arguments: {
+                    'image': 'bg_mine_ybdzpz',
+                    'title': '医保电子凭证',
+                    'rightWidget': [
+                      Semantics(
+                        button: true,
+                        label: '客服',
+                        child: SizedBox(
+                          width: 30.w,
+                          height: 30.w,
+                          child: Center(
+                            child: Image(
+                              image: 'nav_kf_white'.png,
+                              width: 16.w,
+                              height: 16.w,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ).withOnTap(
+                          onTap: () => Get.toNamed(Routes.customerService),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 15.w,
+                      )
+                    ]
+                  });
+                })),
           ],
         ),
-        Image(
-          image: 'bg_mine_6'.png3x,
-          width: 1.sw,
-          fit: BoxFit.fitWidth,
-        ),
+        Stack(
+          children: [
+            Image(
+              image: 'bg_mine_6'.png3x,
+              width: 1.sw,
+              fit: BoxFit.fitWidth,
+            ),
+            Positioned(
+                left: position6.getX(0),
+                top: position6.getY(0),
+                width: 0.5.sw,
+                height: position6.getHeight(600),
+                child: Container(color: Colors.red.withAlpha(50)).withOnTap(
+                    onTap: () {
+                  // 远程办公
+                  Get.to(() => YcbgPage());
+                })),
+            Positioned(
+                left: position6.getX(0),
+                top: position6.getY(600),
+                width: 0.5.sw,
+                height: position6.getHeight(600),
+                child: Container(color: Colors.blue.withAlpha(50)).withOnTap(
+                    onTap: () {
+                  // 我的安全
+                  Get.to(() => WdaqPage());
+                })),
+          ],
+        )
       ],
     );
   }
