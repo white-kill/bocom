@@ -110,12 +110,12 @@ class _OutletDialogDemoPageState extends State<_OutletDialogDemoPage> {
 MemberInfoModel _demoMemberInfo() {
   final bank = MemberInfoBankList()
     ..bankName = '交通银行'
-    ..bankCard = '6222601234568431'
-    ..realName = '李晓明'
+    ..bankCard = '6222****8431'
+    ..realName = '示例用户'
     ..openOutlets = '合肥长江中路支行';
   return MemberInfoModel()
-    ..realName = '李晓明'
-    ..phone = '13866665555'
+    ..realName = '示例用户'
+    ..phone = '138****5555'
     ..city = '合肥'
     ..bankId = '301290000123'
     ..branchBelongs = '合肥长江中路支行'

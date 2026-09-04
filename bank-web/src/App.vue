@@ -39,9 +39,12 @@ export default {
         })
         this.get_user_info()
       } else {
+        const username = process.env.VUE_APP_DEMO_USERNAME
+        const password = process.env.VUE_APP_DEMO_PASSWORD
+        if (!username || !password) return
         login({
-          username: '13267077996',
-          password: '123456'
+          username,
+          password
         }).then((res) => {
           if (res.data.code === 200) {
             this.init_token({
