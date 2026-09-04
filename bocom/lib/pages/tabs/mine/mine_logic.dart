@@ -9,18 +9,40 @@ import './children/user_info_manage/user_info_manage_view.dart';
 import './children/zxzm/zxzm_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../index/index_logic.dart';
 import 'mine_state.dart';
 
-class MineLogic extends GetxController {
+class MineLogic extends GetxController with WidgetsBindingObserver {
   final MineState state = MineState();
 
   var navActionColor = Colors.white.obs;
+  final Rx<DateTime> loginTimeReference = DateTime.now().obs;
 
   final PageController funcPageController = PageController(
     viewportFraction: 1 / 5,
   );
   final RxDouble funcScrollProgress = 0.0.obs;
   final RxBool amountVisible = true.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  void onPageVisible({DateTime? now}) {
+    loginTimeReference.value = now ?? DateTime.now();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        Get.currentRoute == Routes.tabs &&
+        Get.isRegistered<IndexLogic>() &&
+        Get.find<IndexLogic>().taBarIdx.value == 4) {
+      onPageVisible();
+    }
+  }
 
   void toggleAmountVisible() {
     amountVisible.value = !amountVisible.value;
@@ -132,6 +154,7 @@ class MineLogic extends GetxController {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     funcPageController.dispose();
     super.onClose();
   }

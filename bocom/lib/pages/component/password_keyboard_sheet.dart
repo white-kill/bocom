@@ -323,7 +323,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
                 ),
               ),
             ),
-          ] else
+          ] else ...[
             Positioned(
               right: position.getX(20),
               top: position.getY(35),
@@ -379,6 +379,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
                     ),
                   ],
                 )),
+          ],
           Positioned(
             left: position.getX(98),
             top: transaction != null ? position.getY(224) : position.getY(184),

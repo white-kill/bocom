@@ -1,4 +1,5 @@
 import 'package:bocom/config/app_config.dart';
+import 'package:bocom/config/abc_config/boc_logic.dart';
 import 'package:bocom/utils/stack_position.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,6 +18,7 @@ import 'children/settting/setting_view.dart';
 import 'children/ycbg/ycbg_view.dart';
 import 'children/wdaq/wdaq_view.dart';
 import 'children/jjkjf/jjkjf_view.dart';
+import 'login_time_formatter.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
 
@@ -185,10 +187,12 @@ class MinePage extends BaseStateless {
         StackPosition(designWidth: 1080, designHeight: 1077, deviceWidth: 1.sw);
     StackPosition position6 =
         StackPosition(designWidth: 1080, designHeight: 1562, deviceWidth: 1.sw);
-    return ListView(
-      padding: EdgeInsets.zero,
-      physics: const ClampingScrollPhysics(),
-      children: [
+    return GetBuilder<BocLogic>(
+      id: 'updateUI',
+      builder: (_) => ListView(
+        padding: EdgeInsets.zero,
+        physics: const ClampingScrollPhysics(),
+        children: [
         Container(
           key: const Key('mine-status-bar-gradient-spacer'),
           width: 1.sw,
@@ -245,18 +249,16 @@ class MinePage extends BaseStateless {
                 Positioned(
                     left: position1.getX(250),
                     top: position1.getY(330) - backgroundCropTop,
-                    child: const BaseText(
-                      text: '开启财富管理之旅',
-                      fontSize: 13,
-                      color: Color(0xFF878787),
-                    )),
-                Positioned(
-                    left: position1.getX(250),
-                    top: position1.getY(330) - backgroundCropTop,
-                    child: const BaseText(
-                      text: '开启财富管理之旅',
-                      fontSize: 13,
-                      color: Color(0xFF878787),
+                    child: Obx(
+                      () => BaseText(
+                        text: formatLastLogin(
+                          AppConfig.config.abcLogic.memberInfo.loginTime,
+                          now: logic.loginTimeReference.value,
+                        ),
+                        // text: AppConfig.config.abcLogic.memberInfo.loginTime,
+                        fontSize: 13,
+                        color: const Color(0xFF878787),
+                      ),
                     )),
                 Positioned(
                     left: position1.getX(30),
@@ -858,7 +860,8 @@ class MinePage extends BaseStateless {
                 })),
           ],
         )
-      ],
+        ],
+      ),
     );
   }
 }

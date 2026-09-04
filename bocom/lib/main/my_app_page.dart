@@ -6,7 +6,10 @@ import 'package:pull_to_refresh_flutter3/pull_to_refresh_flutter3.dart';
 
 import '../config/app_config.dart';
 import '../main/app_plugin.dart';
+import '../pages/tabs/mine/mine_page_visibility_observer.dart';
 import '../routes/app_pages.dart';
+
+final _minePageVisibilityObserver = MinePageVisibilityObserver();
 
 class MyApp extends GetMaterialApp {
   const MyApp({
@@ -35,7 +38,7 @@ class MyApp extends GetMaterialApp {
 
   @override
   List<NavigatorObserver>? get navigatorObservers =>
-      [FlutterSmartDialog.observer];
+      [FlutterSmartDialog.observer, _minePageVisibilityObserver];
 
   @override
   Transition? get defaultTransition => Transition.rightToLeft;
