@@ -71,9 +71,9 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   TransactionAdvancedFilterValue _advancedFilter =
       const TransactionAdvancedFilterValue();
 
-  DateTime get _today => widget.today ?? DateTime.now();
-
   bool get _usesPreviewData => widget.billLoader == null && token.isEmpty;
+
+  DateTime get _today => widget.today ?? DateTime.now();
 
   bool get _hasActiveFilter =>
       _quickRange != null ||
@@ -112,7 +112,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     _listRefreshController = RefreshController();
     _filteredRefreshController = RefreshController();
     if (_usesPreviewData) {
-      _sections = transactionDetailMockSections;
+      _sections = _sectionsForUnfilteredDisplay(transactionDetailMockSections);
       _initialLoading = false;
     } else {
       _loadTransactions();
@@ -127,7 +127,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       final offset = math.max(0.0, _scrollController.offset);
       var sectionEnd = 0.0;
       for (var index = 0; index < _sections.length; index++) {
-        sectionEnd += 52.w + _sections[index].records.length * 94.w;
+        sectionEnd += _sectionExtent(_sections[index]);
         if (offset < sectionEnd || index == _sections.length - 1) {
           visibleMonthIndex = index;
           break;
@@ -142,6 +142,9 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       });
     }
   }
+
+  double _sectionExtent(TransactionMonthSection section) =>
+      section.records.isEmpty ? 357.w : 52.w + section.records.length * 94.w;
 
   Future<void> _scrollToTop() async {
     if (!_scrollController.hasClients) return;
@@ -498,7 +501,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       final page = await (widget.billLoader ?? loadTransactionBillPage)(params);
       if (!mounted || version != _requestVersion) return false;
       final entries = loadMore ? [..._entries, ...page.entries] : page.entries;
-      final sections = _sectionsFrom(entries);
+      final sections = _sectionsForUnfilteredDisplay(_sectionsFrom(entries));
       setState(() {
         _entries = entries;
         _sections = sections;
@@ -556,7 +559,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     await Future<void>.delayed(const Duration(milliseconds: 650));
     if (!mounted) return false;
     setState(() {
-      _sections = transactionDetailMockSections;
+      _sections = _sectionsForUnfilteredDisplay(transactionDetailMockSections);
       _visibleMonthIndex = 0;
     });
     _jumpToStartAfterLoad();
@@ -703,6 +706,47 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     return sections;
   }
 
+  List<TransactionMonthSection> _sectionsForUnfilteredDisplay(
+    List<TransactionMonthSection> sections,
+  ) {
+    if (_hasActiveFilter) {
+      return sections;
+    }
+
+    final currentMonth = _monthIndex(_today.year, _today.month);
+    if (sections.isEmpty) {
+      return [_emptyMonthSection(currentMonth)];
+    }
+
+    final sectionsByMonth = <int, TransactionMonthSection>{
+      for (final section in sections)
+        _monthIndex(section.year, section.month): section,
+    };
+    final oldestMonth = sectionsByMonth.keys.reduce(math.min);
+    if (oldestMonth > currentMonth) return sections;
+
+    final result = sections
+        .where(
+          (section) => _monthIndex(section.year, section.month) > currentMonth,
+        )
+        .toList();
+    for (var month = currentMonth; month >= oldestMonth; month--) {
+      result.add(sectionsByMonth[month] ?? _emptyMonthSection(month));
+    }
+    return result;
+  }
+
+  int _monthIndex(int year, int month) => year * 12 + month - 1;
+
+  TransactionMonthSection _emptyMonthSection(int monthIndex) =>
+      TransactionMonthSection(
+        year: monthIndex ~/ 12,
+        month: monthIndex % 12 + 1,
+        records: const [],
+        serverIncome: 0,
+        serverExpense: 0,
+      );
+
   void _jumpToStartAfterLoad() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
@@ -723,8 +767,8 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   @override
   Widget build(BuildContext context) {
     final monthText = _monthToolbarLabel;
-    final hasRecords =
-        _filterResult?.records.isNotEmpty ?? _sections.isNotEmpty;
+    final hasRecords = _filterResult?.records.isNotEmpty ??
+        _sections.any((section) => section.records.isNotEmpty);
     final mediaQuery = MediaQuery.of(context);
     final filterOverlayTop = mediaQuery.padding.top + 134.w;
     final advancedAvailableHeight = mediaQuery.size.height -
@@ -792,8 +836,12 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                                       ),
                                     );
                                   }
+                                  final section = _sections[index];
                                   return _MonthSection(
-                                    section: _sections[index],
+                                    section: section,
+                                    isCurrentMonth:
+                                        section.year == _today.year &&
+                                            section.month == _today.month,
                                     onRecordTap: _openBillDetail,
                                   );
                                 },
@@ -1454,7 +1502,7 @@ class _EmptyFilterResult extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
-            'assets/images/transaction_detail/empty_records.png',
+            'assets/images/transaction_detail/empty_records_transparent.png',
             key: const ValueKey('transaction_empty_result_image'),
             width: 111.w,
             height: 87.w,
@@ -1477,10 +1525,12 @@ class _EmptyFilterResult extends StatelessWidget {
 class _MonthSection extends StatelessWidget {
   const _MonthSection({
     required this.section,
+    required this.isCurrentMonth,
     required this.onRecordTap,
   });
 
   final TransactionMonthSection section;
+  final bool isCurrentMonth;
   final ValueChanged<TransactionRecord> onRecordTap;
 
   static final NumberFormat _amountFormat = NumberFormat('#,##0.00');
@@ -1531,18 +1581,58 @@ class _MonthSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(11.w),
             ),
             clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                for (var index = 0; index < section.records.length; index++)
-                  _TransactionRow(
-                    record: section.records[index],
-                    showDivider: index != section.records.length - 1,
-                    onTap: () => onRecordTap(section.records[index]),
+            child: section.records.isEmpty
+                ? _EmptyMonthRecords(isCurrentMonth: isCurrentMonth)
+                : Column(
+                    children: [
+                      for (var index = 0;
+                          index < section.records.length;
+                          index++)
+                        _TransactionRow(
+                          record: section.records[index],
+                          showDivider: index != section.records.length - 1,
+                          onTap: () => onRecordTap(section.records[index]),
+                        ),
+                    ],
                   ),
-              ],
-            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EmptyMonthRecords extends StatelessWidget {
+  const _EmptyMonthRecords({required this.isCurrentMonth});
+
+  final bool isCurrentMonth;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: const ValueKey('transaction_empty_month'),
+      height: 305.w,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/transaction_detail/empty_records_transparent.png',
+              key: const ValueKey('transaction_empty_month_image'),
+              width: 111.w,
+              height: 87.w,
+              fit: BoxFit.fill,
+            ),
+            SizedBox(height: 14.w),
+            Text(
+              isCurrentMonth ? '本月无交易明细记录' : '该月无交易明细记录',
+              style: TextStyle(
+                color: const Color(0xFF303030),
+                fontSize: 16.sp,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

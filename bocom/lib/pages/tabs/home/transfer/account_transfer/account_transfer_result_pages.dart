@@ -13,6 +13,8 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wb_base_widget/extension/string_extension.dart';
 
+import '../../../../../routes/app_pages.dart';
+
 const _successTemplate =
     'assets/images/account_transfer/result/transfer_success_template.png';
 const _receiptBodyTemplate =
@@ -294,6 +296,15 @@ class _AccountTransferSuccessPageState
                   height: 135,
                   semanticLabel: '继续转账',
                   onTap: widget.onContinueTransfer ?? Get.back,
+                ),
+                _hotspot(
+                  scale: scale,
+                  left: 90,
+                  top: 1160,
+                  width: 380,
+                  height: 145,
+                  semanticLabel: '转账记录',
+                  onTap: () => Get.toNamed<void>(Routes.homeTransferRecord),
                 ),
                 _hotspot(
                   scale: scale,

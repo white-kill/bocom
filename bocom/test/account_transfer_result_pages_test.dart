@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:bocom/pages/tabs/home/transfer/account_transfer/account_transfer_result_pages.dart';
+import 'package:bocom/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -58,6 +59,34 @@ void main() {
     expect(find.text('DETAIL202608121130'), findsOneWidget);
     expect(find.text('2026-08-12 11:30:00'), findsOneWidget);
     expect(find.text('人民币壹元整'), findsOneWidget);
+  });
+
+  testWidgets('转账记录跳转已有页面且查询余额暂不响应', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(440, 956));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      GetMaterialApp(
+        getPages: [
+          GetPage(
+            name: Routes.homeTransferRecord,
+            page: () => const Scaffold(body: Text('转账记录目标页')),
+          ),
+        ],
+        home: AccountTransferSuccessPage(
+          data: result,
+          billDetailLoader: (_) async => null,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel('转账记录'), findsOneWidget);
+    expect(find.bySemanticsLabel('查询余额'), findsNothing);
+
+    await tester.tap(find.bySemanticsLabel('转账记录'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('转账记录目标页'), findsOneWidget);
   });
 
   testWidgets('回执中间独立滚动且底部切换完整卡号', (tester) async {
