@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:bocom/config/dio/network.dart';
 import 'package:bocom/config/app_config.dart';
 import 'package:bocom/config/net_config/apis.dart';
+import 'package:bocom/pages/tabs/mine/children/account_asset/account_asset_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -305,6 +306,16 @@ class _AccountTransferSuccessPageState
                   height: 145,
                   semanticLabel: '转账记录',
                   onTap: () => Get.toNamed<void>(Routes.homeTransferRecord),
+                ),
+                _hotspot(
+                  scale: scale,
+                  left: 470,
+                  top: 1160,
+                  width: 350,
+                  height: 145,
+                  semanticLabel: '查询余额',
+                  onTap: () =>
+                      Get.to<void>(() => AccountAssetPage(initialTabIndex: 0)),
                 ),
                 _hotspot(
                   scale: scale,
