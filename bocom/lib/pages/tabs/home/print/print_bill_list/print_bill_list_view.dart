@@ -304,12 +304,12 @@ class PrintBillListPage extends BaseStateless {
                 record.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 16.sp),
+                style: TextStyle(fontSize: 18.sp),
               ),
             ),
             Positioned(
               left: 0,
-              top: 35.w,
+              top: 32.w,
               child: Text(
                 record.channel,
                 style: TextStyle(
@@ -324,7 +324,7 @@ class PrintBillListPage extends BaseStateless {
               child: Text(
                 DateFormat('yyyy-MM-dd HH:mm:ss').format(record.occurredAt),
                 style: TextStyle(
-                  color: const Color(0xFF969696),
+                  color: const Color(0xFFD9D7DA),
                   fontSize: 14.sp,
                 ),
               ),
@@ -345,7 +345,7 @@ class PrintBillListPage extends BaseStateless {
             ),
             Positioned(
               right: 0,
-              top: 35.w,
+              top: 32.w,
               child: Text(
                 '余额: ${record.balance.toStringAsFixed(2)}',
                 style: TextStyle(
@@ -692,7 +692,7 @@ class _FilterBar extends StatelessWidget {
                       key: const ValueKey(
                         'transaction_detail_selected_month',
                       ),
-                      color: periodExpanded
+                      color: periodExpanded || periodLabel != '近1个月'
                           ? const Color(0xFF0075F6)
                           : const Color(0xFF303030),
                       fontSize: 14,
@@ -727,7 +727,7 @@ class _FilterBar extends StatelessWidget {
                       key: const ValueKey(
                         'transaction_detail_selected_money',
                       ),
-                      color: currencyExpanded
+                      color: currencyExpanded || currencyLabel != '人民币CNY'
                           ? const Color(0xFF0075F6)
                           : const Color(0xFF303030),
                       fontSize: 14,

@@ -253,25 +253,26 @@ class _EmptyRecords extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return Padding(
+      padding: EdgeInsets.only(bottom: 70.h),
       child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/ic_common_empty.png',
-                  width: 80.w,
-                  fit: BoxFit.fitWidth,
-                ),
-                SizedBox(height: 5.h),
-                const BaseText(
-                  text: '暂无申请记录',
-                  fontSize: 15,
-                  color: Color(0xFF333333),
-                )
-              ],
-            )
-        ).withContainer(padding: EdgeInsets.only(bottom: 70.h))
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/ic_common_empty.png',
+              width: 80.w,
+              fit: BoxFit.fitWidth,
+            ),
+            SizedBox(height: 5.h),
+            const BaseText(
+              text: '暂无申请记录',
+              fontSize: 15,
+              color: Color(0xFF333333),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
