@@ -80,7 +80,7 @@ void main() {
     expect(requests.last['maxAmount'], 100);
   });
 
-  testWidgets('默认不按本月查询且日期栏展示首个可见数据月份', (tester) async {
+  testWidgets('未筛选时补齐当前月至首个数据月之间的空月份', (tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(375, 812);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -92,10 +92,10 @@ void main() {
         designSize: const Size(375, 750),
         builder: (_, child) => GetMaterialApp(home: child),
         child: TransactionDetailPage(
-          today: DateTime(2026, 8, 15),
+          today: DateTime(2026, 11, 5),
           billLoader: (params) async {
             request = Map<String, dynamic>.from(params);
-            return _singleMonthPage(DateTime(2026, 7, 24, 15, 19, 32));
+            return _pagedBillPage(1);
           },
         ),
       ),
@@ -112,8 +112,92 @@ void main() {
         const ValueKey('transaction_detail_selected_month'),
       ),
     );
-    expect(monthText.data, '2026-07');
+    expect(monthText.data, '本月');
     expect(monthText.style?.color, const Color(0xFF303030));
+    expect(find.text('2026-11'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('transaction_empty_month_image')),
+      findsAtLeastNWidgets(1),
+    );
+    expect(find.text('本月无交易明细记录'), findsOneWidget);
+    expect(find.text('导出交易明细'), findsOneWidget);
+
+    final scrollable = tester.state<ScrollableState>(
+      find
+          .descendant(
+            of: find.byKey(const ValueKey('transaction_detail_list')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    scrollable.position.jumpTo(358);
+    await tester.pump();
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('transaction_detail_selected_month')),
+          )
+          .data,
+      '2026-10',
+    );
+    expect(find.text('该月无交易明细记录'), findsAtLeastNWidgets(1));
+
+    scrollable.position.jumpTo(715);
+    await tester.pump();
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('transaction_detail_selected_month')),
+          )
+          .data,
+      '2026-09',
+    );
+
+    scrollable.position.jumpTo(1072);
+    await tester.pump();
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('transaction_detail_selected_month')),
+          )
+          .data,
+      '2026-08',
+    );
+    expect(find.text('第1页交易0'), findsOneWidget);
+  });
+
+  testWidgets('有筛选且无数据时不补本月空态', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(375, 812);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 750),
+        builder: (_, child) => GetMaterialApp(home: child),
+        child: TransactionDetailPage(
+          today: DateTime(2026, 11, 5),
+          billLoader: (params) async => params.containsKey('beginTime')
+              ? _emptyBillPage()
+              : _singleMonthPage(DateTime(2026, 8, 24, 15, 19, 32)),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('本月无交易明细记录'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('transaction_detail_selected_month')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('近一周'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('本月无交易明细记录'), findsNothing);
+    expect(find.text('无交易明细记录'), findsOneWidget);
+    expect(find.text('导出交易明细'), findsNothing);
   });
 
   testWidgets('加载更多使用第二页接口并显示三点波浪动画', (tester) async {
@@ -265,6 +349,16 @@ TransactionBillPage _singleMonthPage(DateTime occurredAt) {
     pages: 1,
     incomeTotal: 0,
     expensesTotal: 13.96,
+  );
+}
+
+TransactionBillPage _emptyBillPage() {
+  return const TransactionBillPage(
+    entries: [],
+    total: 0,
+    pages: 0,
+    incomeTotal: 0,
+    expensesTotal: 0,
   );
 }
 

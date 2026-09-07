@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:bocom/config/dio/network.dart';
 import 'package:bocom/config/app_config.dart';
 import 'package:bocom/config/net_config/apis.dart';
+import 'package:bocom/pages/tabs/mine/children/account_asset/account_asset_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wb_base_widget/extension/string_extension.dart';
+
+import '../../../../../routes/app_pages.dart';
 
 const _successTemplate =
     'assets/images/account_transfer/result/transfer_success_template.png';
@@ -294,6 +297,25 @@ class _AccountTransferSuccessPageState
                   height: 135,
                   semanticLabel: '继续转账',
                   onTap: widget.onContinueTransfer ?? Get.back,
+                ),
+                _hotspot(
+                  scale: scale,
+                  left: 90,
+                  top: 1160,
+                  width: 380,
+                  height: 145,
+                  semanticLabel: '转账记录',
+                  onTap: () => Get.toNamed<void>(Routes.homeTransferRecord),
+                ),
+                _hotspot(
+                  scale: scale,
+                  left: 470,
+                  top: 1160,
+                  width: 350,
+                  height: 145,
+                  semanticLabel: '查询余额',
+                  onTap: () =>
+                      Get.to<void>(() => AccountAssetPage(initialTabIndex: 0)),
                 ),
                 _hotspot(
                   scale: scale,

@@ -1,8 +1,13 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:bocom/config/abc_config/boc_logic.dart';
+import 'package:bocom/config/app_config.dart';
 import 'package:bocom/pages/tabs/home/transfer/account_transfer/account_transfer_result_pages.dart';
+import 'package:bocom/pages/tabs/mine/children/account_asset/account_asset_view.dart';
+import 'package:bocom/routes/app_pages.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -58,6 +63,62 @@ void main() {
     expect(find.text('DETAIL202608121130'), findsOneWidget);
     expect(find.text('2026-08-12 11:30:00'), findsOneWidget);
     expect(find.text('人民币壹元整'), findsOneWidget);
+  });
+
+  testWidgets('转账记录跳转已有页面', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(440, 956));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      GetMaterialApp(
+        getPages: [
+          GetPage(
+            name: Routes.homeTransferRecord,
+            page: () => const Scaffold(body: Text('转账记录目标页')),
+          ),
+        ],
+        home: AccountTransferSuccessPage(
+          data: result,
+          billDetailLoader: (_) async => null,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel('转账记录'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('转账记录'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('转账记录目标页'), findsOneWidget);
+  });
+
+  testWidgets('查询余额进入我的账户左侧Tab', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(440, 956));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    AppConfig.config.abcLogic = Get.put<BocLogic>(_TestBocLogic());
+
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(440, 956),
+        builder: (_, __) => GetMaterialApp(
+          home: AccountTransferSuccessPage(
+            data: result,
+            billDetailLoader: (_) async => null,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel('查询余额'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('查询余额'));
+    await tester.pumpAndSettle();
+
+    final accountPage = tester.widget<AccountAssetPage>(
+      find.byType(AccountAssetPage),
+    );
+    expect(accountPage.initialTabIndex, 0);
+    expect(find.text('我的账户'), findsOneWidget);
   });
 
   testWidgets('回执中间独立滚动且底部切换完整卡号', (tester) async {
@@ -132,4 +193,9 @@ void main() {
     expect(
         find.byKey(const Key('account-transfer-receipt-page')), findsOneWidget);
   });
+}
+
+class _TestBocLogic extends BocLogic {
+  @override
+  Future<void> memberInfoData() async {}
 }
