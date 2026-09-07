@@ -72,7 +72,7 @@ class PrintRecordPage extends BaseStateless {
                 onRefresh: () => logic.refreshRecords(state.refreshController),
                 onLoading: () =>
                     logic.loadMoreRecords(state.refreshController),
-                child: logic.records.isNotEmpty
+                child: logic.records.isEmpty
                     ? const _EmptyRecords()
                     : ListView.separated(
                         padding: EdgeInsets.only(bottom: 24.w),

@@ -260,6 +260,7 @@ class MinePage extends BaseStateless {
                         color: const Color(0xFF878787),
                       ),
                     )),
+                
                 Positioned(
                     left: position1.getX(30),
                     top: position1.getY(230) - backgroundCropTop,
