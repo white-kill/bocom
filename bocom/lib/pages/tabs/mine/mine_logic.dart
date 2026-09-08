@@ -53,6 +53,12 @@ class MineLogic extends GetxController with WidgetsBindingObserver {
     required String title,
   }) {
     if(index == 0) {
+      // 账户管理
+      Get.to(() => AccountManagePage());
+    }else if(index == 1) {
+      // 个人信息
+      Get.to(() => UserInfoManagePage());
+    }else if(index == 2) {
       // 个人主页
       Get.to(() => ChangeNavPage(), arguments: {
         'image': 'bg_personal',
@@ -64,53 +70,27 @@ class MineLogic extends GetxController with WidgetsBindingObserver {
         'defTitleColor': Colors.transparent,
         'showBackgroundColor': false,
       });
-    }else if(index == 1) {
-      // 待办
-      Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_wddb',
-        'title': '待办',
-      });
-    }else if(index == 2) {
-      // 个人信息
-      Get.to(() => UserInfoManagePage());
     }else if(index == 3) {
-      // 账户管理
-      Get.to(() => AccountManagePage());
+      // 我的支付
     }else if(index == 4) {
       // 活动中心
       Get.toNamed(Routes.homeActivityCenter);
     }else if(index == 5) {
-      // 我的足迹
+      // 代扣管理
       Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_wdzj',
-        'title': '我的足迹',
-        'rightWidget': [
-          SizedBox(width: 15.w,),
-          const Center(
-            child: BaseText(text: '编辑', fontSize: 16, color: Color(0XFF005DDA),),
-          ),
-          SizedBox(width: 15.w,),
-        ]
+        'image': 'bg_mine_dkgl',
+        'title': '代扣管理',
       });
     }else if(index == 6) {
-      // 我的收藏
-      Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_wdsc',
-        'title': '我的收藏',
-        'rightWidget': [
-          SizedBox(width: 15.w,),
-          Center(
-            child: Image.asset(
-              'assets/images/home_nav_search_light.png',
-              width: 16.w,
-              height: 16.w,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(width: 15.w,),
-        ]
-      });
+      // 资信证明
+      Get.to(() => ZxzmPage());
     }else if(index == 7) {
+      // 隐私管理
+      Get.to(() => FixedNavPage(), arguments: {
+        'image': 'bg_set_ysgl',
+        'title': '隐私管理',
+      });
+    }else if(index == 8) {
       // 财富规划
       Get.to(() => ChangeNavPage(), arguments: {
         'image': 'bg_mine_cfgh',
@@ -122,23 +102,11 @@ class MineLogic extends GetxController with WidgetsBindingObserver {
         'defTitleColor': Colors.transparent,
         'showBackgroundColor': false,
       });
-    }else if(index == 8) {
-      // 代扣管理
-      Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_mine_dkgl',
-        'title': '代扣管理',
-      });
     }else if(index == 9) {
-      // 我的支付
+
     }else if(index == 10) {
-      // 资信证明
-      Get.to(() => ZxzmPage());
+
     }else if(index == 11) {
-      // 隐私管理
-      Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_set_ysgl',
-        'title': '隐私管理',
-      });
     }
   }
 

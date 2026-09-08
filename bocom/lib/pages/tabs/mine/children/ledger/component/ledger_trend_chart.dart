@@ -17,6 +17,9 @@ class LedgerTrendChart extends StatefulWidget {
     this.month,
   });
 
+
+
+
   final List<double> incomeValues;
   final List<double> expenseValues;
   final List<String> dateValues;
@@ -33,6 +36,8 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
   static const _incomeColor = Color(0xFF5B9FF2);
   static const _expenseColor = Color(0xFFFF914D);
   late int _selectedIndex;
+  final math.Random _random = math.Random();
+  int _tooltipPlacementSeed = 0;
   bool _showCalendar = false;
   int _selectedCalendarIndex = 11;
   DateTime? _selectedCalendarDate;
@@ -52,6 +57,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
   void initState() {
     super.initState();
     _selectedIndex = _pointCount - 1;
+    _tooltipPlacementSeed = _random.nextInt(1 << 32);
   }
 
   @override
@@ -61,6 +67,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         oldWidget.incomeValues.length != widget.incomeValues.length ||
         oldWidget.expenseValues.length != widget.expenseValues.length) {
       _selectedIndex = _pointCount - 1;
+      _tooltipPlacementSeed = _random.nextInt(1 << 32);
     }
     if (oldWidget.year != widget.year) _selectedCalendarIndex = 11;
     if (oldWidget.year != widget.year || oldWidget.month != widget.month) {
@@ -134,15 +141,8 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
   Widget _buildChart(double chartWidth) {
     final selectedX = chartWidth * _selectedIndex / (_pointCount - 1);
     final plotHeight = 140.w;
-    final incomeY = _valueToChartY(
-      _values(widget.incomeValues)[_selectedIndex],
-      plotHeight,
-    );
-    final expenseY = _valueToChartY(
-      _values(widget.expenseValues)[_selectedIndex],
-      plotHeight,
-    );
-    final tooltipGap = 12.w;
+    final zeroAxisY = plotHeight * _maxY / (_maxY - _minY);
+    final tooltipGap = 20.w;
     final minimumTooltipWidth = 115.w;
     final maximumTooltipOffset = math.max(
       0.0,
@@ -155,6 +155,16 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
     final tooltipRight = (chartWidth - selectedX + tooltipGap)
         .clamp(0.0, maximumTooltipOffset)
         .toDouble();
+    final tooltipWidth = minimumTooltipWidth;
+    final tooltipX = showTooltipOnRight
+        ? tooltipLeft
+        : chartWidth - tooltipRight - tooltipWidth;
+    final tooltipTop = _tooltipTop(
+      chartWidth: chartWidth,
+      tooltipX: tooltipX,
+      tooltipWidth: tooltipWidth,
+      plotHeight: plotHeight,
+    );
     final middleYearIndex = widget.dateValues.length ~/ 2;
     final middleYearX = widget.dateValues.length > 2
         ? chartWidth * middleYearIndex / (_pointCount - 1)
@@ -197,18 +207,13 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         ),
         _selectedPoint(
           x: selectedX,
-          y: expenseY,
-          color: _expenseColor,
-        ),
-        _selectedPoint(
-          x: selectedX,
-          y: incomeY,
+          y: zeroAxisY,
           color: _incomeColor,
         ),
         Positioned(
           left: showTooltipOnRight ? tooltipLeft : null,
           right: showTooltipOnRight ? null : tooltipRight,
-          top: 5.w,
+          top: tooltipTop,
           child: _buildTooltip(),
         ),
         if (widget.isYearMode)
@@ -244,6 +249,71 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         ],
       ],
     );
+  }
+
+  double _tooltipTop({
+    required double chartWidth,
+    required double tooltipX,
+    required double tooltipWidth,
+    required double plotHeight,
+  }) {
+    // The tooltip uses a minimum width and normally renders at this height.
+    // Score several vertical slots against both lines, then use the clearest.
+    final tooltipHeight = 88.w;
+    final edgeGap = 6.w;
+    final maximumTop = math.max(edgeGap, plotHeight - tooltipHeight - edgeGap);
+    final candidates = [
+      edgeGap,
+      maximumTop,
+      (maximumTop / 2).roundToDouble(),
+    ];
+    final values = [_values(widget.incomeValues), _values(widget.expenseValues)];
+    final lineWidth = math.max(1.0, chartWidth / (_pointCount - 1));
+
+    double collisionScore(double top) {
+      var score = 0.0;
+      for (final series in values) {
+        for (var index = 0; index < series.length - 1; index++) {
+          final segmentLeft = index * lineWidth;
+          final segmentRight = (index + 1) * lineWidth;
+          final overlapLeft = math.max(tooltipX, segmentLeft);
+          final overlapRight = math.min(tooltipX + tooltipWidth, segmentRight);
+          if (overlapLeft > overlapRight) continue;
+
+          final startY = _valueToChartY(series[index], plotHeight);
+          final endY = _valueToChartY(series[index + 1], plotHeight);
+          final startRatio = (overlapLeft - segmentLeft) / lineWidth;
+          final endRatio = (overlapRight - segmentLeft) / lineWidth;
+          final overlapTop = math.min(
+            startY + (endY - startY) * startRatio,
+            startY + (endY - startY) * endRatio,
+          );
+          final overlapBottom = math.max(
+            startY + (endY - startY) * startRatio,
+            startY + (endY - startY) * endRatio,
+          );
+          if (overlapBottom >= top - 5.w &&
+              overlapTop <= top + tooltipHeight + 5.w) {
+            score += 1;
+          }
+        }
+      }
+      return score;
+    }
+
+    final lowestScore = candidates
+        .map(collisionScore)
+        .reduce(math.min);
+    final clearestCandidates = candidates
+        .where((candidate) => collisionScore(candidate) == lowestScore)
+        .toList();
+    final baseTop = clearestCandidates[
+      _tooltipPlacementSeed % clearestCandidates.length
+    ];
+    final verticalJitter = (_tooltipPlacementSeed % 13 - 6).toDouble().w;
+    return (baseTop + verticalJitter)
+        .clamp(edgeGap, maximumTop)
+        .toDouble();
   }
 
   Widget _selectedPoint({
@@ -926,7 +996,12 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         ),
         touchCallback: (event, response) {
           if (!event.isInterestedForInteractions || response?.lineBarSpots == null) return;
-          setState(() => _selectedIndex = response!.lineBarSpots!.first.spotIndex);
+          final selectedIndex = response!.lineBarSpots!.first.spotIndex;
+          if (selectedIndex == _selectedIndex) return;
+          setState(() {
+            _selectedIndex = selectedIndex;
+            _tooltipPlacementSeed = _random.nextInt(1 << 32);
+          });
         },
         getTouchedSpotIndicator: (bar, indexes) => indexes
             .map(

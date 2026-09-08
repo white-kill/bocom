@@ -9,6 +9,7 @@ import 'package:wb_base_widget/text_widget/bank_text.dart';
 
 import '../print_confim/print_export_repository.dart';
 import 'print_record_logic.dart';
+import 'print_resend_view.dart';
 import 'print_record_state.dart';
 
 class PrintRecordPage extends BaseStateless {
@@ -203,10 +204,15 @@ class _PrintRecordCard extends StatelessWidget {
           ],
           if (record.status == '已完成' && email.isNotEmpty) ...[
             SizedBox(height: 22.w),
-            const BaseText(
-              text: '重新发送',
-              fontSize: 15,
-              color: Color(0xFF0075E9),
+            GestureDetector(
+              key: Key('print-record-resend-${record.id}'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Get.to(() => PrintResendPage(record: record)),
+              child: const BaseText(
+                text: '重新发送',
+                fontSize: 15,
+                color: Color(0xFF0075E9),
+              ),
             ),
           ],
         ],

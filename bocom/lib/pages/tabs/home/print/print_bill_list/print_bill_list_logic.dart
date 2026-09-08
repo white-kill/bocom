@@ -68,6 +68,7 @@ class PrintBillListLogic extends GetxController {
       filter: advancedFilter.value,
       beginTime: beginTime.value,
       endTime: endTime.value,
+      orderSort: '2',
     );
     try {
       final page = await loadTransactionBillPage(params);
