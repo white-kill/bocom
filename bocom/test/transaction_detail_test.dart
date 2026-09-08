@@ -26,7 +26,7 @@ void main() {
       ScreenUtilInit(
         designSize: const Size(375, 750),
         builder: (_, child) => GetMaterialApp(home: child),
-        child: const TransactionDetailPage(),
+        child: TransactionDetailPage(today: DateTime(2026, 8, 15)),
       ),
     );
     await tester.pumpAndSettle();
@@ -67,7 +67,7 @@ void main() {
       ScreenUtilInit(
         designSize: const Size(375, 750),
         builder: (_, child) => GetMaterialApp(home: child),
-        child: const TransactionDetailPage(),
+        child: TransactionDetailPage(today: DateTime(2026, 8, 15)),
       ),
     );
     await tester.pumpAndSettle();
@@ -84,6 +84,15 @@ void main() {
     expect(text('-8.50').style?.fontSize, 16);
     expect(text('余额2,194.92').style?.fontSize, 14);
     expect(text('导出交易明细').style?.fontSize, 16);
+    final summaryValues = find.byKey(
+      const ValueKey('transaction_month_summary_2026-08'),
+    );
+    expect(tester.getTopRight(summaryValues).dx, closeTo(360, 0.01));
+    final summaryTexts = find.descendant(
+      of: summaryValues,
+      matching: find.byType(RichText),
+    );
+    expect(tester.getTopRight(summaryTexts.last).dx, closeTo(360, 0.01));
     expect(
       tester
           .getSize(
@@ -106,7 +115,7 @@ void main() {
       ScreenUtilInit(
         designSize: const Size(375, 750),
         builder: (_, child) => GetMaterialApp(home: child),
-        child: const TransactionDetailPage(),
+        child: TransactionDetailPage(today: DateTime(2026, 8, 15)),
       ),
     );
     await tester.pumpAndSettle();

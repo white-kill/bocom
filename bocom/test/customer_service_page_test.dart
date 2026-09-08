@@ -4,6 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
 void main() {
+  test('客服页问候语按小时切换', () {
+    expect(customerServiceGreetingForHour(0), '上午好');
+    expect(customerServiceGreetingForHour(11), '上午好');
+    expect(customerServiceGreetingForHour(12), '中午好');
+    expect(customerServiceGreetingForHour(13), '下午好');
+    expect(customerServiceGreetingForHour(17), '下午好');
+    expect(customerServiceGreetingForHour(18), '晚上好');
+    expect(customerServiceGreetingForHour(23), '晚上好');
+  });
+
   testWidgets('客服页使用主内容和固定底部切图', (tester) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 1;
@@ -30,6 +40,22 @@ void main() {
     expect(find.bySemanticsLabel('静音'), findsOneWidget);
     expect(find.bySemanticsLabel('请输入您的问题'), findsOneWidget);
     expect(find.text('请输入您的问题'), findsOneWidget);
+  });
+
+  testWidgets('客服页问候语会随时间实时刷新', (tester) async {
+    var now = DateTime(2026, 9, 8, 17, 59);
+
+    await tester.pumpWidget(
+      GetMaterialApp(home: CustomerServicePage(now: () => now)),
+    );
+
+    expect(find.text('下午好!'), findsOneWidget);
+
+    now = DateTime(2026, 9, 8, 18);
+    await tester.pump(const Duration(minutes: 1));
+
+    expect(find.text('晚上好!'), findsOneWidget);
+    expect(find.text('下午好!'), findsNothing);
   });
 
   testWidgets('客服页返回按钮可退出页面', (tester) async {

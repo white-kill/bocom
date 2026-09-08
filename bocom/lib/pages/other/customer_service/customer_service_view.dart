@@ -1,15 +1,55 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+String customerServiceGreetingForHour(int hour) {
+  assert(hour >= 0 && hour <= 23);
+  if (hour < 12) return '上午好';
+  if (hour < 13) return '中午好';
+  if (hour < 18) return '下午好';
+  return '晚上好';
+}
+
 // 在线客服页
-// 说明：主内容切图已包含状态栏预留区与自定义导航，页面从 y=0 绘制；底部快捷问题与输入区使用独立切图固定绘制。
-class CustomerServicePage extends StatelessWidget {
-  const CustomerServicePage({super.key});
+// 说明：主内容切图已包含状态栏预留区与自定义导航，页面从 y=0 绘制；问候语由 Flutter 实时覆盖，底部快捷问题与输入区使用独立切图固定绘制。
+class CustomerServicePage extends StatefulWidget {
+  const CustomerServicePage({super.key, this.now});
+
+  final DateTime Function()? now;
+
+  @override
+  State<CustomerServicePage> createState() => _CustomerServicePageState();
+}
+
+class _CustomerServicePageState extends State<CustomerServicePage> {
+  static const Duration _greetingRefreshInterval = Duration(minutes: 1);
 
   static const double _sourceWidth = 1080;
   static const double _bodySourceHeight = 2084;
   static const double _footerSourceHeight = 292;
+
+  late DateTime _currentTime;
+  Timer? _greetingTimer;
+
+  DateTime _readNow() => widget.now?.call() ?? DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _currentTime = _readNow();
+    _greetingTimer = Timer.periodic(_greetingRefreshInterval, (_) {
+      if (!mounted) return;
+      setState(() => _currentTime = _readNow());
+    });
+  }
+
+  @override
+  void dispose() {
+    _greetingTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +84,38 @@ class CustomerServicePage extends StatelessWidget {
                       'assets/images/customer_service/customer_service_body.png',
                       fit: BoxFit.fill,
                       gaplessPlayback: true,
+                    ),
+                  ),
+                  Positioned(
+                    key: const Key('customer-service-greeting'),
+                    left: 82 * scale,
+                    top: 509 * scale,
+                    width: 184 * scale,
+                    height: 76 * scale,
+                    child: ColoredBox(
+                      color: Colors.white,
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 12 * scale),
+                          child: Text(
+                            '${customerServiceGreetingForHour(_currentTime.hour)}!',
+                            maxLines: 1,
+                            textScaler: TextScaler.noScaling,
+                            style: TextStyle(
+                              color: const Color(0xFF353535),
+                              fontSize: 48 * scale,
+                              fontWeight: FontWeight.w600,
+                              height: 1,
+                            ),
+                            strutStyle: StrutStyle(
+                              fontSize: 48 * scale,
+                              height: 1.0,
+                              forceStrutHeight: true
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   _hotspot(

@@ -78,7 +78,7 @@ void main() {
     expect(amount.style?.fontSize, 36);
     expect(serialNumber.style?.fontSize, 17);
     expect(serialNumber.data, '20050004202608\n12436002416952');
-    expect(serialNumber.maxLines, isNull);
+    expect(serialNumber.maxLines, 2);
     expect(serialNumber.overflow, isNull);
     expect(
       tester
@@ -97,6 +97,30 @@ void main() {
     );
     expect(receiptTapped, isTrue);
     expect(transferAgainTapped, isTrue);
+  });
+
+  testWidgets('长流水号始终均分为两行', (tester) async {
+    const half = '12345678901234567';
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: TransferRecordDetailPage(
+          data: detail.copyWith(serialNumber: '$half$half'),
+        ),
+      ),
+    );
+
+    final serialNumber = tester.widget<Text>(
+      find.byKey(const ValueKey('transfer_record_detail_流水号')),
+    );
+    expect(serialNumber.data, '$half\n$half');
+    expect(serialNumber.maxLines, 2);
+    expect(
+      find.ancestor(
+        of: find.byKey(const ValueKey('transfer_record_detail_流水号')),
+        matching: find.byType(FittedBox),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('点击转账记录进入对应详情', (tester) async {
@@ -157,7 +181,7 @@ void main() {
     expect(find.text('超级网银快速汇款'), findsOneWidget);
     expect(find.text('0.00'), findsOneWidget);
     expect(find.text('预计实时到账'), findsOneWidget);
-    expect(find.text('DETAIL20260812\n120102'), findsOneWidget);
+    expect(find.text('DETAIL2026\n0812120102'), findsOneWidget);
     expect(find.text('测试附言'), findsOneWidget);
   });
 
@@ -175,7 +199,7 @@ void main() {
     expect(find.text('小光'), findsOneWidget);
     expect(find.text('621700****2353'), findsOneWidget);
     expect(find.text('1.00元'), findsOneWidget);
-    expect(find.text('2005000420260812436002416952'), findsOneWidget);
+    expect(find.text('20050004202608124360024169\n52'), findsOneWidget);
   });
 
   testWidgets('再转一笔回填收款人和金额', (tester) async {
@@ -193,7 +217,7 @@ void main() {
     expect(tester.widget<TextField>(fields.at(0)).controller?.text, '小光');
     expect(
       tester.widget<TextField>(fields.at(1)).controller?.text,
-      '6217001630076962353',
+      '6217 0016 3007 6962 353',
     );
     expect(
       tester.widget<TextField>(fields.at(2)).controller?.text,
