@@ -18,6 +18,7 @@ class TransactionBillQuery {
     required TransactionAdvancedFilterValue filter,
     DateTime? beginTime,
     DateTime? endTime,
+    String? orderSort,
   }) {
     final params = <String, dynamic>{
       'pageNum': pageNum,
@@ -26,6 +27,7 @@ class TransactionBillQuery {
     };
     if (beginTime != null) params['beginTime'] = _formatDate(beginTime);
     if (endTime != null) params['endTime'] = _formatDate(endTime);
+    if (orderSort != null) params['orderSort'] = orderSort;
 
     switch (filter.direction) {
       case '全部收入':

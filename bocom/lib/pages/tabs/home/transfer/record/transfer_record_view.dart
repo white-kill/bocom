@@ -1446,6 +1446,7 @@ class _TransferRecordRow extends StatelessWidget {
                           style: TextStyle(
                             color: const Color(0xFF292929),
                             fontSize: 17 * unit,
+                            fontWeight: FontWeight.w600
                           ),
                         ),
                       ),
@@ -1556,7 +1557,7 @@ class _TransferEmptyState extends StatelessWidget {
           SizedBox(height: 107 * unit),
           Center(
             child: Image.asset(
-              'assets/images/transaction_detail/empty_records.png',
+              'assets/images/transaction_detail/empty_records_transparent.png',
               width: 111 * unit,
               height: 87 * unit,
             ),

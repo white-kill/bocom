@@ -241,6 +241,21 @@ class _AccountContent extends StatelessWidget {
                     ],
                   ).withOnTap(onTap: logic.toggleAmountVisible),
                 ),
+                Positioned(
+                  right: position1.getX(310),
+                  top: position1.getY(135),
+                  child: SizedBox(
+                    height: position1.getHeight(100),
+                    width: position1.getWidth(320),
+                  ).withOnTap(
+                    onTap: () => PasswordKeyboardSheet.show(
+                      context,
+                      onCompleted: () async {
+                        await BankDetailDialog.show(context);
+                      },
+                    ),
+                  ),
+                ),
                 if (logic.accountExpandVisible.value) ...[
                   Positioned(
                     right: position1.getX(140),
@@ -259,21 +274,6 @@ class _AccountContent extends StatelessWidget {
                         .withOnTap(onTap: () {
                       Get.toNamed(Routes.transactionDetail);
                     }),
-                  ),
-                  Positioned(
-                    right: position1.getX(310),
-                    top: position1.getY(135),
-                    child: SizedBox(
-                      height: position1.getHeight(100),
-                      width: position1.getWidth(320),
-                    ).withOnTap(
-                      onTap: () => PasswordKeyboardSheet.show(
-                        context,
-                        onCompleted: () async {
-                          await BankDetailDialog.show(context);
-                        },
-                      ),
-                    ),
                   ),
                   Positioned(
                     left: position1.getX(40),

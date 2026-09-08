@@ -55,7 +55,7 @@ class AccountManageTwoPage extends BaseStateless {
                   ),
                 )),
             Positioned(
-                top: position.getY(300),
+                top: position.getY(304),
                 left: position.getX(350),
                 child: BaseText(
                   text: '￥${AppConfig.config.abcLogic.balance()}元',
@@ -71,7 +71,7 @@ class AccountManageTwoPage extends BaseStateless {
                   fontSize: 12,
                 )),
             Positioned(
-                top: position.getY(430),
+                top: position.getY(437),
                 left: position.getX(350),
                 child: const BaseText(
                   text: '柜面',

@@ -54,9 +54,10 @@ class UserBaseInfoLogic extends GetxController {
     final pinyin = value.trim();
     if (pinyin.isEmpty) return '';
 
-    final surnameSeparator = RegExp(r'\s+').firstMatch(pinyin);
-    if (surnameSeparator == null) return '***';
-    return '***${pinyin.substring(surnameSeparator.start)}';
+    final suffix = pinyin.length > 2
+        ? pinyin.substring(pinyin.length - 2)
+        : pinyin;
+    return '***$suffix';
   }
 
   bool saveDate(String value) => _save(value, state.date, _writeDate);

@@ -9,6 +9,7 @@ import 'package:wb_base_widget/text_widget/bank_text.dart';
 
 import '../print_confim/print_export_repository.dart';
 import 'print_record_logic.dart';
+import 'print_resend_view.dart';
 import 'print_record_state.dart';
 
 class PrintRecordPage extends BaseStateless {
@@ -72,7 +73,7 @@ class PrintRecordPage extends BaseStateless {
                 onRefresh: () => logic.refreshRecords(state.refreshController),
                 onLoading: () =>
                     logic.loadMoreRecords(state.refreshController),
-                child: logic.records.isNotEmpty
+                child: logic.records.isEmpty
                     ? const _EmptyRecords()
                     : ListView.separated(
                         padding: EdgeInsets.only(bottom: 24.w),
@@ -203,10 +204,15 @@ class _PrintRecordCard extends StatelessWidget {
           ],
           if (record.status == '已完成' && email.isNotEmpty) ...[
             SizedBox(height: 22.w),
-            const BaseText(
-              text: '重新发送',
-              fontSize: 15,
-              color: Color(0xFF0075E9),
+            GestureDetector(
+              key: Key('print-record-resend-${record.id}'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Get.to(() => PrintResendPage(record: record)),
+              child: const BaseText(
+                text: '重新发送',
+                fontSize: 15,
+                color: Color(0xFF0075E9),
+              ),
             ),
           ],
         ],
@@ -253,25 +259,26 @@ class _EmptyRecords extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return Padding(
+      padding: EdgeInsets.only(bottom: 70.h),
       child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/ic_common_empty.png',
-                  width: 80.w,
-                  fit: BoxFit.fitWidth,
-                ),
-                SizedBox(height: 5.h),
-                const BaseText(
-                  text: '暂无申请记录',
-                  fontSize: 15,
-                  color: Color(0xFF333333),
-                )
-              ],
-            )
-        ).withContainer(padding: EdgeInsets.only(bottom: 70.h))
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/ic_common_empty.png',
+              width: 80.w,
+              fit: BoxFit.fitWidth,
+            ),
+            SizedBox(height: 5.h),
+            const BaseText(
+              text: '暂无申请记录',
+              fontSize: 15,
+              color: Color(0xFF333333),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

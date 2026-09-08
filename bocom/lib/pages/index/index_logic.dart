@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../utils/local_notifications.dart';
 import '../../config/app_config.dart';
+import '../tabs/mine/mine_logic.dart';
 import 'index_state.dart';
 
 class IndexLogic extends GetxController {
@@ -63,6 +64,9 @@ class IndexLogic extends GetxController {
   void selectIndex(int index) {
     if (taBarIdx.value == index) return;
     taBarIdx.value = index;
+    if (index == 4 && Get.isRegistered<MineLogic>()) {
+      Get.find<MineLogic>().onPageVisible();
+    }
     update(['updateTabBar']);
   }
 

@@ -1,4 +1,5 @@
 import 'package:bocom/config/app_config.dart';
+import 'package:bocom/config/abc_config/boc_logic.dart';
 import 'package:bocom/utils/stack_position.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,6 +18,7 @@ import 'children/settting/setting_view.dart';
 import 'children/ycbg/ycbg_view.dart';
 import 'children/wdaq/wdaq_view.dart';
 import 'children/jjkjf/jjkjf_view.dart';
+import 'login_time_formatter.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
 
@@ -26,18 +28,15 @@ class MinePage extends BaseStateless {
   final MineLogic logic = Get.put(MineLogic());
   final MineState state = Get.find<MineLogic>().state;
   final List<_MineFuncItem> _funcItems = const [
-    _MineFuncItem(title: '个人主页', icon: 'mine_func_1'),
-    _MineFuncItem(title: '待办', icon: 'mine_func_2'),
-    _MineFuncItem(title: '个人信息', icon: 'mine_func_3'),
     _MineFuncItem(title: '账户管理', icon: 'mine_func_4'),
-    _MineFuncItem(title: '活动中心', icon: 'mine_func_5'),
-    _MineFuncItem(title: '我的足迹', icon: 'mine_func_6'),
-    _MineFuncItem(title: '我的收藏', icon: 'mine_func_7'),
-    _MineFuncItem(title: '财富规划', icon: 'mine_func_8'),
-    _MineFuncItem(title: '代扣管理', icon: 'mine_func_9'),
+    _MineFuncItem(title: '个人信息', icon: 'mine_func_3'),
+    _MineFuncItem(title: '个人主页', icon: 'mine_func_1'),
     _MineFuncItem(title: '我的支付', icon: 'mine_func_10'),
+    _MineFuncItem(title: '活动中心', icon: 'mine_func_5'),
+    _MineFuncItem(title: '代扣管理', icon: 'mine_func_9'),
     _MineFuncItem(title: '资信证明', icon: 'mine_func_11'),
     _MineFuncItem(title: '隐私管理', icon: 'mine_func_12'),
+    _MineFuncItem(title: '财富规划', icon: 'mine_func_8'),
   ];
 
   @override
@@ -177,6 +176,7 @@ class MinePage extends BaseStateless {
         : referenceStatusBarHeight;
     StackPosition position1 =
         StackPosition(designWidth: 1080, designHeight: 650, deviceWidth: 1.sw);
+    StackPosition position2 = StackPosition(designWidth: 1080, designHeight: 354, deviceWidth: 1.sw);
     StackPosition position3 =
         StackPosition(designWidth: 1080, designHeight: 710, deviceWidth: 1.sw);
     StackPosition position4 =
@@ -185,10 +185,12 @@ class MinePage extends BaseStateless {
         StackPosition(designWidth: 1080, designHeight: 1077, deviceWidth: 1.sw);
     StackPosition position6 =
         StackPosition(designWidth: 1080, designHeight: 1562, deviceWidth: 1.sw);
-    return ListView(
-      padding: EdgeInsets.zero,
-      physics: const ClampingScrollPhysics(),
-      children: [
+    return GetBuilder<BocLogic>(
+      id: 'updateUI',
+      builder: (_) => ListView(
+        padding: EdgeInsets.zero,
+        physics: const ClampingScrollPhysics(),
+        children: [
         Container(
           key: const Key('mine-status-bar-gradient-spacer'),
           width: 1.sw,
@@ -245,19 +247,18 @@ class MinePage extends BaseStateless {
                 Positioned(
                     left: position1.getX(250),
                     top: position1.getY(330) - backgroundCropTop,
-                    child: const BaseText(
-                      text: '开启财富管理之旅',
-                      fontSize: 13,
-                      color: Color(0xFF878787),
+                    child: Obx(
+                      () => BaseText(
+                        text: formatLastLogin(
+                          AppConfig.config.abcLogic.memberInfo.loginTime,
+                          now: logic.loginTimeReference.value,
+                        ),
+                        // text: AppConfig.config.abcLogic.memberInfo.loginTime,
+                        fontSize: 13,
+                        color: const Color(0xFF878787),
+                      ),
                     )),
-                Positioned(
-                    left: position1.getX(250),
-                    top: position1.getY(330) - backgroundCropTop,
-                    child: const BaseText(
-                      text: '开启财富管理之旅',
-                      fontSize: 13,
-                      color: Color(0xFF878787),
-                    )),
+                
                 Positioned(
                     left: position1.getX(30),
                     top: position1.getY(230) - backgroundCropTop,
@@ -422,53 +423,105 @@ class MinePage extends BaseStateless {
               width: 1.sw,
               fit: BoxFit.fitWidth,
             ),
-            Positioned.fill(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 13.w),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.w),
-                      child: SizedBox(
-                        height: 76.w,
-                        child: NotificationListener<ScrollNotification>(
-                          onNotification: (notification) {
-                            logic
-                                .updateFuncScrollProgress(notification.metrics);
-                            return false;
-                          },
-                          child: PageView.builder(
-                            controller: logic.funcPageController,
-                            padEnds: false,
-                            physics: const PageScrollPhysics(
-                              parent: ClampingScrollPhysics(),
-                            ),
-                            itemCount: _funcItems.length,
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding: EdgeInsets.only(top: 17.w),
-                                child: _MineFuncButton(
-                                  item: _funcItems[index],
-                                  onTap: () => logic.onFuncTap(
-                                    index: index,
-                                    title: _funcItems[index].title,
-                                  ),
-                                ),
-                              );
-                            },
+            Positioned(
+              top: 0,
+                left: position2.getX(30),
+                width: 1.sw - position2.getX(60),
+                height: position2.getHeight(105),
+                child: Row(
+                  children: [
+                    Container().withOnTap(onTap: (){
+                      // 待办
+                      Get.to(() => FixedNavPage(), arguments: {
+                        'image': 'bg_wddb',
+                        'title': '待办',
+                      });
+                    }).expanded(),
+                    Container().withOnTap(onTap: (){
+                      // 我的足迹
+                      Get.to(() => FixedNavPage(), arguments: {
+                        'image': 'bg_wdzj',
+                        'title': '我的足迹',
+                        'rightWidget': [
+                          SizedBox(width: 15.w,),
+                          const Center(
+                            child: BaseText(text: '编辑', fontSize: 16, color: Color(0XFF005DDA),),
                           ),
+                          SizedBox(width: 15.w,),
+                        ]
+                      });
+                    }).expanded(),
+                    Container().withOnTap(onTap: (){
+                      // 我的收藏
+                      Get.to(() => FixedNavPage(), arguments: {
+                        'image': 'bg_wdsc',
+                        'title': '我的收藏',
+                        'rightWidget': [
+                          SizedBox(width: 15.w,),
+                          Center(
+                            child: Image.asset(
+                              'assets/images/home_nav_search_light.png',
+                              width: 16.w,
+                              height: 16.w,
+                              color: Colors.black,
+                            ),
+                          ),
+                          SizedBox(width: 15.w,),
+                        ]
+                      });
+                    }).expanded(),
+                  ],
+                )
+            ),
+            Positioned(
+              left: position2.getX(30),
+                top: position2.getY(105),
+                width: 1.sw - position2.getX(60),
+                child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 13.w),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.w),
+                    child: SizedBox(
+                      height: 76.w,
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (notification) {
+                          logic
+                              .updateFuncScrollProgress(notification.metrics);
+                          return false;
+                        },
+                        child: PageView.builder(
+                          controller: logic.funcPageController,
+                          padEnds: false,
+                          physics: const PageScrollPhysics(
+                            parent: ClampingScrollPhysics(),
+                          ),
+                          itemCount: _funcItems.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: EdgeInsets.only(top: 17.w),
+                              child: _MineFuncButton(
+                                item: _funcItems[index],
+                                onTap: () => logic.onFuncTap(
+                                  index: index,
+                                  title: _funcItems[index].title,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
                   ),
-                  Obx(
-                    () => _MineFuncIndicator(
-                      progress: logic.funcScrollProgress.value,
-                    ),
+                ),
+                Obx(
+                      () => _MineFuncIndicator(
+                    progress: logic.funcScrollProgress.value,
                   ),
-                ],
-              ),
-            ),
+                ),
+              ],
+            )),
           ],
         ),
         Stack(
@@ -858,7 +911,8 @@ class MinePage extends BaseStateless {
                 })),
           ],
         )
-      ],
+        ],
+      ),
     );
   }
 }
@@ -1031,9 +1085,8 @@ class _MineFuncButton extends StatelessWidget {
             child: Center(
               child: Image(
                 image: item.icon.png,
-                width: 22.w,
                 height: 22.w,
-                fit: BoxFit.contain,
+                fit: BoxFit.fitHeight,
               ),
             ),
           ),

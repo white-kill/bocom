@@ -291,7 +291,7 @@ class PrintBillListPage extends BaseStateless {
     final record = entry.record;
     final amount = NumberFormat('#,##0.00').format(record.amount.abs());
     return SizedBox(
-      height: 94.w,
+      height: 88.w,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         child: Stack(
@@ -309,22 +309,22 @@ class PrintBillListPage extends BaseStateless {
             ),
             Positioned(
               left: 0,
-              top: 35.w,
+              top: 34.w,
               child: Text(
                 record.channel,
                 style: TextStyle(
-                  color: const Color(0xFF969696),
+                  color: const Color(0xFF8D95A0),
                   fontSize: 14.sp,
                 ),
               ),
             ),
             Positioned(
               left: 0,
-              top: 57.w,
+              top: 58.w,
               child: Text(
                 DateFormat('yyyy-MM-dd HH:mm:ss').format(record.occurredAt),
                 style: TextStyle(
-                  color: const Color(0xFF969696),
+                  color: const Color(0xFFD9D7DA),
                   fontSize: 14.sp,
                 ),
               ),
@@ -338,18 +338,18 @@ class PrintBillListPage extends BaseStateless {
                   color: record.isIncome
                       ? const Color(0xFFB12D2D)
                       : const Color(0xFF1D1D1D),
-                  fontSize: 18.sp,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
             Positioned(
               right: 0,
-              top: 35.w,
+              top: 34.w,
               child: Text(
                 '余额: ${record.balance.toStringAsFixed(2)}',
                 style: TextStyle(
-                  color: const Color(0xFF969696),
+                  color: const Color(0xFF8D95A0),
                   fontSize: 14.sp,
                 ),
               ),
@@ -692,7 +692,7 @@ class _FilterBar extends StatelessWidget {
                       key: const ValueKey(
                         'transaction_detail_selected_month',
                       ),
-                      color: periodExpanded
+                      color: periodExpanded || periodLabel != '近1个月'
                           ? const Color(0xFF0075F6)
                           : const Color(0xFF303030),
                       fontSize: 14,
@@ -727,7 +727,7 @@ class _FilterBar extends StatelessWidget {
                       key: const ValueKey(
                         'transaction_detail_selected_money',
                       ),
-                      color: currencyExpanded
+                      color: currencyExpanded || currencyLabel != '人民币CNY'
                           ? const Color(0xFF0075F6)
                           : const Color(0xFF303030),
                       fontSize: 14,

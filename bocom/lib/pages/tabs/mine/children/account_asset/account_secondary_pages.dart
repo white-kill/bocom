@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:bocom/utils/stack_position.dart';
+import 'package:wb_base_widget/wb_base_widget.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 
 import '../../../../../config/abc_config/boc_logic.dart';
 import '../../../../../routes/app_pages.dart';
@@ -343,60 +347,39 @@ Future<void> showAccountOutletDialog(BuildContext context) {
         child: AccountLiveDataBuilder(
           builder: (_, data) => LayoutBuilder(
             builder: (_, constraints) {
-              final width = constraints.maxWidth - 30;
-              final scale = width / 1000;
+              // final width = constraints.maxWidth - 30;
+              // final scale = width / 1000;
+              StackPosition position = StackPosition(designWidth: 1000, designHeight: 694, deviceWidth: 1.sw);
               return SizedBox(
                 key: const Key('account-outlet-dialog'),
-                width: width,
-                height: 694 * scale,
                 child: Stack(
                   children: [
-                    Positioned.fill(
-                      child: Image.asset(
-                        'assets/images/account_outlet_dialog.png',
-                        fit: BoxFit.fill,
-                      ),
+                    Image(image: 'account_outlet_dialog'.png, width: 1.sw - position.getX(80), fit: BoxFit.fitWidth,),
+                    Positioned(
+                      right: position.getX(50),
+                      top: position.getY(218),
+                      child: BaseText(
+                        text: data.branch,
+                        fontSize: 14,
+                        color: const Color(0xFF222222),
+                        fontWeight: FontWeight.w400,
+                      )
                     ),
                     Positioned(
-                      left: 250 * scale,
-                      top: 238 * scale,
-                      right: 50 * scale,
-                      child: Text(
-                        data.branch,
-                        key: const Key('account-outlet-live-branch'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        right: position.getX(50),
+                        top: position.getY(310),
+                        child: BaseText(
+                          text: data.paymentSystemNumber,
+                          fontSize: 14,
                           color: const Color(0xFF222222),
-                          fontSize: 38 * scale,
                           fontWeight: FontWeight.w400,
-                        ),
-                      ),
+                        )
                     ),
                     Positioned(
-                      left: 330 * scale,
-                      // The numeric fallback font's baseline sits 9.6 source
-                      // px higher; compensate to preserve the measured 93 px
-                      // reference baseline gap between the two rows.
-                      top: 340.6 * scale,
-                      right: 50 * scale,
-                      child: Text(
-                        data.paymentSystemNumber,
-                        key: const Key('account-outlet-live-system-number'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: const Color(0xFF222222),
-                          fontSize: 38 * scale,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 42 * scale,
-                      bottom: 40 * scale,
-                      width: 437 * scale,
-                      height: 122 * scale,
+                      left: position.getX(40),
+                      bottom: position.getY(40),
+                      width: 1.sw - position.getX(80),
+                      height: position.getHeight(120),
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () => Navigator.of(dialogContext).pop(),

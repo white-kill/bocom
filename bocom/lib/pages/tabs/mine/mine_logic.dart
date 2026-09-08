@@ -9,18 +9,40 @@ import './children/user_info_manage/user_info_manage_view.dart';
 import './children/zxzm/zxzm_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../index/index_logic.dart';
 import 'mine_state.dart';
 
-class MineLogic extends GetxController {
+class MineLogic extends GetxController with WidgetsBindingObserver {
   final MineState state = MineState();
 
   var navActionColor = Colors.white.obs;
+  final Rx<DateTime> loginTimeReference = DateTime.now().obs;
 
   final PageController funcPageController = PageController(
     viewportFraction: 1 / 5,
   );
   final RxDouble funcScrollProgress = 0.0.obs;
   final RxBool amountVisible = true.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  void onPageVisible({DateTime? now}) {
+    loginTimeReference.value = now ?? DateTime.now();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        Get.currentRoute == Routes.tabs &&
+        Get.isRegistered<IndexLogic>() &&
+        Get.find<IndexLogic>().taBarIdx.value == 4) {
+      onPageVisible();
+    }
+  }
 
   void toggleAmountVisible() {
     amountVisible.value = !amountVisible.value;
@@ -31,6 +53,12 @@ class MineLogic extends GetxController {
     required String title,
   }) {
     if(index == 0) {
+      // 账户管理
+      Get.to(() => AccountManagePage());
+    }else if(index == 1) {
+      // 个人信息
+      Get.to(() => UserInfoManagePage());
+    }else if(index == 2) {
       // 个人主页
       Get.to(() => ChangeNavPage(), arguments: {
         'image': 'bg_personal',
@@ -42,53 +70,27 @@ class MineLogic extends GetxController {
         'defTitleColor': Colors.transparent,
         'showBackgroundColor': false,
       });
-    }else if(index == 1) {
-      // 待办
-      Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_wddb',
-        'title': '待办',
-      });
-    }else if(index == 2) {
-      // 个人信息
-      Get.to(() => UserInfoManagePage());
     }else if(index == 3) {
-      // 账户管理
-      Get.to(() => AccountManagePage());
+      // 我的支付
     }else if(index == 4) {
       // 活动中心
       Get.toNamed(Routes.homeActivityCenter);
     }else if(index == 5) {
-      // 我的足迹
+      // 代扣管理
       Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_wdzj',
-        'title': '我的足迹',
-        'rightWidget': [
-          SizedBox(width: 15.w,),
-          const Center(
-            child: BaseText(text: '编辑', fontSize: 16, color: Color(0XFF005DDA),),
-          ),
-          SizedBox(width: 15.w,),
-        ]
+        'image': 'bg_mine_dkgl',
+        'title': '代扣管理',
       });
     }else if(index == 6) {
-      // 我的收藏
-      Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_wdsc',
-        'title': '我的收藏',
-        'rightWidget': [
-          SizedBox(width: 15.w,),
-          Center(
-            child: Image.asset(
-              'assets/images/home_nav_search_light.png',
-              width: 16.w,
-              height: 16.w,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(width: 15.w,),
-        ]
-      });
+      // 资信证明
+      Get.to(() => ZxzmPage());
     }else if(index == 7) {
+      // 隐私管理
+      Get.to(() => FixedNavPage(), arguments: {
+        'image': 'bg_set_ysgl',
+        'title': '隐私管理',
+      });
+    }else if(index == 8) {
       // 财富规划
       Get.to(() => ChangeNavPage(), arguments: {
         'image': 'bg_mine_cfgh',
@@ -100,23 +102,11 @@ class MineLogic extends GetxController {
         'defTitleColor': Colors.transparent,
         'showBackgroundColor': false,
       });
-    }else if(index == 8) {
-      // 代扣管理
-      Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_mine_dkgl',
-        'title': '代扣管理',
-      });
     }else if(index == 9) {
-      // 我的支付
+
     }else if(index == 10) {
-      // 资信证明
-      Get.to(() => ZxzmPage());
+
     }else if(index == 11) {
-      // 隐私管理
-      Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_set_ysgl',
-        'title': '隐私管理',
-      });
     }
   }
 
@@ -132,6 +122,7 @@ class MineLogic extends GetxController {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     funcPageController.dispose();
     super.onClose();
   }
