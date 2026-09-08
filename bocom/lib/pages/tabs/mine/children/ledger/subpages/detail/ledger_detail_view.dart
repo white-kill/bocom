@@ -157,6 +157,8 @@ class _LedgerDetailPageState extends State<LedgerDetailPage> {
                   fallback: _detail?.merchantBranch ?? '')),
           _detailRow('交易渠道', _value(_detail?.transactionChannel,
               fallback: _detail?.merchantBranch ?? '')),
+          if (_detail?.remark?.isNotNullOrEmpty == true)
+            _detailRow('交易摘要', _value(_detail?.remark)),
         ],
       ),
     );

@@ -7,6 +7,7 @@ import 'package:wb_base_widget/text_widget/bank_text.dart';
 import './children/account_manage/account_manage_view.dart';
 import './children/user_info_manage/user_info_manage_view.dart';
 import './children/zxzm/zxzm_view.dart';
+import './children/mine_pay/mine_pay_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../index/index_logic.dart';
@@ -72,6 +73,7 @@ class MineLogic extends GetxController with WidgetsBindingObserver {
       });
     }else if(index == 3) {
       // 我的支付
+      Get.to(() => MinePayPage());
     }else if(index == 4) {
       // 活动中心
       Get.toNamed(Routes.homeActivityCenter);
@@ -102,11 +104,6 @@ class MineLogic extends GetxController with WidgetsBindingObserver {
         'defTitleColor': Colors.transparent,
         'showBackgroundColor': false,
       });
-    }else if(index == 9) {
-
-    }else if(index == 10) {
-
-    }else if(index == 11) {
     }
   }
 

@@ -38,11 +38,7 @@ class LedgerBillItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final detail = item.billDetail;
-    final title = item.oppositeName.isNotEmpty
-        ? item.oppositeName
-        : (detail?.oppositeName.isNotEmpty == true
-            ? detail!.oppositeName
-            : item.excerpt);
+    final title = item.excerpt;
     final card = detail?.bankCard.isNotEmpty == true
         ? '借记卡(${detail?.bankCard.substring(detail.bankCard.length - 6)})'
         : (detail?.bankName ?? '');
