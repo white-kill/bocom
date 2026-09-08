@@ -133,6 +133,7 @@ void main() {
     expect(find.byKey(const Key('receipt-fixed-footer')), findsOneWidget);
     expect(find.text('621700****2353'), findsOneWidget);
     expect(find.text('622262****2910'), findsOneWidget);
+    expect(find.text('20050004202608124360023075\n20'), findsOneWidget);
 
     final footerBefore = tester.getTopLeft(
       find.byKey(const Key('receipt-fixed-footer')),

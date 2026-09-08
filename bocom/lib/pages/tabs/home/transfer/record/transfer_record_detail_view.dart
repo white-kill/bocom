@@ -556,18 +556,40 @@ class _TransferDetailRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              row.copyable ? _serialNumberDisplayText(row.value) : row.value,
-              key: ValueKey('transfer_record_detail_${row.label}'),
-              maxLines: row.copyable ? null : 1,
-              overflow: row.copyable ? null : TextOverflow.ellipsis,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                color: const Color(0xFF303030),
-                fontSize: 17 * unit,
-                height: 1.35,
-              ),
-            ),
+            child: row.copyable
+                ? SizedBox(
+                    height: 52 * unit,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.topRight,
+                      child: Text(
+                        _serialNumberDisplayText(row.value),
+                        key: ValueKey(
+                          'transfer_record_detail_${row.label}',
+                        ),
+                        maxLines: 2,
+                        softWrap: false,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: const Color(0xFF303030),
+                          fontSize: 17 * unit,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  )
+                : Text(
+                    row.value,
+                    key: ValueKey('transfer_record_detail_${row.label}'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: const Color(0xFF303030),
+                      fontSize: 17 * unit,
+                      height: 1.35,
+                    ),
+                  ),
           ),
           if (row.copyable) ...[
             SizedBox(width: 10 * unit),
@@ -703,9 +725,9 @@ String _firstText(Iterable<dynamic> values, {String fallback = ''}) {
 }
 
 String _serialNumberDisplayText(String value) {
-  const firstLineLength = 14;
   final text = value.trim();
-  if (text.length <= firstLineLength || text.contains('\n')) return text;
+  if (text.length <= 14 || text.contains('\n')) return text;
+  final firstLineLength = (text.length + 1) ~/ 2;
   return '${text.substring(0, firstLineLength)}\n'
       '${text.substring(firstLineLength)}';
 }

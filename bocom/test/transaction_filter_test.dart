@@ -169,6 +169,31 @@ void main() {
     expect(selectedDate().data, '近三个月');
     expect(selectedDate().style?.color, const Color(0xFF0077DF));
 
+    final summary = find.byKey(const ValueKey('transaction_filter_count'));
+    final summaryY = tester.getCenter(summary).dy;
+    final toolbarY = tester
+        .getCenter(
+          find.byKey(const ValueKey('transaction_detail_selected_month')),
+        )
+        .dy;
+
+    await tester.drag(
+      find.byKey(const ValueKey('transaction_filtered_list')),
+      const Offset(0, -80),
+    );
+    await tester.pump();
+
+    expect(summaryY, greaterThan(toolbarY));
+    expect(summary, findsNothing);
+    expect(
+      tester
+          .getCenter(
+            find.byKey(const ValueKey('transaction_detail_selected_month')),
+          )
+          .dy,
+      closeTo(toolbarY, 0.01),
+    );
+
     await tester.drag(
       find.byKey(const ValueKey('transaction_filtered_list')),
       const Offset(0, -1000),

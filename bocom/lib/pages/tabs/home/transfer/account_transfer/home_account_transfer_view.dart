@@ -72,6 +72,21 @@ double _supplementalReferencePixels(BuildContext context, double pixels) {
       pixels;
 }
 
+String compactTransferAccountNumber(String value) {
+  return value.replaceAll(RegExp(r'\s+'), '');
+}
+
+String formatTransferAccountNumber(String value) {
+  final compact = compactTransferAccountNumber(value);
+  if (compact.isEmpty) return '';
+  final groups = <String>[];
+  for (var index = 0; index < compact.length; index += 4) {
+    final end = (index + 4).clamp(0, compact.length);
+    groups.add(compact.substring(index, end));
+  }
+  return groups.join(' ');
+}
+
 // 账号转账页
 // 说明：当前页面是活页面，表单、账户信息和交互状态均由 Flutter 原生绘制。
 class HomeAccountTransferPage extends StatefulWidget {
@@ -218,7 +233,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   void _fillRecipient(ContactsModel? recipient) {
     if (recipient == null) return;
     _nameController.text = recipient.name;
-    _accountController.text = recipient.bankCard;
+    _accountController.text = formatTransferAccountNumber(recipient.bankCard);
     _bankController.text = recipient.bankName;
   }
 
@@ -235,7 +250,9 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
   Future<void> _scanBankCard() async {
     FocusScope.of(context).unfocus();
     final cardNumber = await Get.to<String>(() => const BankCardScannerPage());
-    if (cardNumber != null) _accountController.text = cardNumber;
+    if (cardNumber != null) {
+      _accountController.text = formatTransferAccountNumber(cardNumber);
+    }
   }
 
   Future<void> _chooseBank() async {
@@ -266,7 +283,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
     }
     final recipient = ContactsModel()
       ..name = _nameController.text.trim()
-      ..bankCard = _accountController.text.trim()
+      ..bankCard = compactTransferAccountNumber(_accountController.text)
       ..bankName = _bankController.text.trim();
     final amount = _displayAmount(_amountController.text.trim());
     setState(() => _isSubmitting = true);
@@ -635,10 +652,12 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
               ),
             ),
             _TransferInputRow(
+              fieldKey: const Key('transfer-recipient-account-field'),
               label: '账号',
               hint: '借记卡号/信用卡号/企业账号',
               controller: _accountController,
               keyboardType: TextInputType.number,
+              inputFormatters: const [_BankAccountNumberInputFormatter()],
               suffix: _TransferSuffixButton(
                 label: '扫描银行卡',
                 onPressed: _scanBankCard,
@@ -917,6 +936,37 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
       ),
+    );
+  }
+}
+
+class _BankAccountNumberInputFormatter extends TextInputFormatter {
+  const _BankAccountNumberInputFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final formatted = formatTransferAccountNumber(digits);
+    final safeSelectionEnd = newValue.selection.end.clamp(
+      0,
+      newValue.text.length,
+    );
+    final digitsBeforeCursor = newValue.text
+        .substring(0, safeSelectionEnd)
+        .replaceAll(RegExp(r'\D'), '')
+        .length;
+    final spacesBeforeCursor =
+        digitsBeforeCursor == 0 ? 0 : (digitsBeforeCursor - 1) ~/ 4;
+    final cursor = (digitsBeforeCursor + spacesBeforeCursor).clamp(
+      0,
+      formatted.length,
+    );
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: cursor),
     );
   }
 }
@@ -1511,16 +1561,8 @@ class _QuickRecipientCard extends StatelessWidget {
 
   final ContactsModel recipient;
 
-  String get _formattedCardNumber {
-    final compact = recipient.bankCard.replaceAll(RegExp(r'\s+'), '');
-    if (compact.isEmpty) return '';
-    final groups = <String>[];
-    for (var index = 0; index < compact.length; index += 4) {
-      final end = (index + 4).clamp(0, compact.length);
-      groups.add(compact.substring(index, end));
-    }
-    return groups.join(' ');
-  }
+  String get _formattedCardNumber =>
+      formatTransferAccountNumber(recipient.bankCard);
 
   @override
   Widget build(BuildContext context) {

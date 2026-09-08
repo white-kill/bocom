@@ -17,7 +17,7 @@ void main() {
       ScreenUtilInit(
         designSize: const Size(375, 750),
         builder: (_, child) => GetMaterialApp(home: child),
-        child: const TransactionDetailPage(),
+        child: TransactionDetailPage(today: DateTime(2026, 8, 15)),
       ),
     );
     await tester.pumpAndSettle();

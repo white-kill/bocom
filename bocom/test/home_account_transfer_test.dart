@@ -10,6 +10,17 @@ import 'package:get/get.dart';
 void main() {
   tearDown(Get.reset);
 
+  test('转账账号显示分组但数据不含空格', () {
+    expect(
+      formatTransferAccountNumber('1111222233334444555'),
+      '1111 2222 3333 4444 555',
+    );
+    expect(
+      compactTransferAccountNumber('1111 2222 3333 4444 555'),
+      '1111222233334444555',
+    );
+  });
+
   testWidgets('账号转账页使用原生表单并可滚动', (tester) async {
     await tester.pumpWidget(
       const GetMaterialApp(home: HomeAccountTransferPage()),
@@ -95,6 +106,25 @@ void main() {
     expect(find.byType(TextField), findsNWidgets(2));
   });
 
+  testWidgets('账号输入和粘贴后按四位分组', (tester) async {
+    await tester.pumpWidget(
+      const GetMaterialApp(home: HomeAccountTransferPage()),
+    );
+
+    final accountField = find.byKey(
+      const Key('transfer-recipient-account-field'),
+    );
+    await tester.enterText(accountField, '1111 22223333 4444555');
+    await tester.pump();
+
+    final controller = tester.widget<TextField>(accountField).controller!;
+    expect(controller.text, '1111 2222 3333 4444 555');
+    expect(
+      compactTransferAccountNumber(controller.text),
+      '1111222233334444555',
+    );
+  });
+
   testWidgets('点击银行行右侧箭头可进入收款银行列表', (tester) async {
     await tester.pumpWidget(
       GetMaterialApp(
@@ -165,7 +195,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('张三'), findsOneWidget);
-    expect(find.text('6222000012345678'), findsOneWidget);
+    expect(find.text('6222 0000 1234 5678'), findsOneWidget);
     expect(find.text('交通银行'), findsOneWidget);
     expect(find.text('100'), findsOneWidget);
     expect(

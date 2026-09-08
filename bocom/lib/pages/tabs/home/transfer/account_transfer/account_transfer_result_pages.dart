@@ -690,6 +690,31 @@ List<Widget> _receiptFields({
     );
   }
 
+  Widget serialNumberField() {
+    return Positioned(
+      key: const Key('receipt-serial-number'),
+      top: 1228 * scale,
+      right: 102 * scale,
+      width: 850 * scale,
+      height: 128 * scale,
+      child: Align(
+        alignment: Alignment.topRight,
+        child: Text(
+          _receiptSerialNumberDisplayText(data.displaySerialNumber),
+          maxLines: 2,
+          softWrap: false,
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            color: _receiptInk,
+            fontSize: 48 * scale,
+            fontWeight: FontWeight.w400,
+            height: 1.15,
+          ),
+        ),
+      ),
+    );
+  }
+
   return [
     field(
       key: const Key('receipt-recipient-name'),
@@ -737,12 +762,7 @@ List<Widget> _receiptFields({
       top: 1075,
       text: data.payerBank,
     ),
-    field(
-      key: const Key('receipt-serial-number'),
-      top: 1228,
-      text: data.displaySerialNumber,
-      fontSize: 48,
-    ),
+    serialNumberField(),
     field(
       key: const Key('receipt-transaction-time'),
       top: 1324,
@@ -763,6 +783,14 @@ List<Widget> _receiptFields({
         fontSize: 48,
       ),
   ];
+}
+
+String _receiptSerialNumberDisplayText(String value) {
+  const firstLineLength = 26;
+  final text = value.trim();
+  if (text.length <= firstLineLength || text.contains('\n')) return text;
+  return '${text.substring(0, firstLineLength)}\n'
+      '${text.substring(firstLineLength)}';
 }
 
 Widget _successText({

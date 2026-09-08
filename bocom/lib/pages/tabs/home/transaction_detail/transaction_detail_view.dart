@@ -1231,86 +1231,72 @@ class _FilteredResultList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ColoredBox(
       color: const Color(0xFFF7F7F7),
-      child: Column(
-        children: [
-          if (result.showSummary)
-            SizedBox(
-              height: 40.w,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 15.w),
-                child: Row(
-                  children: [
-                    Text(
-                      '共${result.count}笔',
-                      key: const ValueKey('transaction_filter_count'),
-                      style: TextStyle(
-                        color: const Color(0xFF373737),
-                        fontSize: 14.sp,
-                      ),
-                    ),
-                    const Spacer(),
-                    Flexible(
-                      child: _SummaryText(
-                        label: '收入',
-                        amount: result.income,
-                        formatter: _amountFormat,
-                      ),
-                    ),
-                    SizedBox(width: 24.w),
-                    Flexible(
-                      child: _SummaryText(
-                        label: '支出',
-                        amount: result.expense,
-                        formatter: _amountFormat,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          Expanded(
-            child: result.records.isEmpty
-                ? const _EmptyFilterResult()
-                : wrapList(
-                    child: ListView(
-                      key: const ValueKey('transaction_filtered_list'),
-                      controller: controller,
-                      padding: EdgeInsets.zero,
-                      physics: const ClampingScrollPhysics(),
-                      children: [
-                        Container(
-                          margin: EdgeInsets.fromLTRB(14.w, 0, 14.w, 12.w),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(11.w),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: Column(
-                            children: [
-                              for (var index = 0;
-                                  index < result.records.length;
-                                  index++)
-                                _TransactionRow(
-                                  record: result.records[index],
-                                  showDivider:
-                                      index != result.records.length - 1,
-                                  onTap: () =>
-                                      onRecordTap(result.records[index]),
+      child: result.records.isEmpty
+          ? const _EmptyFilterResult()
+          : wrapList(
+              child: ListView(
+                key: const ValueKey('transaction_filtered_list'),
+                controller: controller,
+                padding: EdgeInsets.zero,
+                physics: const ClampingScrollPhysics(),
+                children: [
+                  if (result.showSummary)
+                    SizedBox(
+                      height: 40.w,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 15.w),
+                        child: Row(
+                          children: [
+                            Text(
+                              '共${result.count}笔',
+                              key: const ValueKey('transaction_filter_count'),
+                              style: TextStyle(
+                                color: const Color(0xFF373737),
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                            Expanded(
+                              child: _SummaryTotals(
+                                key: const ValueKey(
+                                  'transaction_filter_summary_values',
                                 ),
-                            ],
-                          ),
+                                income: result.income,
+                                expense: result.expense,
+                                formatter: _amountFormat,
+                              ),
+                            ),
+                          ],
                         ),
-                        if (loadMoreFailed)
-                          _LoadMoreFooter(
-                            failed: true,
-                            onRetry: onRetryLoadMore,
+                      ),
+                    ),
+                  Container(
+                    margin: EdgeInsets.fromLTRB(14.w, 0, 14.w, 12.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(11.w),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        for (var index = 0;
+                            index < result.records.length;
+                            index++)
+                          _TransactionRow(
+                            record: result.records[index],
+                            showDivider: index != result.records.length - 1,
+                            onTap: () => onRecordTap(result.records[index]),
                           ),
                       ],
                     ),
                   ),
-          ),
-        ],
-      ),
+                  if (loadMoreFailed)
+                    _LoadMoreFooter(
+                      failed: true,
+                      onRetry: onRetryLoadMore,
+                    ),
+                ],
+              ),
+            ),
     );
   }
 }
@@ -1554,19 +1540,13 @@ class _MonthSection extends StatelessWidget {
                       fontSize: 14.sp,
                     ),
                   ),
-                  const Spacer(),
-                  Flexible(
-                    child: _SummaryText(
-                      label: '收入',
-                      amount: section.income,
-                      formatter: _amountFormat,
-                    ),
-                  ),
-                  SizedBox(width: 24.w),
-                  Flexible(
-                    child: _SummaryText(
-                      label: '支出',
-                      amount: section.expense,
+                  Expanded(
+                    child: _SummaryTotals(
+                      key: ValueKey(
+                        'transaction_month_summary_${section.monthKey}',
+                      ),
+                      income: section.income,
+                      expense: section.expense,
                       formatter: _amountFormat,
                     ),
                   ),
@@ -1638,6 +1618,46 @@ class _EmptyMonthRecords extends StatelessWidget {
   }
 }
 
+class _SummaryTotals extends StatelessWidget {
+  const _SummaryTotals({
+    super.key,
+    required this.income,
+    required this.expense,
+    required this.formatter,
+  });
+
+  final double income;
+  final double expense;
+  final NumberFormat formatter;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerRight,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _SummaryText(
+              label: '收入',
+              amount: income,
+              formatter: formatter,
+            ),
+            SizedBox(width: 24.w),
+            _SummaryText(
+              label: '支出',
+              amount: expense,
+              formatter: formatter,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SummaryText extends StatelessWidget {
   const _SummaryText({
     required this.label,
@@ -1651,24 +1671,20 @@ class _SummaryText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: Alignment.centerRight,
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(
-              text: label,
-              style: const TextStyle(color: Color(0xFF8793A5)),
-            ),
-            TextSpan(
-              text: '${label == '收入' ? '+' : '-'}${formatter.format(amount)}',
-              style: const TextStyle(color: Color(0xFF3B3B3B)),
-            ),
-          ],
-        ),
-        style: TextStyle(fontSize: 14.sp),
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: label,
+            style: const TextStyle(color: Color(0xFF8793A5)),
+          ),
+          TextSpan(
+            text: '${label == '收入' ? '+' : '-'}${formatter.format(amount)}',
+            style: const TextStyle(color: Color(0xFF3B3B3B)),
+          ),
+        ],
       ),
+      style: TextStyle(fontSize: 14.sp),
     );
   }
 }
