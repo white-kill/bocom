@@ -706,7 +706,7 @@ class MinePage extends BaseStateless {
               top: position3.getY(80),
               width: position3.getWidth(70),
               height: position3.getHeight(70),
-              child: Container(color: Colors.red.withAlpha(50)).withOnTap(onTap: () {
+              child: Container().withOnTap(onTap: () {
                 Get.to(() => FixedNavPage(), arguments: {
                   'image': 'bg_zzc',
                   'title': '资产说明',
