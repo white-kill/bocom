@@ -69,6 +69,27 @@ class BillSwitchSheet extends StatelessWidget {
             ),
           ),
           Positioned(
+            left: position.getX(65),
+            right: position.getX(65),
+            top: position.getY(cardTops[index]),
+            height: position.getHeight(234),
+            child: IgnorePointer(
+              child: Obx(
+                () => DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(position.getX(20)),
+                    border: selectedIndex.value == index
+                        ? Border.all(
+                            color: const Color(0xFF0875ED),
+                            width: 1.w,
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
             left: position.getX(888),
             top: position.getY(iconTops[index]),
             width: position.getWidth(60),

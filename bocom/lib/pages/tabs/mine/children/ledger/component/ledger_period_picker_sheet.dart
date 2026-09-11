@@ -18,17 +18,20 @@ class LedgerPeriodPickerSheet extends StatefulWidget {
     required this.isYearMode,
     required this.initialYear,
     required this.initialMonth,
+    this.latestMonth,
   });
 
   final bool isYearMode;
   final int initialYear;
   final int initialMonth;
+  final DateTime? latestMonth;
 
   static Future<LedgerPeriodSelection?> show(
     BuildContext context, {
     required bool isYearMode,
     required int initialYear,
     required int initialMonth,
+    DateTime? latestMonth,
   }) {
     return showModalBottomSheet<LedgerPeriodSelection>(
       context: context,
@@ -39,6 +42,7 @@ class LedgerPeriodPickerSheet extends StatefulWidget {
         isYearMode: isYearMode,
         initialYear: initialYear,
         initialMonth: initialMonth,
+        latestMonth: latestMonth,
       ),
     );
   }
@@ -61,17 +65,23 @@ class _LedgerPeriodPickerSheetState extends State<LedgerPeriodPickerSheet> {
       List<int>.generate(_yearCount, (index) => _firstYear + index);
 
   List<int> get _months {
-    final lastMonth = _selectedYear == _lastYear ? DateTime.now().month : 12;
+    final lastMonth = _selectedYear == _lastYear
+        ? (widget.latestMonth?.month ?? DateTime.now().month)
+        : 12;
     return List<int>.generate(lastMonth, (index) => index + 1);
   }
 
   @override
   void initState() {
     super.initState();
-    _lastYear = DateTime.now().year;
+    _lastYear = widget.isYearMode
+        ? DateTime.now().year
+        : (widget.latestMonth?.year ?? DateTime.now().year);
     _firstYear = _lastYear - _yearCount + 1;
     _selectedYear = widget.initialYear.clamp(_firstYear, _lastYear).toInt();
-    final maxMonth = _selectedYear == _lastYear ? DateTime.now().month : 12;
+    final maxMonth = _selectedYear == _lastYear
+        ? (widget.latestMonth?.month ?? DateTime.now().month)
+        : 12;
     _selectedMonth = widget.initialMonth.clamp(1, maxMonth).toInt();
     _yearController = FixedExtentScrollController(
       initialItem: _selectedYear - _firstYear,

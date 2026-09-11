@@ -9,13 +9,17 @@ import 'package:bocom/config/net_config/apis.dart';
 import 'comprehensive_bill_state.dart';
 
 class ComprehensiveBillLogic extends GetxController {
+  static DateTime _latestMonthlyPeriod(DateTime now) =>
+      DateTime(now.year, now.month - 1);
+
   final state = ComprehensiveBillState();
   final scrollController = ScrollController();
   final tabController = ScrollController();
   final selectedIndex = 0.obs;
   final periodMode = 0.obs;
   final selectedPeriod =
-      DateTime(DateTime.now().year, DateTime.now().month).obs;
+      _latestMonthlyPeriod(DateTime.now()).obs;
+  final hasAdjustedPeriod = false.obs;
   final periodPickerVisible = false.obs;
   final headerScrolled = false.obs;
   final cashFlowPage = 0.obs;
@@ -80,13 +84,29 @@ class ComprehensiveBillLogic extends GetxController {
   void selectPeriodMode(int index) {
     if (periodMode.value == index) return;
     periodMode.value = index;
+    hasAdjustedPeriod.value = true;
+    if (index == 0) {
+      final latestMonth = _latestMonthlyPeriod(DateTime.now());
+      if (selectedPeriod.value.isAfter(latestMonth)) {
+        selectedPeriod.value = latestMonth;
+      }
+    }
     cashFlowPage.value = 0;
     getAssetOverview();
     getIncomeExpenseOverview();
   }
 
   void selectPeriod({required int year, required int month}) {
-    selectedPeriod.value = DateTime(year, month);
+    final selected = DateTime(year, month);
+    final latestMonth = _latestMonthlyPeriod(DateTime.now());
+    final nextPeriod = periodMode.value == 0 && selected.isAfter(latestMonth)
+        ? latestMonth
+        : selected;
+    if (nextPeriod.year != selectedPeriod.value.year ||
+        nextPeriod.month != selectedPeriod.value.month) {
+      hasAdjustedPeriod.value = true;
+    }
+    selectedPeriod.value = nextPeriod;
     getAssetOverview();
     getIncomeExpenseOverview();
   }

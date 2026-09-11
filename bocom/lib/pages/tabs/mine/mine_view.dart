@@ -14,6 +14,7 @@ import 'children/comprehensive_bill/comprehensive_bill_view.dart';
 import 'children/ledger/ledger_view.dart';
 import 'children/user_info/user_info_view.dart';
 import 'children/profit_center/profit_center_view.dart';
+import 'children/profit_center/yesterday_income_note_sheet.dart';
 import 'children/settting/setting_view.dart';
 import 'children/ycbg/ycbg_view.dart';
 import 'children/wdaq/wdaq_view.dart';
@@ -699,6 +700,29 @@ class MinePage extends BaseStateless {
                 });
               }),
             ),
+            // 总资产旁边的说明
+            Positioned(
+              left: position3.getX(190),
+              top: position3.getY(80),
+              width: position3.getWidth(70),
+              height: position3.getHeight(70),
+              child: Container(color: Colors.red.withAlpha(50)).withOnTap(onTap: () {
+                Get.to(() => FixedNavPage(), arguments: {
+                  'image': 'bg_zzc',
+                  'title': '资产说明',
+                });
+              }),
+            ),
+            // 昨日收益旁边的说明
+            Positioned(
+              left: position3.getX(690),
+              top: position3.getY(80),
+              width: position3.getWidth(70),
+              height: position3.getHeight(70),
+              child: Container().withOnTap(
+                onTap: () => YesterdayIncomeNoteSheet.show(context),
+              ),
+            ),
             // 交行福利季
             Positioned(
                 right: position1.getX(0),
@@ -708,6 +732,7 @@ class MinePage extends BaseStateless {
                 child: Container().withOnTap(onTap: () {
                   Get.toNamed(Routes.homeWelfareSeason);
                 })),
+
           ],
         ),
         Stack(

@@ -407,6 +407,9 @@ class ComprehensiveBillPage extends BaseStateless {
   Widget _period(BuildContext context) => Obx(() {
         final isYearMode = logic.periodMode.value == 1;
         final selectedPeriod = logic.selectedPeriod.value;
+        final periodColor = logic.hasAdjustedPeriod.value
+            ? const Color(0xFF0875ED)
+            : const Color(0xFF181818);
         return Row(children: [
           Container(
             height: 32.w,
@@ -424,13 +427,13 @@ class ComprehensiveBillPage extends BaseStateless {
                 text: isYearMode
                     ? '${selectedPeriod.year}年'
                     : '${selectedPeriod.year}年${selectedPeriod.month}月',
-                color: const Color(0xFF0875ED),
+                color: periodColor,
                 fontSize: 14),
             Icon(
                 logic.periodPickerVisible.value
                     ? Icons.keyboard_arrow_up
                     : Icons.keyboard_arrow_down,
-                color: const Color(0xFF0875ED),
+                color: periodColor,
                 size: 22.w),
           ]).withOnTap(onTap: () => _showPeriodPicker(context)),
         ]).withContainer(
@@ -465,6 +468,9 @@ class ComprehensiveBillPage extends BaseStateless {
         isYearMode: logic.periodMode.value == 1,
         initialYear: selectedPeriod.year,
         initialMonth: selectedPeriod.month,
+        latestMonth: logic.periodMode.value == 0
+            ? DateTime(DateTime.now().year, DateTime.now().month - 1)
+            : null,
       );
     } finally {
       logic.periodPickerVisible.value = false;
@@ -516,7 +522,10 @@ class ComprehensiveBillPage extends BaseStateless {
                       _apiAmount(overview.totalAssets))),
               Expanded(
                   child: _amount(isYearMode ? '当年变动' : '当月变动',
-                      _apiAmount(overview.changeAmount))),
+                      _comparedAmount(overview.changeAmount),
+                      valueColor: _changeColor(
+                        double.tryParse(overview.changeAmount ?? ''),
+                      ))),
             ]);
           }),
           SizedBox(height: 13.w),
@@ -577,14 +586,14 @@ class ComprehensiveBillPage extends BaseStateless {
         ]),
       );
 
-  Widget _amount(String label, String value) =>
+  Widget _amount(String label, String value, {Color? valueColor}) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         BaseText(text: label, fontSize: 14, color: const Color(0xFF4A4A4A)),
         SizedBox(height: 6.w),
         BaseText(
             text: value,
             fontSize: 22,
-            color: const Color(0xFF2B2B2B),
+            color: valueColor ?? const Color(0xFF2B2B2B),
             fontWeight: FontWeight.w600)
       ]);
 
