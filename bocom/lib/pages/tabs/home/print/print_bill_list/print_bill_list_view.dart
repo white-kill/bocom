@@ -333,10 +333,10 @@ class PrintBillListPage extends BaseStateless {
               right: 0,
               top: 9.w,
               child: Text(
-                '${record.isIncome ? '+' : '-'}$amount',
+                '${record.isIncome ? '+' : '-'}$amount', 
                 style: TextStyle(
                   color: record.isIncome
-                      ? const Color(0xFFB12D2D)
+                      ? const Color(0xFFFF5257)
                       : const Color(0xFF1D1D1D),
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
