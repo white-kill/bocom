@@ -191,7 +191,8 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
             label: '对此交易有疑问',
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: widget.onQuestionTap,
+              onTap: widget.onQuestionTap ??
+                  () => Get.toNamed(Routes.customerService),
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: 24.w,

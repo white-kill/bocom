@@ -17,6 +17,8 @@ class Routes {
 
   static const allServices = '/allServices';
 
+  static const homeVersion = '/homeVersion';
+
   static const homeConsumerLoan = '/homeConsumerLoan';
 
   static const homeDemandDepositPlus = '/homeDemandDepositPlus';

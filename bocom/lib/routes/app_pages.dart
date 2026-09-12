@@ -10,6 +10,7 @@ import '../pages/tabs/home/transaction_detail/transaction_detail_view.dart';
 import '../pages/tabs/home/print/print_view.dart';
 import '../pages/tabs/home/feature_pages/home_feature_pages.dart';
 import '../pages/tabs/home/feature_pages/home_static_feature_pages.dart';
+import '../pages/tabs/home/feature_pages/home_version_page.dart';
 import '../pages/tabs/home/all_services/all_services_view.dart';
 import '../pages/tabs/home/transfer/home_transfer_view.dart';
 import '../pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
@@ -56,6 +57,10 @@ class AppPages {
     GetPage(
       name: Routes.allServices,
       page: () => const AllServicesPage(),
+    ),
+    GetPage(
+      name: Routes.homeVersion,
+      page: () => const HomeVersionPage(),
     ),
     GetPage(
       name: Routes.homeConsumerLoan,
