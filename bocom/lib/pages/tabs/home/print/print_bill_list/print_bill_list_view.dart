@@ -289,7 +289,8 @@ class PrintBillListPage extends BaseStateless {
 
   Widget _buildTransactionRow(TransactionBillEntry entry, int index) {
     final record = entry.record;
-    final amount = NumberFormat('#,##0.00').format(record.amount.abs());
+    // final amount = NumberFormat('#,##0.00').format(record.amount.abs());
+    final amount = record.amount.abs();
     return SizedBox(
       height: 88.w,
       child: Padding(

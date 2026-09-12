@@ -71,6 +71,7 @@ class PrintBillListLogic extends GetxController {
       orderSort: '2',
     );
     try {
+      print(params.toString());
       final page = await loadTransactionBillPage(params);
       if (version != _requestVersion) return false;
       entries.assignAll(loadMore

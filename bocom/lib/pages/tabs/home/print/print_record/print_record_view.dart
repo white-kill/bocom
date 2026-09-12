@@ -39,13 +39,13 @@ class PrintRecordPage extends BaseStateless {
           key: const Key('print-record-year-tip'),
           width: 1.sw,
           height: 44.w,
-          color: const Color(0xFFFFF5F0),
+          color: const Color(0xFFFEEBDD),
           alignment: Alignment.centerLeft,
           padding: EdgeInsets.symmetric(horizontal: 15.w),
           child: const BaseText(
             text: '以下是近一年您的开立申请记录。',
             fontSize: 15,
-            color: Color(0xFFF0A15E),
+            color: Color(0xFFBC6F41),
           ),
         ),
         Expanded(
