@@ -176,9 +176,9 @@ class _TransferPageBody extends StatelessWidget {
                 ),
                 Positioned(
                   right: 28 * scale,
-                  top: 720 * scale,
-                  width: 290 * scale,
-                  height: 260 * scale,
+                  top: 735 * scale,
+                  width: 278 * scale,
+                  height: 238 * scale,
                   child: Semantics(
                     key: const ValueKey('home_transfer_all_recipients_hotspot'),
                     button: true,
@@ -264,6 +264,56 @@ class _TransferPageBody extends StatelessWidget {
                       onTap: () => Get.toNamed(Routes.homeTransferRecord),
                     ),
                   ),
+                ),
+                _TransferFeatureHotspot(
+                  key: const ValueKey('home_appointment_transfer_hotspot'),
+                  label: '预约转账',
+                  left: 42,
+                  top: 735,
+                  width: 275,
+                  height: 238,
+                  scale: scale,
+                  route: Routes.appointmentTransfer,
+                ),
+                _TransferFeatureHotspot(
+                  key: const ValueKey('home_single_funds_transfer_hotspot'),
+                  label: '单笔资金转入',
+                  left: 318,
+                  top: 735,
+                  width: 286,
+                  height: 238,
+                  scale: scale,
+                  route: Routes.singleFundsTransfer,
+                ),
+                _TransferFeatureHotspot(
+                  key: const ValueKey('home_periodic_transfer_hotspot'),
+                  label: '定期资金转入',
+                  left: 604,
+                  top: 735,
+                  width: 286,
+                  height: 238,
+                  scale: scale,
+                  route: Routes.periodicTransferPlan,
+                ),
+                _TransferFeatureHotspot(
+                  key: const ValueKey('home_transfer_limit_hotspot'),
+                  label: '转账限额',
+                  left: 42,
+                  top: 973,
+                  width: 275,
+                  height: 226,
+                  scale: scale,
+                  route: Routes.transferLimit,
+                ),
+                _TransferFeatureHotspot(
+                  key: const ValueKey('home_cross_border_payment_hotspot'),
+                  label: '跨境支付通',
+                  left: 318,
+                  top: 973,
+                  width: 286,
+                  height: 226,
+                  scale: scale,
+                  route: Routes.crossBorderPayment,
                 ),
                 Positioned(
                   left: 44 * scale,
@@ -496,6 +546,45 @@ class _BankIconFallback extends StatelessWidget {
             color: Colors.white,
             size: 38 * scale,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TransferFeatureHotspot extends StatelessWidget {
+  const _TransferFeatureHotspot({
+    super.key,
+    required this.label,
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
+    required this.scale,
+    required this.route,
+  });
+
+  final String label;
+  final double left;
+  final double top;
+  final double width;
+  final double height;
+  final double scale;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: left * scale,
+      top: top * scale,
+      width: width * scale,
+      height: height * scale,
+      child: Semantics(
+        button: true,
+        label: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => Get.toNamed(route),
         ),
       ),
     );

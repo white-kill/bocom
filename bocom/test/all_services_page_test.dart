@@ -1,6 +1,8 @@
 import 'package:bocom/pages/tabs/home/all_services/all_services_view.dart';
+import 'package:bocom/pages/tabs/mine/children/zxzm/zxzm_view.dart';
 import 'package:bocom/routes/app_pages.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
@@ -13,9 +15,14 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      GetMaterialApp(
-        getPages: AppPages.routes,
-        home: const AllServicesPage(),
+      ScreenUtilInit(
+        designSize: const Size(375, 750),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (_, __) => GetMaterialApp(
+          getPages: AppPages.routes,
+          home: const AllServicesPage(),
+        ),
       ),
     );
     await tester.pump();
@@ -114,5 +121,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(Get.currentRoute, Routes.homeDeposit);
+  });
+
+  testWidgets('点击查询中的资信证明会进入资信证明页', (tester) async {
+    await pumpPage(tester);
+
+    await tester.tap(find.text('查询'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('all-services-service-query-资信证明')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ZxzmPage), findsOneWidget);
+    expect(find.text('资信证明'), findsOneWidget);
   });
 }

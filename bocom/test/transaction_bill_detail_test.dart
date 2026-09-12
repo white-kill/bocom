@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:bocom/pages/tabs/home/transaction_detail/transaction_bill_detail_view.dart';
 import 'package:bocom/pages/tabs/home/transaction_detail/transaction_detail_repository.dart';
+import 'package:bocom/pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
+import 'package:bocom/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
 void main() {
+  tearDown(Get.reset);
+
   testWidgets('传入列表预览时仍按 billId 刷新完整详情', (tester) async {
     var loadCount = 0;
     await _pumpPage(
@@ -44,6 +48,42 @@ void main() {
       find.byKey(const ValueKey('transaction_bill_detail_transfer_tip')),
       findsNothing,
     );
+  });
+
+  testWidgets('详情刷新后继续展示列表脱敏账号并保留完整账号供后续操作', (tester) async {
+    final loadedDetail = _transferDetail.withAccountDisplayValues(
+      bankCard: '详情接口交易卡号',
+      oppositeAccount: '详情接口对方账户',
+    );
+    await _pumpPage(
+      tester,
+      TransactionBillDetailPage(
+        billId: 11,
+        initialDetail: _transferDetail,
+        detailLoader: (_) async => loadedDetail,
+      ),
+      getPages: [
+        GetPage(
+          name: Routes.homeAccountTransfer,
+          page: () => const Scaffold(body: Text('账号转账测试页')),
+        ),
+      ],
+    );
+
+    expect(find.text(_transferDetail.bankCard), findsOneWidget);
+    expect(find.text(_transferDetail.oppositeAccount), findsOneWidget);
+    expect(find.text('详情接口交易卡号'), findsNothing);
+    expect(find.text('详情接口对方账户'), findsNothing);
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey('transaction_bill_detail_transfer_button'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final arguments = Get.arguments as AccountTransferRouteArguments;
+    expect(arguments.recipient?.bankCard, '详情接口对方账户');
   });
 
   testWidgets('入账金额显示加号并使用列表同款红色', (tester) async {
@@ -373,6 +413,7 @@ Future<void> _pumpPage(
   WidgetTester tester,
   Widget page, {
   bool settle = true,
+  List<GetPage<dynamic>> getPages = const [],
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = const Size(375, 812);
@@ -381,7 +422,10 @@ Future<void> _pumpPage(
   await tester.pumpWidget(
     ScreenUtilInit(
       designSize: const Size(375, 750),
-      builder: (_, child) => GetMaterialApp(home: child),
+      builder: (_, child) => GetMaterialApp(
+        getPages: getPages,
+        home: child,
+      ),
       child: page,
     ),
   );

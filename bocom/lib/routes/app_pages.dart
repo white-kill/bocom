@@ -15,6 +15,7 @@ import '../pages/tabs/home/transfer/home_transfer_view.dart';
 import '../pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
 import '../pages/tabs/home/transfer/phone_transfer/home_phone_transfer_view.dart';
 import '../pages/tabs/home/transfer/record/transfer_record_view.dart';
+import '../pages/tabs/home/transfer/transfer_secondary_pages.dart';
 import '../pages/tabs/mine/children/ledger/ledger_view.dart';
 import '../pages/tabs/mine/children/comprehensive_bill/comprehensive_bill_view.dart';
 import '../pages/tabs/mine/children/account_asset/account_secondary_pages.dart';
@@ -190,6 +191,26 @@ class AppPages {
     GetPage(
       name: Routes.homePhoneTransfer,
       page: () => const HomePhoneTransferPage(),
+    ),
+    GetPage(
+      name: Routes.singleFundsTransfer,
+      page: () => const SingleFundsTransferPage(),
+    ),
+    GetPage(
+      name: Routes.periodicTransferPlan,
+      page: () => const PeriodicTransferPlanPage(),
+    ),
+    GetPage(
+      name: Routes.appointmentTransfer,
+      page: () => const AppointmentTransferPage(),
+    ),
+    GetPage(
+      name: Routes.transferLimit,
+      page: () => const TransferLimitPage(),
+    ),
+    GetPage(
+      name: Routes.crossBorderPayment,
+      page: () => const CrossBorderPaymentPage(),
     ),
     GetPage(
       name: Routes.lifePayment,

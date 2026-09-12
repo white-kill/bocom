@@ -20,6 +20,8 @@ const _successTemplate =
     'assets/images/account_transfer/result/transfer_success_template.png';
 const _receiptBodyTemplate =
     'assets/images/account_transfer/result/transfer_receipt_body.png';
+const _receiptWrappedSerialBodyTemplate =
+    'assets/images/account_transfer/result/transfer_receipt_body_wrapped_serial.png';
 const _receiptNavigationTemplate =
     'assets/images/account_transfer/result/transfer_receipt_navigation.png';
 const _receiptFooterChecked =
@@ -30,12 +32,89 @@ const _referenceWidth = 1320.0;
 const _successTemplateHeight = 2610.0;
 const _receiptScreenReferenceWidth = 1206.0;
 const _receiptBodyHeight = 2025.0;
+const _receiptWrappedSerialReferenceWidth = 1080.0;
+const _receiptWrappedSerialBodyHeight = 1987.0;
 const _receiptNavigationHeight = 180.0;
 const _receiptFooterHeight = 660.0;
 const _receiptInk = Color(0xFF333333);
+const _receiptSerialLineLength = 26;
+const _receiptWrappedSerialMinimumLength = 28;
+
+const _receiptBodyLayout = _ReceiptBodyLayout(
+  referenceWidth: _receiptScreenReferenceWidth,
+  referenceHeight: _receiptBodyHeight,
+  horizontalScale: 1,
+  recipientNameTop: 238,
+  recipientAccountTop: 334,
+  recipientBankTop: 430,
+  transferAmountTop: 524,
+  uppercaseAmountTop: 620,
+  payerNameTop: 883,
+  payerAccountTop: 979,
+  payerBankTop: 1075,
+  serialNumberTop: 1228,
+  transactionTimeTop: 1324,
+  arrivalTimeTop: 1420,
+  purposeTop: 1516,
+);
+
+const _receiptWrappedSerialBodyLayout = _ReceiptBodyLayout(
+  referenceWidth: _receiptWrappedSerialReferenceWidth,
+  referenceHeight: _receiptWrappedSerialBodyHeight,
+  horizontalScale:
+      _receiptWrappedSerialReferenceWidth / _receiptScreenReferenceWidth,
+  recipientNameTop: 212,
+  recipientAccountTop: 305,
+  recipientBankTop: 397,
+  transferAmountTop: 489,
+  uppercaseAmountTop: 582,
+  payerNameTop: 832,
+  payerAccountTop: 924,
+  payerBankTop: 1016,
+  serialNumberTop: 1169,
+  transactionTimeTop: 1313,
+  arrivalTimeTop: 1405,
+  purposeTop: 1497,
+);
 
 typedef TransferBillDetailLoader = Future<dynamic> Function(int billId);
 typedef TransferReceiptSaver = Future<bool> Function(Uint8List bytes);
+
+class _ReceiptBodyLayout {
+  const _ReceiptBodyLayout({
+    required this.referenceWidth,
+    required this.referenceHeight,
+    required this.horizontalScale,
+    required this.recipientNameTop,
+    required this.recipientAccountTop,
+    required this.recipientBankTop,
+    required this.transferAmountTop,
+    required this.uppercaseAmountTop,
+    required this.payerNameTop,
+    required this.payerAccountTop,
+    required this.payerBankTop,
+    required this.serialNumberTop,
+    required this.transactionTimeTop,
+    required this.arrivalTimeTop,
+    required this.purposeTop,
+  });
+
+  final double referenceWidth;
+  final double referenceHeight;
+  final double horizontalScale;
+  final double recipientNameTop;
+  final double recipientAccountTop;
+  final double recipientBankTop;
+  final double transferAmountTop;
+  final double uppercaseAmountTop;
+  final double payerNameTop;
+  final double payerAccountTop;
+  final double payerBankTop;
+  final double serialNumberTop;
+  final double transactionTimeTop;
+  final double arrivalTimeTop;
+  final double purposeTop;
+}
 
 class AccountTransferResultData {
   const AccountTransferResultData({
@@ -336,7 +415,7 @@ class _AccountTransferSuccessPageState
 }
 
 // 转账回执页
-// 说明：导航使用不含系统状态栏的固定切图，中间使用完整回执长图滚动，底部使用选中/未选中状态切图固定展示。
+// 说明：导航使用不含系统状态栏的固定切图，中间按流水号位数切换单行/两行回执长图并滚动，底部使用选中/未选中状态切图固定展示。
 class AccountTransferReceiptPage extends StatefulWidget {
   const AccountTransferReceiptPage({
     super.key,
@@ -600,14 +679,27 @@ class _SavedReceipt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final usesWrappedSerialLayout =
+        _receiptSerialNeedsWrap(data.displaySerialNumber);
+    final layout = usesWrappedSerialLayout
+        ? _receiptWrappedSerialBodyLayout
+        : _receiptBodyLayout;
     return _ReferenceTemplate(
-      asset: _receiptBodyTemplate,
-      referenceWidth: _receiptScreenReferenceWidth,
-      referenceHeight: _receiptBodyHeight,
+      key: Key(
+        usesWrappedSerialLayout
+            ? 'receipt-wrapped-serial-body'
+            : 'receipt-single-line-serial-body',
+      ),
+      asset: usesWrappedSerialLayout
+          ? _receiptWrappedSerialBodyTemplate
+          : _receiptBodyTemplate,
+      referenceWidth: layout.referenceWidth,
+      referenceHeight: layout.referenceHeight,
       childrenBuilder: (scale) => _receiptFields(
         data: data,
         scale: scale,
         hideCardNumbers: hideCardNumbers,
+        layout: layout,
       ),
     );
   }
@@ -615,6 +707,7 @@ class _SavedReceipt extends StatelessWidget {
 
 class _ReferenceTemplate extends StatelessWidget {
   const _ReferenceTemplate({
+    super.key,
     required this.asset,
     required this.referenceWidth,
     required this.referenceHeight,
@@ -656,7 +749,10 @@ List<Widget> _receiptFields({
   required AccountTransferResultData data,
   required double scale,
   required bool hideCardNumbers,
+  required _ReceiptBodyLayout layout,
 }) {
+  final horizontalScale = layout.horizontalScale;
+
   Widget field({
     required Key key,
     required double top,
@@ -667,9 +763,9 @@ List<Widget> _receiptFields({
     return Positioned(
       key: key,
       top: top * scale,
-      right: 102 * scale,
-      width: 850 * scale,
-      height: 64 * scale,
+      right: 102 * horizontalScale * scale,
+      width: 850 * horizontalScale * scale,
+      height: 64 * horizontalScale * scale,
       child: Align(
         alignment: Alignment.centerRight,
         child: FittedBox(
@@ -680,7 +776,7 @@ List<Widget> _receiptFields({
             maxLines: 1,
             style: TextStyle(
               color: color,
-              fontSize: fontSize * scale,
+              fontSize: fontSize * horizontalScale * scale,
               fontWeight: FontWeight.w400,
               height: 1,
             ),
@@ -693,10 +789,10 @@ List<Widget> _receiptFields({
   Widget serialNumberField() {
     return Positioned(
       key: const Key('receipt-serial-number'),
-      top: 1228 * scale,
-      right: 102 * scale,
-      width: 850 * scale,
-      height: 128 * scale,
+      top: layout.serialNumberTop * scale,
+      right: 102 * horizontalScale * scale,
+      width: 850 * horizontalScale * scale,
+      height: 128 * horizontalScale * scale,
       child: Align(
         alignment: Alignment.topRight,
         child: Text(
@@ -706,7 +802,7 @@ List<Widget> _receiptFields({
           textAlign: TextAlign.right,
           style: TextStyle(
             color: _receiptInk,
-            fontSize: 48 * scale,
+            fontSize: 48 * horizontalScale * scale,
             fontWeight: FontWeight.w400,
             height: 1.15,
           ),
@@ -718,12 +814,12 @@ List<Widget> _receiptFields({
   return [
     field(
       key: const Key('receipt-recipient-name'),
-      top: 238,
+      top: layout.recipientNameTop,
       text: data.recipientName,
     ),
     field(
       key: const Key('receipt-recipient-account'),
-      top: 334,
+      top: layout.recipientAccountTop,
       text: hideCardNumbers
           ? data.recipientAccountMasked
           : data.recipientAccountFull,
@@ -731,54 +827,54 @@ List<Widget> _receiptFields({
     ),
     field(
       key: const Key('receipt-recipient-bank'),
-      top: 430,
+      top: layout.recipientBankTop,
       text: data.recipientBank,
     ),
     field(
       key: const Key('receipt-transfer-amount'),
-      top: 524,
+      top: layout.transferAmountTop,
       text: '${data.amountText}元',
     ),
     field(
       key: const Key('receipt-uppercase-amount'),
-      top: 620,
+      top: layout.uppercaseAmountTop,
       text: data.uppercaseAmount,
       color: const Color(0xFFBD8459),
       fontSize: 48,
     ),
     field(
       key: const Key('receipt-payer-name'),
-      top: 883,
+      top: layout.payerNameTop,
       text: data.payerName,
     ),
     field(
       key: const Key('receipt-payer-account'),
-      top: 979,
+      top: layout.payerAccountTop,
       text: hideCardNumbers ? data.payerAccountMasked : data.payerAccountFull,
       fontSize: hideCardNumbers ? 49 : 48,
     ),
     field(
       key: const Key('receipt-payer-bank'),
-      top: 1075,
+      top: layout.payerBankTop,
       text: data.payerBank,
     ),
     serialNumberField(),
     field(
       key: const Key('receipt-transaction-time'),
-      top: 1324,
+      top: layout.transactionTimeTop,
       text: data.transactionTimeText,
       fontSize: 48,
     ),
     field(
       key: const Key('receipt-arrival-time'),
-      top: 1420,
+      top: layout.arrivalTimeTop,
       text: data.arrivalText,
       fontSize: 48,
     ),
     if (data.purpose.trim().isNotEmpty)
       field(
         key: const Key('receipt-purpose'),
-        top: 1516,
+        top: layout.purposeTop,
         text: data.purpose.trim(),
         fontSize: 48,
       ),
@@ -786,12 +882,18 @@ List<Widget> _receiptFields({
 }
 
 String _receiptSerialNumberDisplayText(String value) {
-  const firstLineLength = 26;
-  final text = value.trim();
-  if (text.length <= firstLineLength || text.contains('\n')) return text;
-  return '${text.substring(0, firstLineLength)}\n'
-      '${text.substring(firstLineLength)}';
+  final text = _normalizedReceiptSerialNumber(value);
+  if (!_receiptSerialNeedsWrap(text)) return text;
+  return '${text.substring(0, _receiptSerialLineLength)}\n'
+      '${text.substring(_receiptSerialLineLength)}';
 }
+
+bool _receiptSerialNeedsWrap(String value) =>
+    _normalizedReceiptSerialNumber(value).length >=
+    _receiptWrappedSerialMinimumLength;
+
+String _normalizedReceiptSerialNumber(String value) =>
+    value.replaceAll(RegExp(r'\s+'), '');
 
 Widget _successText({
   required Key key,

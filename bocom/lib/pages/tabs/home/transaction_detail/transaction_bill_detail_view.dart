@@ -34,6 +34,9 @@ class TransactionBillDetailPage extends StatefulWidget {
 
 class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
   TransactionBillDetail? _detail;
+  TransactionBillDetail? _loadedDetail;
+  late final String _listBankCard;
+  late final String _listOppositeAccount;
   bool _loading = false;
   bool _failed = false;
 
@@ -41,6 +44,8 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
   void initState() {
     super.initState();
     _detail = widget.initialDetail;
+    _listBankCard = widget.initialDetail?.bankCard.trim() ?? '';
+    _listOppositeAccount = widget.initialDetail?.oppositeAccount.trim() ?? '';
     _loadDetail();
   }
 
@@ -59,7 +64,15 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
       );
       if (!mounted) return;
       setState(() {
-        _detail = detail;
+        _loadedDetail = detail;
+        // 列表接口提供用于页面展示的脱敏账号；详情接口结果只补齐其余字段，
+        // 完整账号单独保留在 _loadedDetail 中供“再转一笔”等后续操作使用。
+        _detail = detail.withAccountDisplayValues(
+          bankCard: _listBankCard.isEmpty ? detail.bankCard : _listBankCard,
+          oppositeAccount: _listOppositeAccount.isEmpty
+              ? detail.oppositeAccount
+              : _listOppositeAccount,
+        );
         _loading = false;
       });
     } catch (_) {
@@ -77,7 +90,7 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
       callback();
       return;
     }
-    final detail = _detail;
+    final detail = _loadedDetail ?? _detail;
     if (detail == null) return;
     final recipient = ContactsModel()
       ..name = detail.oppositeName
