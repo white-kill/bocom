@@ -6,6 +6,7 @@ import '../../../../routes/app_pages.dart';
 import '../../mine/children/account_asset/account_asset_view.dart';
 import '../../mine/children/profit_center/profit_center_view.dart';
 import '../../mine/children/user_info_manage/user_info_manage_view.dart';
+import '../../mine/children/zxzm/zxzm_view.dart';
 import '../transfer/account_transfer/account_transfer_support_pages.dart';
 
 // 全部服务页
@@ -62,6 +63,12 @@ class _AllServicesPageState extends State<AllServicesPage> {
         _ServiceHotspot('收支账本', 0, 2, _ServiceDestination.ledger),
         _ServiceHotspot('账单', 1, 0, _ServiceDestination.bill),
         _ServiceHotspot('收益中心', 1, 1, _ServiceDestination.profitCenter),
+        _ServiceHotspot(
+          '资信证明',
+          2,
+          2,
+          _ServiceDestination.creditCertificate,
+        ),
         _ServiceHotspot('安心付Pro', 3, 1, _ServiceDestination.familyPay),
       ],
     ),
@@ -515,6 +522,8 @@ class _AllServicesPageState extends State<AllServicesPage> {
         Get.to<void>(() => const AccountTransferRecipientsPage());
       case _ServiceDestination.personalInfo:
         Get.to<void>(() => UserInfoManagePage());
+      case _ServiceDestination.creditCertificate:
+        Get.to<void>(() => ZxzmPage());
       default:
         Get.toNamed<void>(destination.routeName!);
     }
@@ -699,6 +708,7 @@ enum _ServiceDestination {
   cityZone(Routes.homeCityZone),
   couponCenter(Routes.homeCouponCenter),
   personalInfo(),
+  creditCertificate(),
   security(Routes.homeSecurity),
   news(Routes.homeNews);
 
