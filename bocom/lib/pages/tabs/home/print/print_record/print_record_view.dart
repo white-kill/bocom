@@ -202,7 +202,7 @@ class _PrintRecordCard extends StatelessWidget {
             SizedBox(height: 12.w),
             _RecordRow(label: '密码', value: code),
           ],
-          if (record.status == '已完成' && email.isNotEmpty) ...[
+          if (record.status == '发送成功' && email.isNotEmpty) ...[
             SizedBox(height: 22.w),
             GestureDetector(
               key: Key('print-record-resend-${record.id}'),
