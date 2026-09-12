@@ -1,7 +1,9 @@
 import 'package:bocom/config/abc_config/boc_logic.dart';
 import 'package:bocom/config/model/member_info_model.dart';
 import 'package:bocom/pages/tabs/home/transaction_detail/transaction_detail_mock_data.dart';
+import 'package:bocom/pages/tabs/home/transaction_detail/transaction_detail_repository.dart';
 import 'package:bocom/pages/tabs/home/transaction_detail/transaction_detail_view.dart';
+import 'package:bocom/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,6 +51,81 @@ void main() {
     expect(selectedMonth().data, '2026-07');
     expect(selectedMonth().style?.color, const Color(0xFF303030));
     expect(find.bySemanticsLabel('返回顶部'), findsOneWidget);
+    expect(find.text('导出交易明细'), findsNothing);
+    expect(
+      tester
+          .getSize(
+            find.byKey(
+              const ValueKey('transaction_scroll_to_top_button'),
+            ),
+          )
+          .width,
+      38,
+    );
+    expect(
+      tester
+              .getBottomRight(
+                find.byKey(const ValueKey('transaction_detail_list')),
+              )
+              .dy -
+          tester
+              .getBottomRight(
+                find.byKey(
+                  const ValueKey('transaction_scroll_to_top_button'),
+                ),
+              )
+              .dy,
+      50,
+    );
+
+    await tester.tap(find.bySemanticsLabel('返回顶部'));
+    await tester.pumpAndSettle();
+
+    expect(selectedMonth().data, '本月');
+    expect(find.text('导出交易明细'), findsOneWidget);
+  });
+
+  testWidgets('导出交易明细默认进入交易明细清单页', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(375, 750);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 750),
+        builder: (_, child) => GetMaterialApp(
+          getPages: [
+            GetPage(
+              name: Routes.printPage,
+              page: () => const Scaffold(body: Text('交易明细清单目标页')),
+            ),
+          ],
+          home: child,
+        ),
+        child: TransactionDetailPage(
+          today: DateTime(2026, 8, 15),
+          billLoader: (_) async {
+            final record = transactionDetailMockSections.first.records.first;
+            return TransactionBillPage(
+              entries: [TransactionBillEntry(id: 1, record: record)],
+              total: 1,
+              pages: 1,
+              incomeTotal: 0,
+              expensesTotal: record.amount.abs(),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('导出交易明细'), findsOneWidget);
+    await tester.tap(find.text('导出交易明细'));
+    await tester.pumpAndSettle();
+
+    expect(Get.currentRoute, Routes.printPage);
+    expect(find.text('交易明细清单目标页'), findsOneWidget);
   });
 
   testWidgets('首屏文字层级和交易行高度保持参考图比例', (tester) async {

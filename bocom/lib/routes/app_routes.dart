@@ -17,6 +17,8 @@ class Routes {
 
   static const allServices = '/allServices';
 
+  static const homeVersion = '/homeVersion';
+
   static const homeConsumerLoan = '/homeConsumerLoan';
 
   static const homeDemandDepositPlus = '/homeDemandDepositPlus';
@@ -72,6 +74,16 @@ class Routes {
   static const homeAccountTransfer = '/homeAccountTransfer';
 
   static const homePhoneTransfer = '/homePhoneTransfer';
+
+  static const singleFundsTransfer = '/singleFundsTransfer';
+
+  static const periodicTransferPlan = '/periodicTransferPlan';
+
+  static const appointmentTransfer = '/appointmentTransfer';
+
+  static const transferLimit = '/transferLimit';
+
+  static const crossBorderPayment = '/crossBorderPayment';
 
   static const lifePayment = '/lifePayment';
 

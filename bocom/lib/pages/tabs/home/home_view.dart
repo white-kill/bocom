@@ -95,6 +95,7 @@ class HomePage extends BaseStateless {
             assetName: logic.isNavDark.value
                 ? 'home_nav_version_dark.png'
                 : 'home_nav_version_light.png',
+            onTap: () => Get.toNamed(Routes.homeVersion),
           ),
         ),
         Obx(

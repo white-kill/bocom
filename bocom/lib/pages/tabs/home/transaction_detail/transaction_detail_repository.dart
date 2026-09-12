@@ -274,6 +274,33 @@ class TransactionBillDetail {
   final String merchantBranch;
   final String remark;
 
+  TransactionBillDetail withAccountDisplayValues({
+    required String bankCard,
+    required String oppositeAccount,
+  }) {
+    return TransactionBillDetail(
+      id: id,
+      merchantName: merchantName,
+      amount: amount,
+      balance: balance,
+      bankCard: bankCard,
+      transactionTime: transactionTime,
+      transactionChannel: transactionChannel,
+      transactionCategory: transactionCategory,
+      transactionDescription: transactionDescription,
+      oppositeName: oppositeName,
+      oppositeAccount: oppositeAccount,
+      oppositeBankName: oppositeBankName,
+      postscriptno: postscriptno,
+      transactionLogno: transactionLogno,
+      excerpt: excerpt,
+      detailTemplate: detailTemplate,
+      transactionAccount: transactionAccount,
+      merchantBranch: merchantBranch,
+      remark: remark,
+    );
+  }
+
   TransactionBillDetailKind get kind =>
       TransactionBillDetailKind.fromTemplate(detailTemplate);
 

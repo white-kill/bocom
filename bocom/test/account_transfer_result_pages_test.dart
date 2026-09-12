@@ -63,6 +63,10 @@ void main() {
     expect(find.text('DETAIL202608121130'), findsOneWidget);
     expect(find.text('2026-08-12 11:30:00'), findsOneWidget);
     expect(find.text('人民币壹元整'), findsOneWidget);
+    expect(
+      find.byKey(const Key('receipt-single-line-serial-body')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('转账记录跳转已有页面', (tester) async {
@@ -134,6 +138,10 @@ void main() {
     expect(find.text('621700****2353'), findsOneWidget);
     expect(find.text('622262****2910'), findsOneWidget);
     expect(find.text('20050004202608124360023075\n20'), findsOneWidget);
+    expect(
+      find.byKey(const Key('receipt-wrapped-serial-body')),
+      findsOneWidget,
+    );
 
     final footerBefore = tester.getTopLeft(
       find.byKey(const Key('receipt-fixed-footer')),
@@ -155,6 +163,52 @@ void main() {
     expect(find.text('621700****2353'), findsNothing);
     expect(find.bySemanticsLabel('保存图片'), findsOneWidget);
     expect(find.bySemanticsLabel('通知微信好友'), findsOneWidget);
+  });
+
+  testWidgets('流水号达到28位才切换两行底图', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(402, 874));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final singleLineSerial = List.filled(27, '0').join();
+    final firstWrappedLine = List.filled(26, '0').join();
+    final wrappedSerial = '${firstWrappedLine}00';
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AccountTransferReceiptPage(
+          data: result.copyWith(serialNumber: singleLineSerial),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(singleLineSerial), findsOneWidget);
+    expect(
+      find.byKey(const Key('receipt-single-line-serial-body')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('receipt-wrapped-serial-body')),
+      findsNothing,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AccountTransferReceiptPage(
+          data: result.copyWith(serialNumber: wrappedSerial),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('$firstWrappedLine\n00'), findsOneWidget);
+    expect(
+      find.byKey(const Key('receipt-wrapped-serial-body')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('receipt-single-line-serial-body')),
+      findsNothing,
+    );
   });
 
   testWidgets('保存回执入口使用动态模板并进入保存状态', (tester) async {
