@@ -187,6 +187,42 @@ void main() {
     expect(orderText.overflow, isNull);
     expect(flowText.maxLines, isNull);
     expect(flowText.overflow, isNull);
+
+    final orderValueBox = tester.widget<ConstrainedBox>(
+      find.byKey(
+        const ValueKey('transaction_bill_detail_value_box_订单编号'),
+      ),
+    );
+    expect(
+      orderValueBox.constraints.maxWidth,
+      178,
+    );
+  });
+
+  testWidgets('转入模板的长字段沿用十九位数字宽度并完整换行', (tester) async {
+    await _pumpPage(
+      tester,
+      TransactionBillDetailPage(
+        billId: 12,
+        initialDetail: _incomeDetail,
+        detailLoader: (_) async => _incomeDetail,
+      ),
+    );
+
+    final bankNameBox = tester.widget<ConstrainedBox>(
+      find.byKey(
+        const ValueKey('transaction_bill_detail_value_box_对方开户行'),
+      ),
+    );
+    final cardNumberBox = tester.widget<ConstrainedBox>(
+      find.byKey(
+        const ValueKey('transaction_bill_detail_value_box_交易卡号'),
+      ),
+    );
+    expect(
+      bankNameBox.constraints.maxWidth,
+      cardNumberBox.constraints.maxWidth,
+    );
   });
 
   testWidgets('网上支付没有对方户名时不展示该行', (tester) async {

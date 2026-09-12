@@ -63,6 +63,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   bool _loadingMore = false;
   bool _loadMoreFailed = false;
   bool _showScrollToTop = false;
+  bool _showExportBar = true;
   bool _showQuickFilter = false;
   bool _showAdvancedFilter = false;
   TransactionFilterResult? _filterResult;
@@ -122,6 +123,8 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   void _handleScroll() {
     final show =
         _scrollController.hasClients && _scrollController.offset > 420.w;
+    final showExportBar =
+        !_scrollController.hasClients || _scrollController.offset <= 4.w;
     var visibleMonthIndex = _visibleMonthIndex;
     if (_filterResult == null && _sections.isNotEmpty) {
       final offset = math.max(0.0, _scrollController.offset);
@@ -135,9 +138,12 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       }
     }
     if (mounted &&
-        (show != _showScrollToTop || visibleMonthIndex != _visibleMonthIndex)) {
+        (show != _showScrollToTop ||
+            showExportBar != _showExportBar ||
+            visibleMonthIndex != _visibleMonthIndex)) {
       setState(() {
         _showScrollToTop = show;
+        _showExportBar = showExportBar;
         _visibleMonthIndex = visibleMonthIndex;
       });
     }
@@ -867,7 +873,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                               _sections.isNotEmpty)
                             Positioned(
                               right: 20.w,
-                              bottom: 18.w,
+                              bottom: 50.w,
                               child: AnimatedScale(
                                 duration: const Duration(milliseconds: 150),
                                 scale: _showScrollToTop ? 1 : 0,
@@ -881,9 +887,13 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                 ],
               ),
             ),
-            bottomNavigationBar: _initialLoading || _loadFailed || !hasRecords
-                ? null
-                : _ExportBar(onTap: widget.onExportTap),
+            bottomNavigationBar:
+                _initialLoading || _loadFailed || !hasRecords || !_showExportBar
+                    ? null
+                    : _ExportBar(
+                        onTap: widget.onExportTap ??
+                            () => Get.toNamed<void>(Routes.printPage),
+                      ),
           ),
           if (_showQuickFilter) ...[
             Positioned(
@@ -1857,23 +1867,24 @@ class _ScrollToTopButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          width: 50.w,
-          height: 50.w,
+          key: const ValueKey('transaction_scroll_to_top_button'),
+          width: 38.w,
+          height: 38.w,
           decoration: BoxDecoration(
             color: Colors.white,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF536273).withValues(alpha: 0.12),
-                blurRadius: 18.w,
-                offset: Offset(0, 5.w),
+                blurRadius: 14.w,
+                offset: Offset(0, 4.w),
               ),
             ],
           ),
           child: Icon(
             Icons.keyboard_double_arrow_up_rounded,
             color: const Color(0xFF435365),
-            size: 28.w,
+            size: 21.w,
           ),
         ),
       ),

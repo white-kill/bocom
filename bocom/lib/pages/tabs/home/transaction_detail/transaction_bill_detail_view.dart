@@ -469,6 +469,12 @@ class _BillDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final valueStyle = TextStyle(
+      color: const Color(0xFF303030),
+      fontSize: 16.sp,
+      height: 1.35,
+    );
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 5.w),
       child: Row(
@@ -486,15 +492,21 @@ class _BillDetailRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              key: ValueKey('transaction_bill_detail_$label'),
-              softWrap: true,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                color: const Color(0xFF303030),
-                fontSize: 16.sp,
-                height: 1.35,
+            child: Align(
+              alignment: Alignment.topRight,
+              child: ConstrainedBox(
+                key: ValueKey('transaction_bill_detail_value_box_$label'),
+                // Reference value column fits 19 digits, then wraps digit 20.
+                constraints: BoxConstraints(
+                  maxWidth: 178.w,
+                ),
+                child: Text(
+                  value,
+                  key: ValueKey('transaction_bill_detail_$label'),
+                  softWrap: true,
+                  textAlign: TextAlign.right,
+                  style: valueStyle,
+                ),
               ),
             ),
           ),
