@@ -305,7 +305,10 @@ class PrintBillListPage extends BaseStateless {
                 record.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 16.sp),
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: const Color(0xFF37414D),
+                ),
               ),
             ),
             Positioned(
@@ -314,7 +317,7 @@ class PrintBillListPage extends BaseStateless {
               child: Text(
                 record.channel,
                 style: TextStyle(
-                  color: const Color(0xFF8D95A0),
+                  color: const Color(0xFF8D95A1),
                   fontSize: 14.sp,
                 ),
               ),
@@ -337,8 +340,8 @@ class PrintBillListPage extends BaseStateless {
                 '${record.isIncome ? '+' : '-'}$amount', 
                 style: TextStyle(
                   color: record.isIncome
-                      ? const Color(0xFFFF5257)
-                      : const Color(0xFF1D1D1D),
+                      ? const Color(0xFFFB5555)
+                      : const Color(0xFF38404D),
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                 ),
@@ -350,7 +353,7 @@ class PrintBillListPage extends BaseStateless {
               child: Text(
                 '余额: ${record.balance.toStringAsFixed(2)}',
                 style: TextStyle(
-                  color: const Color(0xFF8D95A0),
+                  color: const Color(0xFF8D95A1),
                   fontSize: 14.sp,
                 ),
               ),
