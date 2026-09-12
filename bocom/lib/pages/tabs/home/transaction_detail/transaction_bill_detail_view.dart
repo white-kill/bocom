@@ -482,9 +482,10 @@ class _BillDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLongIdentifier = label == '订单编号' || label == '交易流水号';
     final valueStyle = TextStyle(
       color: const Color(0xFF303030),
-      fontSize: 16.sp,
+      fontSize: isLongIdentifier ? 16.6.sp : 16.sp,
       height: 1.35,
     );
 

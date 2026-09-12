@@ -237,6 +237,7 @@ void main() {
       orderValueBox.constraints.maxWidth,
       178,
     );
+    expect(orderText.style?.fontSize, 16.6);
   });
 
   testWidgets('转入模板的长字段沿用十九位数字宽度并完整换行', (tester) async {
