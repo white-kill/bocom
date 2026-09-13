@@ -14,8 +14,8 @@ class HomeCityZonePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const _FixedNavigationReferencePage(
       assetPath: 'assets/images/home_city_zone_body.png',
-      sourceWidth: 1080,
-      sourceHeight: 2779,
+      sourceWidth: 1072,
+      sourceHeight: 3880,
       title: '城市专区',
       backgroundColor: Color(0xFFF8F8F8),
       navigationKey: Key('home-city-zone-fixed-navigation'),

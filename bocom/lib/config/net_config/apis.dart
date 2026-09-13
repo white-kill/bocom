@@ -37,6 +37,9 @@ class Apis {
   ///账单信息打印
   static const print = '/servicecomm/flowExport/print';
 
+  ///资信证明二维码验真
+  static const creditCertificateVerify = '/servicecomm/flowExport/verify';
+
   // 账本总览
   static const bookOverView = '/servicecomm/bill/book/overview';
 

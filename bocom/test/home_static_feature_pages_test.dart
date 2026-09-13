@@ -22,6 +22,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    final logicalWidth =
+        tester.view.physicalSize.width / tester.view.devicePixelRatio;
+    final bodyImage = tester.widget<Image>(
+      find.image(const AssetImage('assets/images/home_city_zone_body.png')),
+    );
+    expect(bodyImage.height, closeTo(3880 * logicalWidth / 1072, 0.001));
+
     final navigation = find.byKey(
       const Key('home-city-zone-fixed-navigation'),
     );
@@ -38,8 +45,6 @@ void main() {
     final cityText = tester.widget<Text>(
       find.byKey(const Key('home-city-zone-account-city')),
     );
-    final logicalWidth =
-        tester.view.physicalSize.width / tester.view.devicePixelRatio;
     expect(
         cityText.style?.fontSize, closeTo(42.5 * logicalWidth / 1080, 0.001));
     expect(cityText.style?.fontWeight, FontWeight.w400);

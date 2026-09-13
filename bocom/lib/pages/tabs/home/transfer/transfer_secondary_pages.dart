@@ -1,7 +1,9 @@
 import 'package:bocom/config/abc_config/boc_logic.dart';
+import 'package:bocom/config/model/member_info_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:wb_base_widget/extension/double_extension.dart';
 
 import '../../../../routes/app_pages.dart';
 
@@ -30,6 +32,19 @@ String _memberBankLabel() {
   return '$name ${bank.cardType.trim().isEmpty ? '借记卡' : bank.cardType.trim()}（${_maskedCardSuffix(bank.bankCard)}）';
 }
 
+String _fundsTransferBankLabel(MemberInfoBankList bank) {
+  final digits = bank.bankCard.replaceAll(RegExp(r'\D'), '');
+  final suffix = digits.isEmpty
+      ? '0000'
+      : digits.length > 4
+          ? digits.substring(digits.length - 4)
+          : digits;
+  final bankName = bank.bankName.trim().isEmpty ? '交通银行' : bank.bankName.trim();
+  final cardType =
+      bank.cardType.trim().isEmpty ? 'II类账户' : bank.cardType.trim();
+  return '$bankName $cardType(**$suffix)';
+}
+
 String _memberName() {
   if (!Get.isRegistered<BocLogic>()) return 'DEMO USER';
   final member = Get.find<BocLogic>().memberInfo;
@@ -41,9 +56,15 @@ String _memberName() {
 }
 
 class _TransferHeader extends StatelessWidget implements PreferredSizeWidget {
-  const _TransferHeader({required this.title});
+  const _TransferHeader({
+    required this.title,
+    this.showCustomerService = false,
+    this.backgroundColor = _secondaryBackground,
+  });
 
   final String title;
+  final bool showCustomerService;
+  final Color backgroundColor;
 
   @override
   Size get preferredSize => const Size.fromHeight(52);
@@ -51,7 +72,7 @@ class _TransferHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: _secondaryBackground,
+      backgroundColor: backgroundColor,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: true,
@@ -77,6 +98,32 @@ class _TransferHeader extends StatelessWidget implements PreferredSizeWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+      actions: showCustomerService
+          ? [
+              Semantics(
+                button: true,
+                label: '客服',
+                child: IconButton(
+                  onPressed: () => Get.toNamed(Routes.customerService),
+                  icon: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(9),
+                      child: Image.asset(
+                        'assets/images/nav_right_kf.png',
+                        width: 22,
+                        height: 22,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+            ]
+          : null,
     );
   }
 }
@@ -139,7 +186,7 @@ Future<String?> _showChoiceSheet(
 }
 
 // 单笔资金转入页
-// 说明：当前页面是活页面，导航、卡片选择、金额输入和按钮状态均由 Flutter 原生绘制。
+// 说明：当前页面是活页面，导航、卡片选择、金额输入和按钮状态均由 Flutter 原生绘制；收款卡默认读取当前账户。
 class SingleFundsTransferPage extends StatefulWidget {
   const SingleFundsTransferPage({super.key});
 
@@ -153,8 +200,11 @@ class _SingleFundsTransferPageState extends State<SingleFundsTransferPage> {
   String? _receiver;
   String? _payer;
 
-  bool get _canContinue =>
-      _receiver != null &&
+  String? _receiverValue(MemberInfoBankList? bank) =>
+      _receiver ?? (bank == null ? null : _fundsTransferBankLabel(bank));
+
+  bool _canContinue(MemberInfoBankList? bank) =>
+      _receiverValue(bank) != null &&
       _payer != null &&
       (double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0) > 0;
 
@@ -175,41 +225,73 @@ class _SingleFundsTransferPageState extends State<SingleFundsTransferPage> {
     super.dispose();
   }
 
+  List<String> _bankChoices() {
+    if (!Get.isRegistered<BocLogic>()) {
+      return const ['示例收款卡（****0000）'];
+    }
+    final banks = Get.find<BocLogic>().memberInfo.bankList;
+    if (banks.isEmpty) return const ['示例收款卡（****0000）'];
+    return banks.map(_fundsTransferBankLabel).toList(growable: false);
+  }
+
   Future<void> _chooseReceiver() async {
     final result = await _showChoiceSheet(
       context,
       title: '选择收款卡',
-      choices: [_memberBankLabel()],
+      choices: _bankChoices(),
     );
     if (result != null && mounted) setState(() => _receiver = result);
   }
 
-  Future<void> _choosePayer() async {
-    if (_receiver == null) return;
+  Future<void> _choosePayer(MemberInfoBankList? bank) async {
+    if (_receiverValue(bank) == null) return;
     final result = await _showChoiceSheet(
       context,
       title: '选择付款卡',
-      choices: const ['示例付款卡（****0000）'],
+      choices: _bankChoices(),
     );
     if (result != null && mounted) setState(() => _payer = result);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!Get.isRegistered<BocLogic>()) {
+      return _buildPage(context, null);
+    }
+    return GetBuilder<BocLogic>(
+      id: 'updateCard',
+      builder: (logic) => _buildPage(
+        context,
+        logic.memberInfo.bankList.isEmpty
+            ? null
+            : logic.memberInfo.bankList.first,
+      ),
+    );
+  }
+
+  Widget _buildPage(BuildContext context, MemberInfoBankList? bank) {
     final scale = _sourceScale(context);
+    final receiverValue = _receiverValue(bank);
     return _LightPage(
       child: Scaffold(
         backgroundColor: _secondaryBackground,
         appBar: const _TransferHeader(title: '资金转入'),
         body: ListView(
           padding: EdgeInsets.fromLTRB(
-              38 * scale, 20 * scale, 38 * scale, 44 * scale),
+            38 * scale,
+            20 * scale,
+            38 * scale,
+            44 * scale,
+          ),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           children: [
             _FundsCard(
               scale: scale,
               title: '收款卡',
-              value: _receiver,
+              value: receiverValue,
+              subtitle: receiverValue == null
+                  ? null
+                  : '可用余额： ${bank?.accountBalance.bankBalance ?? '--'}元',
               hint: '请选择收款卡',
               enabled: true,
               showChevron: true,
@@ -221,50 +303,66 @@ class _SingleFundsTransferPageState extends State<SingleFundsTransferPage> {
               title: '付款卡',
               value: _payer,
               hint: '请选择付款卡',
-              enabled: _receiver != null,
+              enabled: receiverValue != null,
               showChevron: false,
-              onTap: _choosePayer,
+              onTap: () => _choosePayer(bank),
             ),
             SizedBox(height: 32 * scale),
             Container(
               height: 300 * scale,
               padding: EdgeInsets.fromLTRB(
-                  52 * scale, 42 * scale, 52 * scale, 24 * scale),
+                52 * scale,
+                42 * scale,
+                52 * scale,
+                24 * scale,
+              ),
               decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24 * scale)),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24 * scale),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('转账金额',
-                      style: TextStyle(
-                          fontSize: 46 * scale, fontWeight: FontWeight.w600)),
+                  Text(
+                    '转账金额',
+                    style: TextStyle(
+                      fontSize: 46 * scale,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const Spacer(),
                   Row(
                     children: [
-                      Text('¥',
-                          style: TextStyle(
-                              fontSize: 68 * scale,
-                              fontWeight: FontWeight.w700)),
+                      Text(
+                        '¥',
+                        style: TextStyle(
+                          fontSize: 68 * scale,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       SizedBox(width: 16 * scale),
                       Expanded(
                         child: TextField(
                           key: const Key('single-funds-amount-field'),
                           controller: _amountController,
                           keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
+                            decimal: true,
+                          ),
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d{0,9}(\.\d{0,2})?'))
+                              RegExp(r'^\d{0,9}(\.\d{0,2})?'),
+                            ),
                           ],
                           style: TextStyle(
-                              fontSize: 55 * scale,
-                              fontWeight: FontWeight.w500),
+                            fontSize: 55 * scale,
+                            fontWeight: FontWeight.w500,
+                          ),
                           decoration: InputDecoration.collapsed(
                             hintText: '免手续费',
                             hintStyle: TextStyle(
-                                color: const Color(0xFFD4D8DE),
-                                fontSize: 43 * scale),
+                              color: const Color(0xFFD4D8DE),
+                              fontSize: 43 * scale,
+                            ),
                           ),
                         ),
                       ),
@@ -278,7 +376,7 @@ class _SingleFundsTransferPageState extends State<SingleFundsTransferPage> {
               key: const Key('single-funds-next-button'),
               scale: scale,
               label: '下一步',
-              enabled: _canContinue,
+              enabled: _canContinue(bank),
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('资金转入信息已填写')),
               ),
@@ -297,6 +395,7 @@ class _FundsCard extends StatelessWidget {
     required this.scale,
     required this.title,
     required this.value,
+    this.subtitle,
     required this.hint,
     required this.enabled,
     required this.showChevron,
@@ -306,6 +405,7 @@ class _FundsCard extends StatelessWidget {
   final double scale;
   final String title;
   final String? value;
+  final String? subtitle;
   final String hint;
   final bool enabled;
   final bool showChevron;
@@ -324,16 +424,25 @@ class _FundsCard extends StatelessWidget {
         child: Container(
           height: 286 * scale,
           padding: EdgeInsets.fromLTRB(
-              52 * scale, 40 * scale, 46 * scale, 32 * scale),
+            52 * scale,
+            40 * scale,
+            46 * scale,
+            32 * scale,
+          ),
           decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24 * scale)),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24 * scale),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: TextStyle(
-                      fontSize: 46 * scale, fontWeight: FontWeight.w600)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 46 * scale,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const Spacer(),
               Row(
                 children: [
@@ -347,15 +456,45 @@ class _FundsCard extends StatelessWidget {
                   ),
                   SizedBox(width: 24 * scale),
                   Expanded(
-                    child: Text(
-                      value ?? hint,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: value == null ? _secondaryHint : _secondaryText,
-                        fontSize: 42 * scale,
-                      ),
-                    ),
+                    child: subtitle == null
+                        ? Text(
+                            value ?? hint,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: value == null
+                                  ? _secondaryHint
+                                  : _secondaryText,
+                              fontSize: 42 * scale,
+                            ),
+                          )
+                        : Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                value ?? hint,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: _secondaryText,
+                                  fontSize: 40 * scale,
+                                  height: 1.05,
+                                ),
+                              ),
+                              SizedBox(height: 6 * scale),
+                              Text(
+                                subtitle!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: const Color(0xFF969EAC),
+                                  fontSize: 34 * scale,
+                                  height: 1.05,
+                                ),
+                              ),
+                            ],
+                          ),
                   ),
                   if (showChevron) Icon(Icons.chevron_right, size: 48 * scale),
                 ],
@@ -416,16 +555,126 @@ class _FundsTransferTips extends StatelessWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('温馨提示：',
-            style: TextStyle(
-                color: Color(0xFF888888),
-                fontSize: 16,
-                fontWeight: FontWeight.w600)),
+        Text(
+          '温馨提示：',
+          style: TextStyle(
+            color: Color(0xFF888888),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         SizedBox(height: 10),
         Text('1. 收款卡与付款卡须为本人同名账户。', style: style),
         Text('2. 转入额度以付款卡发卡行与银联渠道的可用限额为准。', style: style),
         Text('3. 请妥善保管卡号、密码和短信验证码，谨防诈骗。', style: style),
       ],
+    );
+  }
+}
+
+// 信用卡还款页
+// 说明：当前页面使用不含导航栏的内容切图，返回、标题和客服导航由 Flutter 单独绘制。
+class CreditCardRepaymentPage extends StatelessWidget {
+  const CreditCardRepaymentPage({super.key});
+
+  static const _sourceWidth = 1080.0;
+  static const _sourceHeight = 2168.0;
+  static const _asset =
+      'assets/images/transfer_secondary/credit_card_repayment_body.png';
+
+  @override
+  Widget build(BuildContext context) {
+    return _LightPage(
+      child: Scaffold(
+        backgroundColor: _secondaryBackground,
+        appBar: const _TransferHeader(
+          title: '信用卡还款',
+          showCustomerService: true,
+          backgroundColor: Colors.white,
+        ),
+        body: LayoutBuilder(
+          builder: (_, constraints) {
+            final scale = constraints.maxWidth / _sourceWidth;
+            return SingleChildScrollView(
+              padding: EdgeInsets.zero,
+              physics: const ClampingScrollPhysics(),
+              child: Image.asset(
+                _asset,
+                width: constraints.maxWidth,
+                height: _sourceHeight * scale,
+                fit: BoxFit.fill,
+                gaplessPlayback: true,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// 转账设置页
+// 说明：当前页面使用不含导航栏的内容切图，页面导航由 Flutter 单独绘制；切图中的开关仅作静态展示。
+class TransferSettingsPage extends StatelessWidget {
+  const TransferSettingsPage({super.key});
+
+  static const _sourceWidth = 1080.0;
+  static const _sourceHeight = 2160.0;
+  static const _asset =
+      'assets/images/transfer_secondary/transfer_settings_body.png';
+
+  @override
+  Widget build(BuildContext context) {
+    return _LightPage(
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF9F9F9),
+        appBar: const _TransferHeader(
+          title: '转账设置',
+          showCustomerService: true,
+          backgroundColor: Color(0xFFF9F9F9),
+        ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final scale =
+                constraints.maxWidth / TransferSettingsPage._sourceWidth;
+            final imageHeight = TransferSettingsPage._sourceHeight * scale;
+            final contentHeight = imageHeight < constraints.maxHeight
+                ? constraints.maxHeight
+                : imageHeight;
+            return SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: SizedBox(
+                width: constraints.maxWidth,
+                height: contentHeight,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 0,
+                      height: imageHeight,
+                      child: Image.asset(
+                        TransferSettingsPage._asset,
+                        fit: BoxFit.fill,
+                        gaplessPlayback: true,
+                      ),
+                    ),
+                    _ImageHotspot(
+                      label: '查询手机转账限额',
+                      left: 39,
+                      top: 24,
+                      width: 949,
+                      height: 120,
+                      scale: scale,
+                      onTap: () => Get.toNamed(Routes.transferLimit),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

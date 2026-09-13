@@ -59,6 +59,9 @@ dependencies:
     path: modules/gallery_saver_plus
   popup_menu: any
   camera: 0.11.2+1
+  image_picker: ^1.1.2
+  mobile_scanner: ^6.0.11
+  url_launcher: ^6.3.2
   lunar: ^1.7.8
 
 

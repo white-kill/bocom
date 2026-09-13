@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'dart:ui';
 
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+
+import 'credit_certificate_verification.dart';
 
 const _referenceWidth = 402.0;
 
@@ -13,74 +17,143 @@ class ScanPage extends StatefulWidget {
   const ScanPage({
     super.key,
     this.enableCamera = true,
+    this.verificationLoader,
+    this.pdfLauncher,
   });
 
   /// 仅供无相机的测试环境使用。
   final bool enableCamera;
+  final CreditCertificateLoader? verificationLoader;
+  final ExternalPdfLauncher? pdfLauncher;
 
   @override
   State<ScanPage> createState() => _ScanPageState();
 }
 
 class _ScanPageState extends State<ScanPage>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with SingleTickerProviderStateMixin {
   late final AnimationController _scanController;
-  CameraController? _cameraController;
-  bool _initializingCamera = false;
+  MobileScannerController? _scannerController;
+  bool _handlingScan = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _scanController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
     )..repeat();
-    if (widget.enableCamera) _initializeCamera();
-  }
-
-  Future<void> _initializeCamera() async {
-    if (_initializingCamera || _cameraController != null) return;
-    _initializingCamera = true;
-    try {
-      final cameras = await availableCameras();
-      if (cameras.isEmpty || !mounted) return;
-      final controller = CameraController(
-        cameras.first,
-        ResolutionPreset.high,
-        enableAudio: false,
+    if (widget.enableCamera) {
+      _scannerController = MobileScannerController(
+        detectionSpeed: DetectionSpeed.noDuplicates,
+        facing: CameraFacing.back,
+        formats: const [BarcodeFormat.qrCode],
       );
-      await controller.initialize();
-      if (!mounted) {
-        await controller.dispose();
-        return;
-      }
-      setState(() => _cameraController = controller);
-    } catch (_) {
-      // 模拟器或权限不可用时保留深色扫码背景。
-    } finally {
-      _initializingCamera = false;
     }
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!widget.enableCamera) return;
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused) {
-      final controller = _cameraController;
-      _cameraController = null;
-      controller?.dispose();
-    } else if (state == AppLifecycleState.resumed) {
-      _initializeCamera();
+  Future<void> _handleDetection(BarcodeCapture capture) async {
+    if (_handlingScan) return;
+    final rawValue = _firstRawValue(capture);
+    if (rawValue == null) return;
+    await _verifyScannedValue(rawValue);
+  }
+
+  String? _firstRawValue(BarcodeCapture? capture) {
+    for (final barcode in capture?.barcodes ?? const <Barcode>[]) {
+      final value = barcode.rawValue?.trim();
+      if (value != null && value.isNotEmpty) return value;
     }
+    return null;
+  }
+
+  Future<void> _verifyScannedValue(String rawValue) async {
+    if (_handlingScan) return;
+    _handlingScan = true;
+    await _stopScanner();
+    try {
+      await _loadAndOpenVerification(rawValue);
+    } on FormatException catch (error) {
+      if (mounted) _showMessage(error.message.toString());
+    } catch (_) {
+      if (mounted) _showMessage('资信证明验真失败，请稍后重试');
+    } finally {
+      _handlingScan = false;
+      if (mounted) await _startScanner();
+    }
+  }
+
+  Future<void> _pickQrFromGallery() async {
+    if (_handlingScan) return;
+    _handlingScan = true;
+    await _stopScanner();
+    try {
+      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (image == null || !mounted) return;
+      final capture = await _scannerController?.analyzeImage(
+        image.path,
+        formats: const [BarcodeFormat.qrCode],
+      );
+      final rawValue = _firstRawValue(capture);
+      if (rawValue == null) {
+        throw const FormatException('未识别到二维码');
+      }
+      await _loadAndOpenVerification(rawValue);
+    } on FormatException catch (error) {
+      if (mounted) _showMessage(error.message.toString());
+    } catch (_) {
+      if (mounted) _showMessage('图片识别失败，请重新选择');
+    } finally {
+      _handlingScan = false;
+      if (mounted) await _startScanner();
+    }
+  }
+
+  Future<void> _loadAndOpenVerification(String rawValue) async {
+    final result = await verifyCreditCertificateQr(
+      rawValue,
+      loader: widget.verificationLoader ?? loadCreditCertificateVerification,
+    );
+    if (!mounted) return;
+    await Get.to<void>(
+      () => CreditCertificateVerificationPage(
+        result: result,
+        pdfLauncher: widget.pdfLauncher,
+      ),
+    );
+  }
+
+  Future<void> _stopScanner() async {
+    try {
+      await _scannerController?.stop();
+    } catch (_) {}
+  }
+
+  Future<void> _startScanner() async {
+    try {
+      await _scannerController?.start();
+    } catch (_) {}
+  }
+
+  Future<void> _toggleTorch() async {
+    try {
+      await _scannerController?.toggleTorch();
+    } catch (_) {
+      if (mounted) _showMessage('暂时无法打开手电筒');
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _scanController.dispose();
-    _cameraController?.dispose();
+    final scannerController = _scannerController;
+    if (scannerController != null) unawaited(scannerController.dispose());
     super.dispose();
   }
 
@@ -114,7 +187,10 @@ class _ScanPageState extends State<ScanPage>
             return Stack(
               fit: StackFit.expand,
               children: [
-                _CameraBackdrop(controller: _cameraController),
+                _ScannerBackdrop(
+                  controller: _scannerController,
+                  onDetect: _handleDetection,
+                ),
                 const IgnorePointer(child: _ReadabilityOverlay()),
                 AnimatedBuilder(
                   animation: _scanController,
@@ -165,12 +241,13 @@ class _ScanPageState extends State<ScanPage>
                   top: actionTop,
                   width: actionSize,
                   height: actionSize,
-                  child: const _RoundScanAction(
+                  child: _RoundScanAction(
                     semanticsLabel: '照亮',
                     iconAsset: 'assets/images/scan/flashlight.png',
                     iconWidth: 10,
                     iconHeight: 17,
                     label: '照亮',
+                    onTap: _toggleTorch,
                   ),
                 ),
                 Positioned(
@@ -178,12 +255,13 @@ class _ScanPageState extends State<ScanPage>
                   top: actionTop,
                   width: actionSize,
                   height: actionSize,
-                  child: const _RoundScanAction(
+                  child: _RoundScanAction(
                     semanticsLabel: '相册',
                     iconAsset: 'assets/images/scan/gallery.png',
                     iconWidth: 14,
                     iconHeight: 14,
                     label: '相册',
+                    onTap: _pickQrFromGallery,
                   ),
                 ),
                 Positioned(
@@ -243,29 +321,27 @@ class _ScanPageState extends State<ScanPage>
   }
 }
 
-class _CameraBackdrop extends StatelessWidget {
-  const _CameraBackdrop({required this.controller});
+class _ScannerBackdrop extends StatelessWidget {
+  const _ScannerBackdrop({
+    required this.controller,
+    required this.onDetect,
+  });
 
-  final CameraController? controller;
+  final MobileScannerController? controller;
+  final void Function(BarcodeCapture capture) onDetect;
 
   @override
   Widget build(BuildContext context) {
-    if (controller?.value.isInitialized != true) {
+    if (controller == null) {
       return const ColoredBox(color: Color(0xFF24272A));
     }
-    final previewSize = controller!.value.previewSize;
-    if (previewSize == null) {
-      return const ColoredBox(color: Color(0xFF24272A));
-    }
-    return ClipRect(
-      child: FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: previewSize.height,
-          height: previewSize.width,
-          child: CameraPreview(controller!),
-        ),
-      ),
+    return MobileScanner(
+      key: const Key('real-qr-scanner'),
+      controller: controller,
+      fit: BoxFit.cover,
+      onDetect: onDetect,
+      placeholderBuilder: (_, __) => const ColoredBox(color: Color(0xFF24272A)),
+      errorBuilder: (_, __, ___) => const ColoredBox(color: Color(0xFF24272A)),
     );
   }
 }
@@ -299,6 +375,7 @@ class _RoundScanAction extends StatelessWidget {
     required this.iconWidth,
     required this.iconHeight,
     required this.label,
+    this.onTap,
   });
 
   final String semanticsLabel;
@@ -306,6 +383,7 @@ class _RoundScanAction extends StatelessWidget {
   final double iconWidth;
   final double iconHeight;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -319,7 +397,7 @@ class _RoundScanAction extends StatelessWidget {
         shape: const CircleBorder(),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () {},
+          onTap: onTap,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
