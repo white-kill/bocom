@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
@@ -24,13 +25,22 @@ class HomeLogic extends GetxController {
   void setTwoLevelOpen(bool value) {
     _isTwoLevelOpen = value;
     if (value) {
-      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
+      SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle.dark.copyWith(
+          statusBarColor: Colors.transparent,
+          systemStatusBarContrastEnforced: false,
+        ),
+      );
       state.appBarController.changeTabTitle(false);
       return;
     }
 
     SystemChrome.setSystemUIOverlayStyle(
-      isNavDark.value ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+      (isNavDark.value ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light)
+          .copyWith(
+        statusBarColor: Colors.transparent,
+        systemStatusBarContrastEnforced: false,
+      ),
     );
 
     Future<void>.delayed(const Duration(milliseconds: 560), () {

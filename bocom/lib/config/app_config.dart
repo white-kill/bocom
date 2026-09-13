@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sp_util/sp_util.dart';
-import 'dart:io' show Platform;
 import '../utils/local_notifications.dart';
 import 'abc_config/boc_logic.dart';
 import 'net_config/net_config.dart';
@@ -73,8 +72,11 @@ class Config {
   late BocLogic abcLogic;
   Future initApp() async {
     WidgetsFlutterBinding.ensureInitialized();
+    // 全局允许页面背景绘制到系统栏下方，控件的安全间距由页面导航处理。
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
+      systemStatusBarContrastEnforced: false,
     ));
     await SpUtil.getInstance();
     // netConfig.baseUrl = 'http://47.102.135.129:8001';
