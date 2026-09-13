@@ -103,6 +103,7 @@ BookAnalysisRankList $BookAnalysisRankListFromJson(Map<String, dynamic> json) =>
     BookAnalysisRankList()
       ..rank = jsonConvert.convert<int>(json['rank']) ?? 0
       ..id = jsonConvert.convert<int>(json['id']) ?? 0
+      ..icon = _string(json['icon'])
       ..excerpt = _string(json['excerpt'])
       ..amount = _string(json['amount'])
       ..transactionTime = _string(json['transactionTime'])
@@ -111,6 +112,7 @@ BookAnalysisRankList $BookAnalysisRankListFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> $BookAnalysisRankListToJson(BookAnalysisRankList e) => {
       'rank': e.rank,
       'id': e.id,
+      'icon': e.icon,
       'excerpt': e.excerpt,
       'amount': e.amount,
       'transactionTime': e.transactionTime,

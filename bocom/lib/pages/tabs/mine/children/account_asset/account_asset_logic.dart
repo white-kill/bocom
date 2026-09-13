@@ -27,7 +27,7 @@ class AccountAssetLogic extends GetxController {
   void onInit(){
     super.onInit();
     DateTime now = DateTime.now();
-    DateFormat formatter = DateFormat('yyyy年MM月dd日 hh:mm:ss');
+    DateFormat formatter = DateFormat('yyyy年MM月dd日 HH:mm:ss');
     nowDate = formatter.format(now).obs;
   }
 }

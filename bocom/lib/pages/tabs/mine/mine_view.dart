@@ -19,6 +19,7 @@ import 'children/settting/setting_view.dart';
 import 'children/ycbg/ycbg_view.dart';
 import 'children/wdaq/wdaq_view.dart';
 import 'children/jjkjf/jjkjf_view.dart';
+import 'children/dkgl/dkgl_view.dart';
 import 'login_time_formatter.dart';
 import 'mine_logic.dart';
 import 'mine_state.dart';
@@ -846,10 +847,11 @@ class MinePage extends BaseStateless {
                 child: Container().withOnTap(
                     onTap: () {
                   // 代扣设置
-                  Get.to(() => FixedNavPage(), arguments: {
-                    'image': 'bg_mine_dkgl',
-                    'title': '代扣管理',
-                  });
+                  // Get.to(() => FixedNavPage(), arguments: {
+                  //   'image': 'bg_mine_dkgl',
+                  //   'title': '代扣管理',
+                  // });
+                  Get.to(() => DkglPage());
                 })),
             Positioned(
                 left: position5.getX(120),

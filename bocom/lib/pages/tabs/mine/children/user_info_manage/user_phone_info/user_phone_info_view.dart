@@ -124,7 +124,7 @@ class UserPhoneInfoPage extends BaseStateless {
               child: GetBuilder<BocLogic>(
                 id: 'updateUI',
                 builder: (logic) => BaseText(
-                  text: 'I类账户(${logic.cardFour()})',
+                  text: 'I类账户(**${logic.cardFour()})',
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: const Color(0xFF181818),

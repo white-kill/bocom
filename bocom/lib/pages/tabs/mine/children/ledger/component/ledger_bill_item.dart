@@ -88,12 +88,14 @@ class LedgerBillItem extends StatelessWidget {
                     : '${item.month.split('-').last}月',
                 fontSize: 18,
                 color: const Color(0xFF333333),
+                fontWeight: FontWeight.w500,
               ),
               SizedBox(height: 9.w),
               _totals(
                 income: item.monthIncomeTotal,
                 expenses: item.monthExpensesTotal,
                 color: const Color(0xFF333333),
+                amountFontWeight: FontWeight.w500,
               ),
               SizedBox(height: 16.w),
             ],
@@ -208,15 +210,28 @@ class LedgerBillItem extends StatelessWidget {
     required String income,
     required String expenses,
     required Color color,
+    FontWeight? amountFontWeight,
   }) =>
       Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
         children: [
           const BaseText(text: '收入', fontSize: 14, color: Color(0xFF999999)),
-          BaseText(text: _total(income), fontSize: 14, color: color),
+          BaseText(
+            text: _total(income),
+            fontSize: 14,
+            color: color,
+            fontWeight: amountFontWeight,
+          ),
           SizedBox(width: 12.w),
           const BaseText(text: '支出', fontSize: 14, color: Color(0xFF999999)),
-          BaseText(text: _total(expenses), fontSize: 14, color: color),
+          BaseText(
+            text: _total(expenses),
+            fontSize: 14,
+            color: color,
+            fontWeight: amountFontWeight,
+          ),
         ],
       );
 }

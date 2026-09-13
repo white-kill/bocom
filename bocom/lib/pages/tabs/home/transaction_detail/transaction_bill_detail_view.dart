@@ -19,6 +19,8 @@ class TransactionBillDetailPage extends StatefulWidget {
     this.detailLoader,
     this.onQuestionTap,
     this.onTransferTap,
+    this.showTransferAction = true,
+    this.showBanner = true,
   });
 
   final int billId;
@@ -26,6 +28,8 @@ class TransactionBillDetailPage extends StatefulWidget {
   final TransactionBillDetailLoader? detailLoader;
   final VoidCallback? onQuestionTap;
   final VoidCallback? onTransferTap;
+  final bool showTransferAction;
+  final bool showBanner;
 
   @override
   State<TransactionBillDetailPage> createState() =>
@@ -167,24 +171,27 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
             child: _BillDetailCard(
               detail: _detail!,
               onTransferTap: _handleTransferTap,
+              showTransferAction: widget.showTransferAction,
             ),
           ),
-          SizedBox(height: 14.w),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14.w),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(9.w),
-              child: AspectRatio(
-                // Reference crop: x=43, y=1990, 1120x300 from 1206x2622.
-                aspectRatio: 1120 / 300,
-                child: Image.asset(
-                  'assets/images/transaction_detail/detail_banner.png',
-                  key: const ValueKey('transaction_bill_detail_banner'),
-                  fit: BoxFit.fill,
+          if (widget.showBanner) ...[
+            SizedBox(height: 14.w),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 14.w),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(9.w),
+                child: AspectRatio(
+                  // Reference crop: x=43, y=1990, 1120x300 from 1206x2622.
+                  aspectRatio: 1120 / 300,
+                  child: Image.asset(
+                    'assets/images/transaction_detail/detail_banner.png',
+                    key: const ValueKey('transaction_bill_detail_banner'),
+                    fit: BoxFit.fill,
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
           SizedBox(height: 62.w),
           Semantics(
             button: true,
@@ -274,10 +281,12 @@ class _BillDetailCard extends StatelessWidget {
   const _BillDetailCard({
     required this.detail,
     required this.onTransferTap,
+    required this.showTransferAction,
   });
 
   final TransactionBillDetail detail;
   final VoidCallback onTransferTap;
+  final bool showTransferAction;
 
   static final NumberFormat _amountFormat = NumberFormat('#,##0.00');
   static final DateFormat _dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
@@ -352,6 +361,7 @@ class _BillDetailCard extends StatelessWidget {
   }
 
   bool get _showTransferAction {
+    if (!showTransferAction) return false;
     if (detail.kind == TransactionBillDetailKind.transferOut) return true;
     if (detail.kind != TransactionBillDetailKind.transferIn) return false;
     return detail.oppositeName.trim().isNotEmpty ||

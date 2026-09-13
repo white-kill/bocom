@@ -58,7 +58,7 @@ class AccountManageTwoPage extends BaseStateless {
                 top: position.getY(304),
                 left: position.getX(350),
                 child: BaseText(
-                  text: '￥${AppConfig.config.abcLogic.balance()}元',
+                  text: '￥${AppConfig.config.abcLogic.balance()}',
                   color: const Color(0xFF777777),
                   fontSize: 12,
                 )),
@@ -86,6 +86,13 @@ class AccountManageTwoPage extends BaseStateless {
                   color: const Color(0xFF777777),
                   fontSize: 12,
                 )),
+            // 遮挡住详情的按钮
+            Positioned(
+                top: position.getY(470),
+                right: position.getX(70),
+                width: position.getWidth(170),
+                height: position.getHeight(100),
+                child: Container(color: Colors.white)),
             Positioned(
                 top: position.getY(630),
                 left: 0,

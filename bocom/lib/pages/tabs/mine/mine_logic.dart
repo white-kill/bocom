@@ -8,6 +8,8 @@ import './children/account_manage/account_manage_view.dart';
 import './children/user_info_manage/user_info_manage_view.dart';
 import './children/zxzm/zxzm_view.dart';
 import './children/mine_pay/mine_pay_view.dart';
+import './children/dkgl/dkgl_view.dart';
+import './children/grzy/grzy_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../index/index_logic.dart';
@@ -61,16 +63,17 @@ class MineLogic extends GetxController with WidgetsBindingObserver {
       Get.to(() => UserInfoManagePage());
     }else if(index == 2) {
       // 个人主页
-      Get.to(() => ChangeNavPage(), arguments: {
-        'image': 'bg_personal',
-        'title': '',
-        'hideRightAction': true,
-        'isOffset': true,
-        'navColor': Colors.white,
-        'changeTitleColor': Colors.transparent,
-        'defTitleColor': Colors.transparent,
-        'showBackgroundColor': false,
-      });
+      Get.to(() => GrzyPage());
+      // Get.to(() => ChangeNavPage(), arguments: {
+      //   'image': 'bg_personal',
+      //   'title': '',
+      //   'hideRightAction': true,
+      //   'isOffset': true,
+      //   'navColor': Colors.white,
+      //   'changeTitleColor': Colors.transparent,
+      //   'defTitleColor': Colors.transparent,
+      //   'showBackgroundColor': false,
+      // });
     }else if(index == 3) {
       // 我的支付
       Get.to(() => MinePayPage());
@@ -79,10 +82,11 @@ class MineLogic extends GetxController with WidgetsBindingObserver {
       Get.toNamed(Routes.homeActivityCenter);
     }else if(index == 5) {
       // 代扣管理
-      Get.to(() => FixedNavPage(), arguments: {
-        'image': 'bg_mine_dkgl',
-        'title': '代扣管理',
-      });
+      // Get.to(() => FixedNavPage(), arguments: {
+      //   'image': 'bg_mine_dkgl',
+      //   'title': '代扣管理',
+      // });
+      Get.to(() => DkglPage());
     }else if(index == 6) {
       // 资信证明
       Get.to(() => ZxzmPage());

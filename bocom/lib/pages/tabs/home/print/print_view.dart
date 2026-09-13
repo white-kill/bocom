@@ -1,5 +1,5 @@
 import 'dart:math';
-
+import 'package:bocom/pages/other/fixed_nav/fixed_nav_view.dart';
 import 'package:bocom/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -32,6 +32,7 @@ class PrintPage extends BaseStateless {
     StackPosition stackPosition =
         StackPosition(designWidth: 1080, designHeight: 2168, deviceWidth: 1.sw);
     return ListView(
+      shrinkWrap: true,
       padding: EdgeInsets.zero,
       children: [
         Stack(
@@ -58,7 +59,11 @@ class PrintPage extends BaseStateless {
                   width: 1.sw,
                   height: stackPosition.getHeight(400),
                 ).withOnTap(onTap: () {
-                  Get.to(() => PrintBillListPage());
+                  // 网点打印
+                  Get.to(() => FixedNavPage(), arguments: {
+                    'image': 'bg_print_network‌',
+                    'title': '开立交易明细',
+                  });
                 })),
             Positioned(
                 left: 0,

@@ -95,7 +95,7 @@ class BankDetailDialog extends StatelessWidget {
                 child: BaseText(
                   text: AppConfig.config.abcLogic.card1(),
                   fontSize: 16,
-                  color: const Color(0xFF757575),
+                  color: const Color(0xFF181818),
                 ),
               ),
               Positioned(
@@ -104,7 +104,7 @@ class BankDetailDialog extends StatelessWidget {
                 child: BaseText(
                   text: AppConfig.config.abcLogic.memberInfo.realName,
                   fontSize: 15,
-                  color: const Color(0xFF757575),
+                  color: const Color(0xFF181818),
                 ),
               ),
               Positioned(
@@ -113,7 +113,7 @@ class BankDetailDialog extends StatelessWidget {
                 child: BaseText(
                   text: AppConfig.config.abcLogic.branchBelongs(),
                   fontSize: 15,
-                  color: const Color(0xFF757575),
+                  color: const Color(0xFF181818),
                 ),
               ),
               Positioned(

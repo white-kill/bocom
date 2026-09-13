@@ -66,6 +66,7 @@ class BookAnalysisTrendList {
 class BookAnalysisRankList {
   int rank = 0;
   int id = 0;
+  String icon = '';
   String excerpt = '';
   String amount = '';
   String transactionTime = '';

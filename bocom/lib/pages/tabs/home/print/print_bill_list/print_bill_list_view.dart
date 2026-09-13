@@ -277,12 +277,13 @@ class PrintBillListPage extends BaseStateless {
       ),
     );
   }
-
   void _openBillDetail(TransactionBillEntry entry) {
     Get.to<void>(
       () => TransactionBillDetailPage(
         billId: entry.id,
         initialDetail: entry.detail,
+        showTransferAction: false,
+        showBanner: false,
       ),
     );
   }

@@ -514,6 +514,7 @@ class LedgerLogic extends GetxController {
   Future<void> getBookAnalysis() async {
     if (token == '') return;
     final params = buildAnalysisParams();
+    print(params.toString());
     final value =
         await Http.post(Apis.bookAnalysis, data: params, isLoading: false);
     if (value is Map) {

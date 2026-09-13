@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:bocom/config/app_config.dart';
 import 'package:bocom/routes/app_pages.dart';
 import 'package:bocom/utils/stack_position.dart';
@@ -262,35 +263,43 @@ class ProfitCenterPage extends BaseStateless {
                     showDateHeader:
                         logic.selectedView.value == ProfitChartView.trend,
                   ),
-                  if (logic.selectedView.value == ProfitChartView.trend)
-                    Image(
-                      image: 'bg_profit_chart'.png3x,
-                      width: 1.sw - position1.getX(80),
-                      fit: BoxFit.fitWidth,
-                    )
-                  else
-                    ProfitCalendarView(
-                      period: logic.selectedPeriod.value,
-                      anchor: logic.calendarAnchor.value,
-                      selectedDate: logic.selectedDate.value,
-                      currentDate: logic.currentDate,
-                      canMoveNext: logic.canMoveCalendarNext(
-                        logic.selectedPeriod.value,
-                      ),
-                      onMove: (direction) => logic.moveCalendar(
-                        logic.selectedPeriod.value,
-                        direction,
-                      ),
-                      onDaySelected: logic.selectCalendarDay,
-                      onWeekSelected: logic.selectCalendarWeek,
-                      onMonthSelected: logic.selectCalendarMonth,
-                      onYearSelected: logic.selectCalendarYear,
+                  _ProfitPrivacyOverlay(
+                    visible: logic.amountVisible.value,
+                    onShow: () => logic.amountVisible.value = true,
+                    child: Column(
+                      children: [
+                        if (logic.selectedView.value == ProfitChartView.trend)
+                          Image(
+                            image: 'bg_profit_chart'.png3x,
+                            width: 1.sw - position1.getX(80),
+                            fit: BoxFit.fitWidth,
+                          )
+                        else
+                          ProfitCalendarView(
+                            period: logic.selectedPeriod.value,
+                            anchor: logic.calendarAnchor.value,
+                            selectedDate: logic.selectedDate.value,
+                            currentDate: logic.currentDate,
+                            canMoveNext: logic.canMoveCalendarNext(
+                              logic.selectedPeriod.value,
+                            ),
+                            onMove: (direction) => logic.moveCalendar(
+                              logic.selectedPeriod.value,
+                              direction,
+                            ),
+                            onDaySelected: logic.selectCalendarDay,
+                            onWeekSelected: logic.selectCalendarWeek,
+                            onMonthSelected: logic.selectCalendarMonth,
+                            onYearSelected: logic.selectCalendarYear,
+                          ),
+                        ProfitViewSwitch(
+                          selectedView: logic.selectedView.value,
+                          onViewSelected: logic.selectView,
+                        ),
+                        SizedBox(height: 20.h),
+                      ],
                     ),
-                  ProfitViewSwitch(
-                    selectedView: logic.selectedView.value,
-                    onViewSelected: logic.selectView,
                   ),
-                  SizedBox(height: 20.h),
                 ],
               ),
             ),
@@ -306,6 +315,71 @@ class ProfitCenterPage extends BaseStateless {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _ProfitPrivacyOverlay extends StatelessWidget {
+  const _ProfitPrivacyOverlay({
+    required this.visible,
+    required this.onShow,
+    required this.child,
+  });
+
+  final bool visible;
+  final VoidCallback onShow;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (visible) return child;
+    return ClipRect(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          ExcludeSemantics(
+            child: IgnorePointer(
+              child: ImageFiltered(
+                imageFilter: ui.ImageFilter.blur(sigmaX: 5.w, sigmaY: 5.w),
+                child: child,
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: ColoredBox(color: Colors.white.withValues(alpha: 0.45)),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const BaseText(
+                text: '已隐藏收益数据及图表',
+                fontSize: 16,
+                color: Color(0xFF333333),
+              ),
+              SizedBox(height: 24.w),
+              Semantics(
+                button: true,
+                child: GestureDetector(
+                  onTap: onShow,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24.w),
+                      border: Border.all(color: const Color(0xFFCFD3DA)),
+                    ),
+                    child: const BaseText(
+                      text: '点击此处显示',
+                      fontSize: 16,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -136,6 +136,8 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
                   count: '${item.billCount}笔',
                   amount: _formatAmount(item.amount),
                   progress: _progressValue(item.percentage),
+                  progressColor:
+                      _showExpense ? const Color(0xFFFFB57C) : _incomeColor,
                 ),
               );
             }),
@@ -759,12 +761,22 @@ class _LedgerAnalysisTabState extends State<LedgerAnalysisTab> {
                   ),
           ),
           SizedBox(width: 9.w),
-          Icon(
-              item.type == 1
-                  ? Icons.account_balance_wallet_outlined
-                  : Icons.sync_alt,
+          // Icon(
+          //     item.type == 1
+          //         ? Icons.account_balance_wallet_outlined
+          //         : Icons.sync_alt,
+          //     size: 22.w,
+          //     color: const Color(0xFF333333)),
+          Image.network(
+            item.icon,
+            width: 22.w,
+            height: 22.w,
+            errorBuilder: (_, __, ___) => Icon(
+              Icons.sync_alt,
               size: 22.w,
-              color: const Color(0xFF333333)),
+              color: const Color(0xFF333333),
+            ),
+          ),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -830,6 +842,7 @@ class _CategoryItem extends StatelessWidget {
     required this.count,
     required this.amount,
     required this.progress,
+    required this.progressColor,
   });
 
   final VoidCallback onTap;
@@ -839,6 +852,7 @@ class _CategoryItem extends StatelessWidget {
   final String count;
   final String amount;
   final double progress;
+  final Color progressColor;
 
   @override
   Widget build(BuildContext context) {
@@ -895,7 +909,7 @@ class _CategoryItem extends StatelessWidget {
                     minHeight: 4.w,
                     value: progress,
                     backgroundColor: const Color(0xFFEDF1F5),
-                    valueColor: const AlwaysStoppedAnimation(Color(0xFFFFB57C)),
+                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                   ),
                 ),
               ],

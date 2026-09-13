@@ -14,6 +14,7 @@ import 'account_asset_logic.dart';
 import 'account_asset_state.dart';
 import 'bank_detail_dialog.dart';
 import 'account_secondary_pages.dart';
+import './account_huoqi_yue/account_huoqi_yue_view.dart';
 
 // 我的账户/我的资产页
 // 说明：当前页面使用不含导航栏的账户与资产内容切图，动态余额、导航和功能热区由 Flutter 单独绘制。
@@ -146,35 +147,41 @@ class AccountAssetPage extends BaseStateless {
                 : _AssetContent(logic: logic),
           ),
         ),
-        Stack(
-          children: [
-            Obx(
-              () => Image(
-                image: logic.bottomItemIndex.value == 0
-                    ? 'bg_my_account_bottom'.png3x
-                    : 'bg_my_asset_bottom'.png3x,
-                width: 1.sw,
-                fit: BoxFit.fitWidth,
-              ),
-            ),
-            Positioned(
-              left: 0,
-              top: 0,
+        ColoredBox(
+          color: Colors.white,
+          child: SafeArea(
+            top: false,
+            left: false,
+            right: false,
+            child: SizedBox(
               width: 1.sw,
               height: positionBottom.getHeight(146),
-              child: Row(
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Container().withOnTap(onTap: () {
-                    logic.onBottomItemClick(0);
-                  }).expanded(),
-                  Container().withOnTap(onTap: () {
-                    logic.onBottomItemClick(1);
-                  }).expanded(),
+                  Obx(
+                    () => Image(
+                      image: logic.bottomItemIndex.value == 0
+                          ? 'bg_my_account_bottom'.png3x
+                          : 'bg_my_asset_bottom'.png3x,
+                      fit: BoxFit.fitWidth,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container().withOnTap(onTap: () {
+                        logic.onBottomItemClick(0);
+                      }).expanded(),
+                      Container().withOnTap(onTap: () {
+                        logic.onBottomItemClick(1);
+                      }).expanded(),
+                    ],
+                  ),
                 ],
               ),
-            )
-          ],
-        )
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -745,6 +752,16 @@ class _AssetContent extends StatelessWidget {
                     color: const Color(0xFF111111),
                   ),
                 )),
+              Positioned(
+                left: position2.getX(50),
+                right: position2.getX(50),
+                top: position2.getY(385),
+                child: SizedBox(
+                  height: position2.getHeight(70),
+                ).withOnTap(onTap: (){
+                  Get.to(() => AccountHuoQiYuEPage());
+                })
+              ),
           ],
         ),
         Image(
