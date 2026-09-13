@@ -12,7 +12,6 @@ import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:wb_base_widget/extension/string_extension.dart';
 
 import '../../../../../routes/app_pages.dart';
 
@@ -37,6 +36,7 @@ const _receiptWrappedSerialBodyHeight = 1987.0;
 const _receiptNavigationHeight = 180.0;
 const _receiptFooterHeight = 660.0;
 const _receiptInk = Color(0xFF333333);
+const _receiptPageBackground = Color(0xFFF7F7F7);
 const _receiptSerialLineLength = 26;
 const _receiptWrappedSerialMinimumLength = 28;
 
@@ -436,84 +436,212 @@ class AccountTransferReceiptPage extends StatefulWidget {
 class _AccountTransferReceiptPageState
     extends State<AccountTransferReceiptPage> {
   final _savedReceiptKey = GlobalKey();
+  final _receiptScrollController = ScrollController();
   bool _isSaving = false;
+  bool? _saveResult;
   bool _hideCardNumbers = true;
 
   Future<void> _saveReceipt() async {
     if (_isSaving) return;
     setState(() => _isSaving = true);
+    var saved = false;
     try {
+      _receiptScrollController.jumpTo(0);
+      // 先移除底部操作区并完成整页重绘，再生成不含控件和提示框的回执图片。
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
       final boundary = _savedReceiptKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) throw StateError('Receipt render is unavailable');
       final ratio = _receiptScreenReferenceWidth / boundary.size.width;
       final image = await boundary.toImage(pixelRatio: ratio);
-      final data = await image.toByteData(format: ui.ImageByteFormat.png);
-      image.dispose();
+      ByteData? data;
+      try {
+        data = await image.toByteData(format: ui.ImageByteFormat.png);
+      } finally {
+        image.dispose();
+      }
       if (data == null) throw StateError('Receipt encoding failed');
       final bytes = data.buffer.asUint8List();
-      final saved = await (widget.receiptSaver?.call(bytes) ??
+      saved = await (widget.receiptSaver?.call(bytes) ??
           _saveReceiptToGallery(bytes, widget.data.billId));
-      if (!mounted) return;
-      (saved ? '保存成功' : '保存失败').showToast;
     } catch (error, stackTrace) {
       debugPrint('Unable to save transfer receipt: $error\n$stackTrace');
-      if (mounted) {
-        '保存失败'.showToast;
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
     }
+    if (!mounted) return;
+    setState(() => _saveResult = saved);
+  }
+
+  void _closeSaveResult() {
+    setState(() {
+      _saveResult = null;
+      _isSaving = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _receiptScrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFFF7F7F7),
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            _saveResult != null ? Brightness.light : Brightness.dark,
+        statusBarBrightness:
+            _saveResult != null ? Brightness.dark : Brightness.light,
+        systemStatusBarContrastEnforced: false,
         systemNavigationBarColor: Colors.white,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
         key: const Key('account-transfer-receipt-page'),
-        backgroundColor: const Color(0xFFF7F7F7),
-        body: SafeArea(
-          bottom: false,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final scale = constraints.maxWidth / _receiptScreenReferenceWidth;
-              return Column(
-                children: [
-                  _ReceiptNavigation(
-                    height: _receiptNavigationHeight * scale,
-                    scale: scale,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      key: const Key('receipt-content-scroll-view'),
-                      child: RepaintBoundary(
-                        key: _savedReceiptKey,
-                        child: _SavedReceipt(
-                          data: widget.data,
-                          hideCardNumbers: _hideCardNumbers,
+        backgroundColor: _receiptPageBackground,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: SafeArea(
+                bottom: false,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final scale =
+                        constraints.maxWidth / _receiptScreenReferenceWidth;
+                    return Column(
+                      children: [
+                        _ReceiptNavigation(
+                          height: _receiptNavigationHeight * scale,
+                          scale: scale,
                         ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            key: const Key('receipt-content-scroll-view'),
+                            controller: _receiptScrollController,
+                            child: RepaintBoundary(
+                              key: _savedReceiptKey,
+                              child: _SavedReceipt(
+                                data: widget.data,
+                                hideCardNumbers: _hideCardNumbers,
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (!_isSaving)
+                          _ReceiptFooter(
+                            hideCardNumbers: _hideCardNumbers,
+                            onToggleCardNumbers: () {
+                              setState(
+                                () => _hideCardNumbers = !_hideCardNumbers,
+                              );
+                            },
+                            onSave: _saveReceipt,
+                            onNotifyWechatFriend:
+                                widget.onNotifyWechatFriend ?? () {},
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+            if (_saveResult != null)
+              Positioned.fill(
+                child: Stack(
+                  key: const Key('receipt-save-result-overlay'),
+                  children: [
+                    const Positioned.fill(
+                      child: ModalBarrier(
+                        color: Colors.black54,
+                        dismissible: false,
                       ),
                     ),
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: _ReceiptSaveResultSheet(
+                        saved: _saveResult!,
+                        onConfirm: _closeSaveResult,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReceiptSaveResultSheet extends StatelessWidget {
+  const _ReceiptSaveResultSheet({
+    required this.saved,
+    required this.onConfirm,
+  });
+
+  final bool saved;
+  final VoidCallback onConfirm;
+
+  @override
+  Widget build(BuildContext context) {
+    // 参考图去除外框后的宽度为 383，底部提示面板高 286。
+    final scale = MediaQuery.sizeOf(context).width / 383;
+    return Container(
+      key: const Key('receipt-save-result-sheet'),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18 * scale)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 286 * scale,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14 * scale),
+            child: Column(
+              children: [
+                SizedBox(height: 60 * scale),
+                Text(
+                  '提示',
+                  style: TextStyle(
+                    color: const Color(0xFF171717),
+                    fontSize: 18 * scale,
+                    fontWeight: FontWeight.w600,
+                    height: 1.25,
                   ),
-                  _ReceiptFooter(
-                    hideCardNumbers: _hideCardNumbers,
-                    isSaving: _isSaving,
-                    onToggleCardNumbers: () {
-                      setState(() => _hideCardNumbers = !_hideCardNumbers);
-                    },
-                    onSave: _saveReceipt,
-                    onNotifyWechatFriend: widget.onNotifyWechatFriend ?? () {},
+                ),
+                SizedBox(height: 16 * scale),
+                Text(
+                  saved ? '保存成功' : '保存失败，请重试',
+                  style: TextStyle(
+                    color: const Color(0xFF333333),
+                    fontSize: 14 * scale,
+                    height: 1.25,
                   ),
-                ],
-              );
-            },
+                ),
+                const Spacer(),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48 * scale,
+                  child: ElevatedButton(
+                    onPressed: onConfirm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0072F3),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12 * scale),
+                      ),
+                      textStyle: TextStyle(fontSize: 18 * scale),
+                    ),
+                    child: const Text('确定'),
+                  ),
+                ),
+                SizedBox(height: 26 * scale),
+              ],
+            ),
           ),
         ),
       ),
@@ -568,14 +696,12 @@ class _ReceiptNavigation extends StatelessWidget {
 class _ReceiptFooter extends StatelessWidget {
   const _ReceiptFooter({
     required this.hideCardNumbers,
-    required this.isSaving,
     required this.onToggleCardNumbers,
     required this.onSave,
     required this.onNotifyWechatFriend,
   });
 
   final bool hideCardNumbers;
-  final bool isSaving;
   final VoidCallback onToggleCardNumbers;
   final VoidCallback onSave;
   final VoidCallback onNotifyWechatFriend;
@@ -622,7 +748,7 @@ class _ReceiptFooter extends StatelessWidget {
                 top: 397,
                 width: 538,
                 height: 150,
-                semanticLabel: isSaving ? '正在保存图片' : '保存图片',
+                semanticLabel: '保存图片',
                 onTap: onSave,
               ),
               _footerHotspot(

@@ -178,7 +178,11 @@ class _AppBarWidgetState extends State<AppBarWidget> {
                   widget.noBackGround == true
                   ? (_scrollDistance > 20
                   ? SystemUiOverlayStyle.dark
-                  : SystemUiOverlayStyle.light)
+                  : SystemUiOverlayStyle.light).copyWith(
+                    // 切换图标明暗时也要清除上一页留下的状态栏底色。
+                    statusBarColor: Colors.transparent,
+                    systemStatusBarContrastEnforced: false,
+                  )
                   : null,
               backgroundColor:widget.showBackgroundColor ==true? (widget.noBackGround == true
                   ? widget.navColor?.withAlpha(

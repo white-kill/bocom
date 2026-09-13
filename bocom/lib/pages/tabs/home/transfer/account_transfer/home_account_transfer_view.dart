@@ -717,7 +717,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
                   alignment: Alignment.centerRight,
                   child: Icon(
                     Icons.person_outline,
-                    size: 23,
+                    size: 19,
                     color: Color(0xFF333333),
                   ),
                 ),

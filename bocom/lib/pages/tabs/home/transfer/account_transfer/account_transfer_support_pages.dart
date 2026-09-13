@@ -19,6 +19,8 @@ const _pageBackground = Color(0xFFF5F6F8);
 
 enum _RequestState { loading, loaded, error }
 
+enum _RecipientEditAction { deleted }
+
 // 全部收款人页
 // 说明：导航、搜索、动态分组列表和底部操作均使用原生 Flutter 绘制，截图仅用于尺寸与颜色校准。
 class AccountTransferRecipientsPage extends StatefulWidget {
@@ -151,14 +153,21 @@ class _AccountTransferRecipientsPageState
   }
 
   Future<void> _editRecipient(ContactsModel original) async {
-    final updated = await Get.to<ContactsModel>(
+    final result = await Get.to<Object>(
       () => AddRecipientPage(initialRecipient: original),
     );
-    if (updated == null || !mounted) return;
+    if (result == null || !mounted) return;
     final contacts = [..._contacts];
     final index = contacts.indexOf(original);
     if (index < 0) return;
-    contacts[index] = updated;
+    if (result == _RecipientEditAction.deleted) {
+      // 与当前添加、编辑流程一致，仅更新本次打开的收款人列表。
+      contacts.removeAt(index);
+    } else if (result is ContactsModel) {
+      contacts[index] = result;
+    } else {
+      return;
+    }
     contacts.sort((a, b) => _sortKey(a.name).compareTo(_sortKey(b.name)));
     setState(() {
       _contacts = contacts;
@@ -429,6 +438,7 @@ class _AddRecipientBottomBar extends StatelessWidget {
   }
 }
 
+// 添加／编辑收款人页：表单与操作按钮由 Flutter 原生绘制，不使用整页截图。
 class AddRecipientPage extends StatefulWidget {
   const AddRecipientPage({
     super.key,
@@ -451,6 +461,8 @@ class _AddRecipientPageState extends State<AddRecipientPage> {
   final _branchController = TextEditingController();
   final _phoneController = TextEditingController();
   final _noteController = TextEditingController();
+
+  bool get _isEditing => widget.initialRecipient != null;
 
   bool get _canContinue =>
       _nameController.text.trim().isNotEmpty &&
@@ -564,7 +576,7 @@ class _AddRecipientPageState extends State<AddRecipientPage> {
               children: [
                 _AddRecipientHeader(
                   scale: scale,
-                  title: widget.initialRecipient == null ? '添加收款人' : '编辑收款人',
+                  title: _isEditing ? '编辑收款人' : '添加收款人',
                 ),
                 ColoredBox(
                   color: Colors.white,
@@ -672,34 +684,66 @@ class _AddRecipientPageState extends State<AddRecipientPage> {
                     43 * scale,
                     40 * scale,
                   ),
-                  child: SizedBox(
-                    key: const Key('add-recipient-next-button'),
-                    height: 127 * scale,
-                    child: ElevatedButton(
-                      onPressed: _complete,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF016AE9),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18 * scale),
-                        ),
-                      ),
-                      child: Text(
-                        '下一步',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 50 * scale,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: _buildActions(scale),
                 ),
               ],
             );
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildActions(double scale) {
+    final height = (_isEditing ? 138 : 127) * scale;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular((_isEditing ? 34 : 18) * scale),
+    );
+    final textStyle = TextStyle(
+      fontSize: 50 * scale,
+      fontWeight: FontWeight.w400,
+    );
+    final nextButton = SizedBox(
+      key: const Key('add-recipient-next-button'),
+      height: height,
+      child: ElevatedButton(
+        onPressed: _complete,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF016AE9),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: shape,
+          textStyle: textStyle,
+        ),
+        child: const Text('下一步'),
+      ),
+    );
+    if (!_isEditing) return nextButton;
+
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            key: const Key('edit-recipient-delete-button'),
+            height: height,
+            child: OutlinedButton(
+              onPressed: () => Get.back(result: _RecipientEditAction.deleted),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF28799E),
+                side: BorderSide(
+                  color: const Color(0xFF28799E),
+                  width: 3 * scale,
+                ),
+                shape: shape,
+                textStyle: textStyle,
+              ),
+              child: const Text('删除'),
+            ),
+          ),
+        ),
+        SizedBox(width: 46 * scale),
+        Expanded(child: nextButton),
+      ],
     );
   }
 }
