@@ -164,11 +164,11 @@ class AccountMoreFunctionsPage extends StatelessWidget {
     return _AccountSlicePage(
       title: '更多功能',
       assetPath: 'assets/images/account_more_functions_body.png',
-      sourceHeight: 2168,
+      sourceHeight: 2172,
       hotspots: [
         _SliceHotspot(
-          top: 790,
-          height: 150,
+          top: 1224,
+          height: 128,
           label: '账户解绑',
           onTap: () => Get.toNamed(Routes.accountUnbind),
         ),
@@ -492,7 +492,7 @@ class _AccountScaffold extends StatelessWidget {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: backgroundColor,
+        backgroundColor: Colors.white,
         body: SafeArea(
           bottom: false,
           child: Column(
@@ -540,7 +540,13 @@ class _AccountScaffold extends StatelessWidget {
                   ),
                 ),
               ),
-              Expanded(child: child),
+              Expanded(
+                child: ColoredBox(
+                  key: const Key('account-secondary-content-background'),
+                  color: backgroundColor,
+                  child: child,
+                ),
+              ),
             ],
           ),
         ),

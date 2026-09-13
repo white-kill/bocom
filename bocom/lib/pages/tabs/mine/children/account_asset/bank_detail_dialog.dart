@@ -6,6 +6,8 @@ import 'package:bocom/utils/stack_position.dart';
 import 'package:bocom/config/app_config.dart';
 import 'package:flutter/services.dart';
 
+const _detailValueColor = Color(0xFF6A6A6A);
+
 class BankDetailCopiedToast extends StatelessWidget {
   const BankDetailCopiedToast({super.key});
 
@@ -95,7 +97,7 @@ class BankDetailDialog extends StatelessWidget {
                 child: BaseText(
                   text: AppConfig.config.abcLogic.card1(),
                   fontSize: 16,
-                  color: const Color(0xFF757575),
+                  color: _detailValueColor,
                 ),
               ),
               Positioned(
@@ -104,7 +106,7 @@ class BankDetailDialog extends StatelessWidget {
                 child: BaseText(
                   text: AppConfig.config.abcLogic.memberInfo.realName,
                   fontSize: 15,
-                  color: const Color(0xFF757575),
+                  color: _detailValueColor,
                 ),
               ),
               Positioned(
@@ -113,7 +115,7 @@ class BankDetailDialog extends StatelessWidget {
                 child: BaseText(
                   text: AppConfig.config.abcLogic.branchBelongs(),
                   fontSize: 15,
-                  color: const Color(0xFF757575),
+                  color: _detailValueColor,
                 ),
               ),
               Positioned(

@@ -1,6 +1,7 @@
 import 'package:bocom/config/abc_config/boc_logic.dart';
 import 'package:bocom/config/model/member_info_model.dart';
 import 'package:bocom/pages/tabs/mine/children/account_asset/account_secondary_pages.dart';
+import 'package:bocom/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -81,6 +82,45 @@ void main() {
 
     expect(find.byKey(const Key('account-family-pay-agreement')), findsNothing);
     expect(find.byKey(const Key('account-family-pay-open')), findsNothing);
+  });
+
+  testWidgets('更多功能新切图的账户解绑行可进入解绑页', (tester) async {
+    await tester.pumpWidget(
+      GetMaterialApp(
+        getPages: [
+          GetPage(
+            name: Routes.accountUnbind,
+            page: () => const Scaffold(body: Text('账户解绑页')),
+          ),
+        ],
+        home: const AccountMoreFunctionsPage(),
+      ),
+    );
+    await tester.pump();
+
+    final accountUnbind = find.bySemanticsLabel('账户解绑');
+    await tester.ensureVisible(accountUnbind);
+    await tester.pumpAndSettle();
+    await tester.tap(accountUnbind);
+    await tester.pumpAndSettle();
+
+    expect(Get.currentRoute, Routes.accountUnbind);
+    expect(find.text('账户解绑页'), findsOneWidget);
+  });
+
+  testWidgets('账户二级页顶部与导航保持白色', (tester) async {
+    await tester.pumpWidget(
+      const GetMaterialApp(home: AccountMoreFunctionsPage()),
+    );
+    await tester.pump();
+
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    final contentBackground = tester.widget<ColoredBox>(
+      find.byKey(const Key('account-secondary-content-background')),
+    );
+
+    expect(scaffold.backgroundColor, Colors.white);
+    expect(contentBackground.color, const Color(0xFFF7F7F7));
   });
 
   testWidgets('所有账户二级页都有可用返回导航', (tester) async {
