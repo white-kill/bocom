@@ -561,7 +561,7 @@ class LedgerLogic extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getOverView();
+    _loadTabIfNeeded(ledgerTab.value);
   }
 
   @override

@@ -179,7 +179,7 @@ class PrintBillListLogic extends GetxController {
     final finish = _dateOnly(end);
     beginTime.value = start;
     endTime.value = finish;
-    selectedPeriodLabel.value = '${_formatDate(start)}至${_formatDate(finish)}';
+    selectedPeriodLabel.value = '${_formatDate(start)}-${_formatDate(finish)}';
     closePeriodFilter();
     loadTransactions();
   }
@@ -210,6 +210,6 @@ class PrintBillListLogic extends GetxController {
   String _formatDate(DateTime date) {
     final month = date.month.toString().padLeft(2, '0');
     final day = date.day.toString().padLeft(2, '0');
-    return '${date.year}-$month-$day';
+    return '${date.year}.$month.$day';
   }
 }

@@ -101,7 +101,7 @@ class LedgerOverviewTab extends StatelessWidget {
         children: [
           SizedBox(
             width: _position.getWidth(1080),
-            height: _position.getWidth(453),
+            height: _position.getHeight(453),
             child: Stack(
               children: [
                 Positioned.fill(

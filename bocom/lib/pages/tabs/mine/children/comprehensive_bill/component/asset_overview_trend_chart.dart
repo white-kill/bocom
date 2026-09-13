@@ -41,12 +41,18 @@ class AssetOverviewTrendChart extends StatelessWidget {
     return SizedBox(
       height: 155.w,
       child: LayoutBuilder(builder: (context, constraints) {
+        final bottomTitlesHeight = 25.w;
+        const xAxisBorderWidth = 1.0;
+        final markerTop = constraints.maxHeight -
+            bottomTitlesHeight -
+            xAxisBorderWidth / 2 -
+            8.w;
         final plotWidth = math.max(0, constraints.maxWidth - 42.w).toDouble();
         final markerLeft = 42.w +
             (values.length <= 1
                 ? 0
                 : plotWidth * activeIndex / (values.length - 1)) -
-            5.w;
+            8.w;
         return Stack(clipBehavior: Clip.none, children: [
         Positioned.fill(
           child: LineChart(
@@ -72,7 +78,7 @@ class AssetOverviewTrendChart extends StatelessWidget {
             border: const Border(
               bottom: BorderSide(
                 color: Color(0xFFBFCBD6),
-                width: 1,
+                width: xAxisBorderWidth,
               ),
             ),
           ),
@@ -122,7 +128,7 @@ class AssetOverviewTrendChart extends StatelessWidget {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 25.w,
+                reservedSize: bottomTitlesHeight,
                 getTitlesWidget: (_, __) => const SizedBox.shrink(),
               ),
             ),
@@ -173,21 +179,27 @@ class AssetOverviewTrendChart extends StatelessWidget {
           ),
         Positioned(
           left: markerLeft,
-          top: 125.w,
+          top: markerTop,
           child: Container(
-            width: 10.w,
-            height: 10.w,
+            width: 16.w,
+            height: 16.w,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: _lineColor.withOpacity(.22),
               shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  _lineColor.withValues(alpha: 0.38),
+                  _lineColor.withValues(alpha: 0.12),
+                ],
+              ),
             ),
             child: Container(
-              width: 5.w,
-              height: 5.w,
-              decoration: const BoxDecoration(
+              width: 8.w,
+              height: 8.w,
+              decoration: BoxDecoration(
                 color: _lineColor,
                 shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2.w),
               ),
             ),
           ),

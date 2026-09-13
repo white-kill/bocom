@@ -551,20 +551,6 @@ class MinePage extends BaseStateless {
               ),
             ),
             Positioned(
-              right: position3.getX(70),
-              top: position3.getY(70),
-              child: Obx(
-                () => Image(
-                  image: (logic.amountVisible.value
-                          ? 'ic_mine_eye_open'
-                          : 'ic_mine_eye_close')
-                      .png,
-                  width: position3.getWidth(70),
-                  fit: BoxFit.fitWidth,
-                ).withOnTap(onTap: logic.toggleAmountVisible),
-              ),
-            ),
-            Positioned(
                 left: position3.getX(80),
                 top: position3.getY(180),
                 child: Row(
@@ -668,6 +654,21 @@ class MinePage extends BaseStateless {
                 // 跳转到收益中心
                 Get.to(() => ProfitCenterPage());
               }),
+            ),
+            // 眼睛
+            Positioned(
+              right: position3.getX(70),
+              top: position3.getY(70),
+              child: Obx(
+                () => Image(
+                  image: (logic.amountVisible.value
+                          ? 'ic_mine_eye_open'
+                          : 'ic_mine_eye_close')
+                      .png,
+                  width: position3.getWidth(70),
+                  fit: BoxFit.fitWidth,
+                ).withOnTap(onTap: logic.toggleAmountVisible),
+              ),
             ),
             Positioned(
               left: position3.getX(30),

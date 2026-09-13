@@ -482,6 +482,11 @@ class PrintBillListPage extends BaseStateless {
 
   bool _isPeriodSelected(String period) {
     final label = logic.selectedPeriodLabel.value;
+    if (period == '自定义') {
+      return label == period ||
+          RegExp(r'^\d{4}\.\d{2}\.\d{2}-\d{4}\.\d{2}\.\d{2}$')
+              .hasMatch(label);
+    }
     return label == period || (period == '近一个月' && label == '近1个月');
   }
 
@@ -681,6 +686,7 @@ class _FilterBar extends StatelessWidget {
       color: Colors.white,
       child: Row(
         children: [
+          SizedBox(width: 3.w),
           Expanded(
             child: Semantics(
               button: true,
@@ -691,22 +697,26 @@ class _FilterBar extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    BaseText(
-                      text: periodLabel,
-                      key: const ValueKey(
-                        'transaction_detail_selected_month',
+                    Flexible(
+                      child: BaseText(
+                        text: periodLabel,
+                        key: const ValueKey(
+                          'transaction_detail_selected_month',
+                        ),
+                        color: periodExpanded || periodLabel != '近1个月'
+                            ? const Color(0xFF0075F6)
+                            : const Color(0xFF303030),
+                        fontSize: 14,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      color: periodExpanded || periodLabel != '近1个月'
-                          ? const Color(0xFF0075F6)
-                          : const Color(0xFF303030),
-                      fontSize: 14,
                     ),
-                    SizedBox(width: 5.w),
+                    SizedBox(width: 3.w),
                     Icon(
                       periodExpanded
                           ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
-                      color: periodExpanded
+                      color: periodExpanded || periodLabel != '近1个月'
                           ? const Color(0xFF0075F6)
                           : const Color(0xFF303030),
                       size: 20.w,
@@ -736,7 +746,7 @@ class _FilterBar extends StatelessWidget {
                           : const Color(0xFF303030),
                       fontSize: 14,
                     ),
-                    SizedBox(width: 5.w),
+                    SizedBox(width: 3.w),
                     Icon(
                       currencyExpanded
                           ? Icons.keyboard_arrow_up
