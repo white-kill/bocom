@@ -198,6 +198,14 @@ class AppPages {
       page: () => const HomePhoneTransferPage(),
     ),
     GetPage(
+      name: Routes.creditCardRepayment,
+      page: () => const CreditCardRepaymentPage(),
+    ),
+    GetPage(
+      name: Routes.transferSettings,
+      page: () => const TransferSettingsPage(),
+    ),
+    GetPage(
       name: Routes.singleFundsTransfer,
       page: () => const SingleFundsTransferPage(),
     ),

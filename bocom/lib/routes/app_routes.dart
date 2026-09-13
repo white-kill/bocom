@@ -75,6 +75,10 @@ class Routes {
 
   static const homePhoneTransfer = '/homePhoneTransfer';
 
+  static const creditCardRepayment = '/creditCardRepayment';
+
+  static const transferSettings = '/transferSettings';
+
   static const singleFundsTransfer = '/singleFundsTransfer';
 
   static const periodicTransferPlan = '/periodicTransferPlan';

@@ -251,6 +251,23 @@ class _TransferPageBody extends StatelessWidget {
                   ),
                 ),
                 Positioned(
+                  left: 784 * scale,
+                  top: 180 * scale,
+                  width: 378 * scale,
+                  height: 355 * scale,
+                  child: Semantics(
+                    key: const ValueKey(
+                      'home_credit_card_repayment_hotspot',
+                    ),
+                    button: true,
+                    label: '信用卡还款',
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Get.toNamed(Routes.creditCardRepayment),
+                    ),
+                  ),
+                ),
+                Positioned(
                   left: 44 * scale,
                   top: 540 * scale,
                   width: 558 * scale,
@@ -262,6 +279,21 @@ class _TransferPageBody extends StatelessWidget {
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       onTap: () => Get.toNamed(Routes.homeTransferRecord),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 602 * scale,
+                  top: 540 * scale,
+                  width: 370 * scale,
+                  height: 185 * scale,
+                  child: Semantics(
+                    key: const ValueKey('home_transfer_settings_hotspot'),
+                    button: true,
+                    label: '转账设置',
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Get.toNamed(Routes.transferSettings),
                     ),
                   ),
                 ),

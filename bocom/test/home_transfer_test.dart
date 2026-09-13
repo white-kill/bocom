@@ -4,6 +4,7 @@ import 'package:bocom/config/model/contacts_model.dart';
 import 'package:bocom/pages/tabs/home/transfer/account_transfer/home_account_transfer_view.dart';
 import 'package:bocom/pages/tabs/home/transfer/home_transfer_view.dart';
 import 'package:bocom/pages/tabs/home/transfer/phone_transfer/home_phone_transfer_view.dart';
+import 'package:bocom/pages/tabs/home/transfer/transfer_secondary_pages.dart';
 import 'package:bocom/routes/app_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,11 +28,42 @@ void main() {
     expect(find.bySemanticsLabel('客服'), findsOneWidget);
     expect(find.bySemanticsLabel('账号转账'), findsOneWidget);
     expect(find.bySemanticsLabel('手机号转账'), findsOneWidget);
+    expect(find.bySemanticsLabel('信用卡还款'), findsOneWidget);
     expect(find.bySemanticsLabel('转账记录'), findsOneWidget);
     expect(
       find.image(
         const AssetImage(
           'assets/images/account_transfer/icons/recipient_contact.png',
+        ),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('点击信用卡还款进入切图二级页', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2388);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        getPages: AppPages.routes,
+        home: HomeTransferPage(contactsLoader: () async => const []),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('信用卡还款'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CreditCardRepaymentPage), findsOneWidget);
+    expect(find.text('信用卡还款'), findsOneWidget);
+    expect(find.bySemanticsLabel('返回'), findsOneWidget);
+    expect(find.bySemanticsLabel('客服'), findsOneWidget);
+    expect(
+      find.image(
+        const AssetImage(
+          'assets/images/transfer_secondary/credit_card_repayment_body.png',
         ),
       ),
       findsOneWidget,
@@ -55,6 +87,25 @@ void main() {
     expect(find.byType(HomePhoneTransferPage), findsOneWidget);
     expect(find.byKey(const Key('phone-transfer-name-field')), findsOneWidget);
     expect(find.byKey(const Key('phone-transfer-phone-field')), findsOneWidget);
+  });
+
+  testWidgets('点击转账设置进入设置二级页', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2388);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        getPages: AppPages.routes,
+        home: HomeTransferPage(contactsLoader: () async => const []),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('转账设置'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TransferSettingsPage), findsOneWidget);
   });
 
   testWidgets('常用收款人使用接口数据渲染', (tester) async {
