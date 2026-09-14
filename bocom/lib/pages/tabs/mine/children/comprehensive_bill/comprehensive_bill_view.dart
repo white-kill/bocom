@@ -19,6 +19,8 @@ import '../profit_center/profit_center_view.dart';
 import '../ledger/ledger_view.dart';
 import 'income_bill_view.dart';
 
+// 综合账单收支条形图改版之前的版本
+
 ProfitPeriod profitPeriodForComprehensiveBillMode(int periodMode) {
   return periodMode == 1 ? ProfitPeriod.year : ProfitPeriod.month;
 }
