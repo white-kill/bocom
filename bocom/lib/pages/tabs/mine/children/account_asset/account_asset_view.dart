@@ -15,6 +15,8 @@ import 'account_asset_state.dart';
 import 'bank_detail_dialog.dart';
 import 'account_secondary_pages.dart';
 import './account_huoqi_yue/account_huoqi_yue_view.dart';
+import '../profit_center/profit_center_view.dart';
+import './account_asset_diary/account_asset_diary_view.dart';
 
 // 我的账户/我的资产页
 // 说明：当前页面使用不含导航栏的账户与资产内容切图，动态余额、导航和功能热区由 Flutter 单独绘制。
@@ -727,6 +729,24 @@ class _AssetContent extends StatelessWidget {
                   fontSize: 14,
                   color: const Color(0xFF333333),
                 ),
+              ),
+            ),
+            Positioned(
+              left: position1.getX(60),
+              right: position1.getX(60),
+              height: position1.getHeight(150),
+              top: position1.getY(1100) - assetImageTopCrop,
+              child: Row(
+                children: [
+                  Container().withOnTap(onTap: (){
+                    // 收益中心
+                    Get.to(() => ProfitCenterPage());
+                  }).expanded(),
+                  Container().withOnTap(onTap: (){
+                    // 资产日记
+                    Get.to(() => AccountAssetDiaryPage());
+                  }).expanded(),
+                ]
               ),
             ),
           ],

@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
 import './account_manage_two_view.dart';
+import './account_all/account_all_view.dart';
 
 import 'account_manage_logic.dart';
 import 'account_manage_state.dart';
@@ -50,6 +51,16 @@ class AccountManagePage extends BaseStateless {
                   letterSpacing: 1.3, // 增加字间距
                 ),
               )
+            ),
+            Positioned(
+              top: position.getY(580),
+              right: position.getX(250),
+              width: position.getWidth(300),
+              height: position.getHeight(100),
+              child: Container().withOnTap(onTap: (){
+                // 跳转全部账户页面
+                Get.to(() => AccountAllPage());
+              })
             )
           ],
         ),
