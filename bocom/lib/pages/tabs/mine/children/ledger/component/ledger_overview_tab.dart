@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 
 import '../ledger_logic.dart';
 import '../ledger_state.dart';
+import '../subpages/community/ledger_community_view.dart';
 import 'ledger_bill_item.dart';
 import 'ledger_trend_chart.dart';
 
@@ -92,7 +93,9 @@ class LedgerOverviewTab extends StatelessWidget {
               );
             },
           ),
-          _ledgerEntry().marginSymmetric(horizontal: _position.getX(30)),
+          _ledgerEntry()
+              .withOnTap(onTap: () => Get.to(() => LedgerCommunityPage()))
+              .marginSymmetric(horizontal: _position.getX(30)),
           SizedBox(height: 10.w),
         ],
       );

@@ -143,10 +143,11 @@ class AccountAssetDiaryPage extends BaseStateless {
                                           borderRadius:
                                               BorderRadius.circular(7.w)),
                                       child: Row(children: [
-                                        Image.asset(
-                                            'assets/images/transaction_detail/bank_logo.png',
-                                            width: 18.w,
-                                            height: 18.w),
+                                        Image(image: 'ic_bank_card_logo'.png, width: 15.w, fit: BoxFit.fitWidth,),
+                                        // Image.asset(
+                                        //     'assets/images/transaction_detail/bank_logo.png',
+                                        //     width: 18.w,
+                                        //     height: 18.w),
                                         SizedBox(width: 5.w),
                                         Expanded(
                                             child: BaseText(

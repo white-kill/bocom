@@ -793,8 +793,8 @@ class ComprehensiveBillPage extends BaseStateless {
                       fontSize: 14,
                       color: const Color(0xFF3F4852)),
                 ),
+                 SizedBox(height: 18.w),
                 if (showChart) ...[
-                  SizedBox(height: 18.w),
                   _cashFlowLegend(),
                   SizedBox(height: 10.w),
                   _cashFlowChart(data, visible, page, isYearMode),
