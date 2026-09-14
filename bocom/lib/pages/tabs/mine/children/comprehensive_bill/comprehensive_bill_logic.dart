@@ -17,8 +17,14 @@ class ComprehensiveBillLogic extends GetxController {
   final tabController = ScrollController();
   final selectedIndex = 0.obs;
   final periodMode = 0.obs;
-  final selectedPeriod =
-      _latestMonthlyPeriod(DateTime.now()).obs;
+  final initialPeriod = _latestMonthlyPeriod(DateTime.now());
+  late final selectedPeriod = initialPeriod.obs;
+
+  bool get isInitialCashFlowPeriod {
+    final selected = selectedPeriod.value;
+    return selected.year == initialPeriod.year &&
+        (periodMode.value == 1 || selected.month == initialPeriod.month);
+  }
   final hasAdjustedPeriod = false.obs;
   final periodPickerVisible = false.obs;
   final headerScrolled = false.obs;

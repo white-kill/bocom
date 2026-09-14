@@ -690,7 +690,7 @@ class ComprehensiveBillPage extends BaseStateless {
         child: Obx(() {
           final isYearMode = logic.periodMode.value == 1;
           final overview = logic.incomeExpenseOverview.value;
-          final data = overview.trendList
+          final trendData = overview.trendList
               .where((item) => item.dateTime != null)
               .map((item) => CashFlowItem(
                     item.dateTime!,
@@ -698,11 +698,25 @@ class ComprehensiveBillPage extends BaseStateless {
                     double.tryParse(item.expensesTotal ?? '') ?? 0,
                   ))
               .toList();
-          final page = logic.cashFlowPage.value;
-          final start = page;
-          final visible = data.skip(start).take(3).toList();
           final income = double.tryParse(overview.incomeTotal ?? '') ?? 0;
           final expense = double.tryParse(overview.expensesTotal ?? '') ?? 0;
+          final selected = logic.selectedPeriod.value;
+          final data = logic.isInitialCashFlowPeriod
+              ? trendData
+              : [
+                  CashFlowItem(
+                    isYearMode
+                        ? '${selected.year}'
+                        : '${selected.year}-${selected.month.toString().padLeft(2, '0')}',
+                    income,
+                    expense,
+                  ),
+                ];
+          final page = logic.isInitialCashFlowPeriod
+              ? logic.cashFlowPage.value
+              : 0;
+          final visible = data.skip(page).take(3).toList();
+          final showChart = income != 0 || expense != 0;
           final balance = double.tryParse(overview.balance ?? '');
           final balanceCompared =
               double.tryParse(overview.balanceComparedPrevious ?? '');
@@ -779,11 +793,13 @@ class ComprehensiveBillPage extends BaseStateless {
                       fontSize: 14,
                       color: const Color(0xFF3F4852)),
                 ),
-                SizedBox(height: 18.w),
-                _cashFlowLegend(),
-                SizedBox(height: 10.w),
-                _cashFlowChart(data, visible, page, isYearMode),
-                SizedBox(height: 5.w),
+                if (showChart) ...[
+                  SizedBox(height: 18.w),
+                  _cashFlowLegend(),
+                  SizedBox(height: 10.w),
+                  _cashFlowChart(data, visible, page, isYearMode),
+                  SizedBox(height: 5.w),
+                ],
                 _cashFlowAnalysis(isYearMode, overview),
               ]);
         }),
