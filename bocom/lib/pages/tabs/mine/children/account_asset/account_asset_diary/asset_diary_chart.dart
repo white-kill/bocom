@@ -31,14 +31,29 @@ class AssetDiaryChart extends StatelessWidget {
         math.pow(10, (math.log(raw) / math.ln10).floor()).toDouble();
     final step = (raw / magnitude).ceil() * magnitude;
     final maxY = step * 5;
+    final axisFormat = NumberFormat('#,##0');
+    final axisStyle = TextStyle(fontSize: 11.sp, color: const Color(0xFF999999));
+    final painter = TextPainter(
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    );
+    double labelWidth = 0;
+    for (var i = 0; i <= 5; i++) {
+      painter.text = TextSpan(text: axisFormat.format(step * i), style: axisStyle);
+      painter.layout();
+      labelWidth = math.max(labelWidth, painter.width);
+    }
+    painter.dispose();
+    final axisWidth = math.max(30.w, labelWidth.ceilToDouble() + 10.w);
     final index = selectedIndex.clamp(0, entries.length - 1).toInt();
     const blue = Color(0xFF75B1FA);
     return SizedBox(
         height: 170.w,
         child: LayoutBuilder(builder: (context, box) {
-          final plotWidth = box.maxWidth - 30.w;
+          final plotWidth = box.maxWidth - axisWidth;
           final plotHeight = box.maxHeight - 25.w - 1;
-          final x = 30.w + plotWidth * index / math.max(1, entries.length - 1);
+          final x = axisWidth + plotWidth * index / math.max(1, entries.length - 1);
           final y = plotHeight * (1 - entries[index].amount / maxY);
           final dateFormat = DateFormat(showYear ? 'yyyy-MM-dd' : 'MM-dd');
           return Stack(clipBehavior: Clip.none, children: [
@@ -74,15 +89,16 @@ class AssetDiaryChart extends StatelessWidget {
                         leftTitles: AxisTitles(
                             sideTitles: SideTitles(
                                 showTitles: true,
-                                reservedSize: 30.w,
+                                reservedSize: axisWidth,
                                 interval: step,
                                 getTitlesWidget: (value, _) => Padding(
                                     padding: EdgeInsets.only(right: 8.w),
                                     child: Align(
                                         alignment: Alignment.centerRight,
                                         child: BaseText(
-                                            text: NumberFormat('#,##0')
-                                                .format(value),
+                                            text: axisFormat.format(value),
+                                            style: axisStyle,
+                                            maxLines: 1,
                                             fontSize: 11,
                                             color: const Color(0xFF999999)))))),
                       ),
@@ -130,7 +146,7 @@ class AssetDiaryChart extends StatelessWidget {
                     ),
                     duration: Duration.zero)),
             Positioned(
-                left: 30.w,
+                left: axisWidth,
                 bottom: 2.w,
                 child: BaseText(
                     text: dateFormat.format(entries.first.date),

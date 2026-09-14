@@ -60,6 +60,9 @@ class Apis {
   static const bookAnalysisCategoryDetailPage =
       '/servicecomm/bill/book/analysis/categoryDetailPage';
 
+  /// 资产日记
+  static const assetDiary = '/servicecomm/bill/assetDiary';
+
   /// 综合账单-资产概览
   static const comprehensiveAssetOverview =
       '/servicecomm/bill/comprehensive/assetOverview';

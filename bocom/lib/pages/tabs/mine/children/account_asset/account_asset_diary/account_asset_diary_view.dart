@@ -16,7 +16,13 @@ class AccountAssetDiaryPage extends BaseStateless {
   final AccountAssetDiaryState state = Get.find<AccountAssetDiaryLogic>().state;
   static const blue = Color(0xFF0075F6);
   static const grey = Color(0xFF999999);
-  String money(double value) => NumberFormat('#,##0.00').format(value);
+
+  Color _changeColor(double? value) {
+    if (value == null || value == 0) return const Color(0xFF333333);
+    return value > 0 ? const Color(0xFFFF5257) : const Color(0xFF1AA36F);
+  }
+
+  String money(double? value) => value == null ? '--' : NumberFormat('#,##0.00').format(value);
 
   @override
   bool get isChangeNav => true;
@@ -70,7 +76,9 @@ class AccountAssetDiaryPage extends BaseStateless {
   }
 
   void _showDetails(BuildContext context) {
+    if (logic.loadingDetail.value || logic.loadFailed.value || logic.detail.value == null) return;
     final amount = logic.amount;
+    final available = logic.availableBalance;
     final date = DateFormat('yyyy-MM-dd').format(logic.selectedDate.value);
     final card = AppConfig.config.abcLogic.cardFour();
     showModalBottomSheet<void>(
@@ -130,7 +138,7 @@ class AccountAssetDiaryPage extends BaseStateless {
                                             fontSize: 16,
                                             fontWeight: FontWeight.w600)),
                                     BaseText(
-                                        text: money(amount),
+                                        text: money(available),
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500)
                                   ]),
@@ -156,7 +164,7 @@ class AccountAssetDiaryPage extends BaseStateless {
                                                 color:
                                                     const Color(0xFF333333))),
                                         BaseText(
-                                            text: money(amount),
+                                            text: money(available),
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500),
                                       ])),
@@ -185,6 +193,8 @@ class AccountAssetDiaryPage extends BaseStateless {
                       15.w,
                       MediaQuery.paddingOf(context).bottom + 30.w),
                   children: [
+                    if (logic.loadFailed.value)
+                      TextButton(onPressed: logic.retry, child: const BaseText(text: '加载失败，点击重试', color: blue)),
                     _card(Column(children: [
                       SizedBox(height: 28.w),
                       GestureDetector(
@@ -236,7 +246,7 @@ class AccountAssetDiaryPage extends BaseStateless {
                             BaseText(
                                 text: money(logic.change),
                                 fontSize: 17,
-                                color: const Color(0xFF333333)),
+                                color: _changeColor(logic.change)),
                           ])),
                       SizedBox(height: 40.w),
                       Padding(
@@ -318,7 +328,7 @@ class AccountAssetDiaryPage extends BaseStateless {
                                     fontSize: 17,
                                     fontWeight: FontWeight.w600)),
                             BaseText(
-                                text: money(logic.amount),
+                                text: money(logic.availableBalance),
                                 fontSize: 17,
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFF555555))
@@ -340,9 +350,9 @@ class AccountAssetDiaryPage extends BaseStateless {
                                   child: BaseText(
                                       text: '资产变动', fontSize: 14, color: grey)),
                               BaseText(
-                                  text: money(logic.todayAmount - logic.amount),
+                                  text: money(logic.comparisonChange),
                                   fontSize: 15,
-                                  color: blue)
+                                  color: _changeColor(logic.comparisonChange))
                             ]),
                           ],
                           SizedBox(height: 27.w),
@@ -360,7 +370,7 @@ class AccountAssetDiaryPage extends BaseStateless {
                         color: grey),
                     SizedBox(height: 8.w),
                     ...[
-                      '1.今日资产数据更新至 ${DateFormat('yyyy-MM-dd HH:mm:ss').format(logic.updatedAt)}。',
+                      '1.今日资产数据更新至 ${logic.updatedAt == null ? '--' : DateFormat('yyyy-MM-dd HH:mm:ss').format(logic.updatedAt!)}。',
                       '2.历史日期的资产为该日24点左右的数据（延期交易资产展示的是次日凌晨02:30时的数据）。若您在凌晨期间产生交易，展示金额可能和实际金额存在偏差。',
                       '3.部分资产的统计口径曾被调整。在统计口径变更日前后，被调整的资产项金额变动可能不连续。',
                       '4.数据仅供参考，不作为对账凭证。',
