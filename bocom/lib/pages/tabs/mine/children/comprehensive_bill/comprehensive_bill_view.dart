@@ -473,6 +473,9 @@ class ComprehensiveBillPage extends BaseStateless {
         latestMonth: logic.periodMode.value == 0
             ? DateTime(DateTime.now().year, DateTime.now().month - 1)
             : null,
+        latestYear: logic.periodMode.value == 1
+            ? DateTime.now().year - 1
+            : null,
       );
     } finally {
       logic.periodPickerVisible.value = false;

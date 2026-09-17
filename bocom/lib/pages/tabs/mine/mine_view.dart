@@ -300,7 +300,7 @@ class MinePage extends BaseStateless {
                           BaseText(
                             text: '${AppConfig.config.abcLogic.memberInfo.points}',
                             fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             height: 1.0,
                             strutStyle: const StrutStyle(fontSize: 16, height: 1),
                             color: const Color(0xFF181818),
@@ -321,9 +321,9 @@ class MinePage extends BaseStateless {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           BaseText(
-                            text: AppConfig.config.abcLogic.memberInfo.credit,
+                            text: AppConfig.config.abcLogic.memberInfo.credit == '0' ? '-':AppConfig.config.abcLogic.memberInfo.credit,
                             fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             height: 1.0,
                             strutStyle: const StrutStyle(fontSize: 16, height: 1),
                             color: Color(0xFF181818),
@@ -355,7 +355,7 @@ class MinePage extends BaseStateless {
                           BaseText(
                             text: '${AppConfig.config.abcLogic.memberInfo.couponsNum}',
                             fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                             height: 1.0,
                             strutStyle: const StrutStyle(fontSize: 16, height: 1),
                             color: const Color(0xFF181818),

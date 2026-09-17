@@ -105,7 +105,8 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         children: [
           Row(
             children: [
-              if (!_showCalendar || !widget.isYearMode || _isCurrentYear)
+              if (widget.title.isNotEmpty &&
+                  (!_showCalendar || !widget.isYearMode || _isCurrentYear))
                 BaseText(text: widget.title, fontSize: 13, color: const Color(0xFF333333)),
               const Spacer(),
               _buildSwitch(),
@@ -446,7 +447,7 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
   }
 
   double _monthCalendarHeight() =>
-      (28 + _monthCalendarRowCount() * 60 + 70).w;
+      (28 + _monthCalendarRowCount() * 72 + 70).w;
 
   Widget _buildMonthCalendar() {
     final dates = _monthCalendarDates();
@@ -503,14 +504,14 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
         ),
         SizedBox(height: 8.w),
         SizedBox(
-          height: (_monthCalendarRowCount() * 60).w,
+          height: (_monthCalendarRowCount() * 72).w,
           child: GridView.builder(
             padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: slots.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              mainAxisExtent: 60.w,
+              mainAxisExtent: 72.w,
               crossAxisSpacing: 0,
               mainAxisSpacing: 0,
             ),
@@ -585,15 +586,19 @@ class _LedgerTrendChartState extends State<LedgerTrendChart> {
               color: selected ? Colors.white : const Color(0xFF555555),
             ),
           ),
-          if (hasData)
+          if (data.expense > 0)
             BaseText(
-              text: _calendarAmount(
-                data.expense > data.income ? data.expense : data.income,
-              ),
+              text: _calendarAmount(data.expense),
               fontSize: 9,
-              color: data.expense > data.income
-                  ? const Color(0xFFFF7A18)
-                  : const Color(0xFF5B9FF2),
+              color: const Color(0xFFFF7A18),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          if (data.income > 0)
+            BaseText(
+              text: _calendarAmount(data.income),
+              fontSize: 9,
+              color: const Color(0xFF5B9FF2),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

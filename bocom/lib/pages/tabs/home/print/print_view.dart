@@ -60,10 +60,12 @@ class PrintPage extends BaseStateless {
                   height: stackPosition.getHeight(400),
                 ).withOnTap(onTap: () {
                   // 网点打印
-                  Get.to(() => FixedNavPage(), arguments: {
-                    'image': 'bg_print_network‌',
-                    'title': '开立交易明细',
-                  });
+                  Get.to(() => PrintBillListPage(
+                        onApply: () => Get.to(() => FixedNavPage(), arguments: {
+                          'image': 'bg_print_network‌',
+                          'title': '开立交易明细',
+                        }),
+                      ));
                 })),
             Positioned(
                 left: 0,

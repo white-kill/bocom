@@ -12,6 +12,8 @@ class ComprehensiveBillLogic extends GetxController {
   static DateTime _latestMonthlyPeriod(DateTime now) =>
       DateTime(now.year, now.month - 1);
 
+  static int _latestYearlyPeriod(DateTime now) => now.year - 1;
+
   final state = ComprehensiveBillState();
   final scrollController = ScrollController();
   final tabController = ScrollController();
@@ -96,6 +98,11 @@ class ComprehensiveBillLogic extends GetxController {
       if (selectedPeriod.value.isAfter(latestMonth)) {
         selectedPeriod.value = latestMonth;
       }
+    } else {
+      final latestYear = _latestYearlyPeriod(DateTime.now());
+      if (selectedPeriod.value.year > latestYear) {
+        selectedPeriod.value = DateTime(latestYear, selectedPeriod.value.month);
+      }
     }
     cashFlowPage.value = 0;
     getAssetOverview();
@@ -105,9 +112,12 @@ class ComprehensiveBillLogic extends GetxController {
   void selectPeriod({required int year, required int month}) {
     final selected = DateTime(year, month);
     final latestMonth = _latestMonthlyPeriod(DateTime.now());
-    final nextPeriod = periodMode.value == 0 && selected.isAfter(latestMonth)
-        ? latestMonth
-        : selected;
+    final latestYear = _latestYearlyPeriod(DateTime.now());
+    final nextPeriod = periodMode.value == 0
+        ? (selected.isAfter(latestMonth) ? latestMonth : selected)
+        : (selected.year > latestYear
+            ? DateTime(latestYear, selected.month)
+            : selected);
     if (nextPeriod.year != selectedPeriod.value.year ||
         nextPeriod.month != selectedPeriod.value.month) {
       hasAdjustedPeriod.value = true;

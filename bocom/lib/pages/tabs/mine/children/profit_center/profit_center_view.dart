@@ -218,6 +218,24 @@ class ProfitCenterPage extends BaseStateless {
                 logic.amountVisible.value = !logic.amountVisible.value;
               }),
             ),
+            Obx((){
+              return !logic.amountVisible.value ? Positioned(
+                  left: position1.getX(80),
+                  top: position1.getY(480),
+                  child: Container(
+                    padding: EdgeInsets.only(top: position1.getY(10)),
+                    width: position1.getWidth(300),
+                    height: position1.getHeight(80),
+                    color: Colors.white,
+                    child: const BaseText(
+                      text: '****',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14,
+                      color: Color(0xFF7D7D80),
+                    ),
+                  )
+              ): SizedBox.shrink();
+            }),
             Positioned(
                 left: position1.getX(60),
                 top: position1.getY(650),

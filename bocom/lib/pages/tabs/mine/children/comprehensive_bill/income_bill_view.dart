@@ -149,6 +149,8 @@ class IncomeBillContent extends StatelessWidget {
       isYearMode: logic.periodMode.value == 1,
       initialYear: selected.year,
       initialMonth: selected.month,
+      latestYear:
+          logic.periodMode.value == 1 ? DateTime.now().year - 1 : null,
     );
     if (result != null) {
       logic.selectPeriod(year: result.year, month: result.month);

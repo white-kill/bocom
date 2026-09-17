@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:wb_base_widget/text_widget/bank_text.dart';
 import 'package:wb_base_widget/extension/widget_extension.dart';
 import '../../config/app_config.dart';
 import '../../utils/stack_position.dart';
@@ -144,6 +145,7 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
 
   int _inputCount = 0;
   bool _completed = false;
+  bool _showAuthenticationTools = false;
   late final AnimationController _cursorController;
 
   @override
@@ -187,8 +189,82 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
 
   void _close() => Navigator.of(context).pop(false);
 
+  Widget _buildAuthenticationTools(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final scale = size.width / 375;
+    return Container(
+      key: const Key('password-authentication-tools'),
+      width: size.width,
+      height: size.height * .75,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12 * scale)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: 54 * scale,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  BaseText(
+                    text: '选择认证工具',
+                    style: TextStyle(
+                      fontSize: 17 * scale,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF242424),
+                    ),
+                  ),
+                  Positioned(
+                    left: 5 * scale,
+                    top: 0,
+                    bottom: 0,
+                    width: 36 * scale,
+                    child: IconButton(
+                      key: const Key('authentication-tools-close'),
+                      tooltip: '关闭',
+                      padding: EdgeInsets.zero,
+                      onPressed: _close,
+                      icon: Icon(Icons.close, size: 20 * scale,
+                        color: const Color(0xFF555555)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            for (final label in const ['交易密码', '短信验证码', '人脸识别'])
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15 * scale),
+                child: InkWell(
+                  onTap: label == '交易密码'
+                      ? () => setState(() => _showAuthenticationTools = false)
+                      : null,
+                  child: Container(
+                    height: 46 * scale,
+                    alignment: Alignment.centerLeft,
+                    decoration: const BoxDecoration(
+                      border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
+                    ),
+                    child: BaseText(
+                      text: label,
+                      style: TextStyle(fontSize: 16 * scale,
+                        color: const Color(0xFF333333)),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_showAuthenticationTools) return _buildAuthenticationTools(context);
     final width = MediaQuery.sizeOf(context).width;
     final bottomSafeHeight = MediaQuery.paddingOf(context).bottom;
     // 转账场景需要保留收款人和账户信息的纵向空间；“我的账户”
@@ -327,13 +403,24 @@ class _PasswordKeyboardSheetState extends State<PasswordKeyboardSheet>
             Positioned(
               right: position.getX(20),
               top: position.getY(35),
-              child: Text(
-                '切换认证',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: const Color(0XFF005DDA),
-                  fontSize: position.getWidth(_titleFontSize),
-                  height: 1.05,
+              child: Semantics(
+                button: true,
+                child: GestureDetector(
+                  key: const Key('password-switch-authentication'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _completed ? null : () => setState(() {
+                    _inputCount = 0;
+                    _showAuthenticationTools = true;
+                  }),
+                  child: Text(
+                    '切换认证',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: const Color(0XFF005DDA),
+                      fontSize: position.getWidth(_titleFontSize),
+                      height: 1.05,
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -19,7 +19,10 @@ import 'print_bill_list_state.dart';
 // 社区页
 // 说明：当前页面使用不含导航栏和分类栏的推荐内容切图，顶部导航与横向分类栏由 Flutter 单独绘制。
 class PrintBillListPage extends BaseStateless {
-  PrintBillListPage({Key? key}) : super(key: key, title: "开立交易明细");
+  PrintBillListPage({Key? key, this.onApply})
+      : super(key: key, title: "开立交易明细");
+
+  final VoidCallback? onApply;
 
   final PrintBillListLogic logic = Get.put(PrintBillListLogic());
   final PrintBillListState state = Get.find<PrintBillListLogic>().state;
@@ -81,7 +84,7 @@ class PrintBillListPage extends BaseStateless {
                             ).withOnTap(
                               onTap: logic.entries.isEmpty
                                   ? null
-                                  : () => Get.to(
+                                  : onApply ?? () => Get.to(
                                         () => PrintConfimPage(
                                           exportParams:
                                               logic.buildPrintExportFilters(),

@@ -11,6 +11,7 @@ class LedgerBillItem extends StatelessWidget {
     required this.item,
     required this.isFirst,
     required this.isLast,
+    this.showMonthSummary = true,
     this.topCornerBackgroundGradient,
     this.onDetailUpdated,
   });
@@ -18,6 +19,7 @@ class LedgerBillItem extends StatelessWidget {
   final BillItemList item;
   final bool isFirst;
   final bool isLast;
+  final bool showMonthSummary;
   final Gradient? topCornerBackgroundGradient;
   final VoidCallback? onDetailUpdated;
 
@@ -81,7 +83,7 @@ class LedgerBillItem extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (item.month.isNotEmpty) ...[
+            if (showMonthSummary && item.month.isNotEmpty) ...[
               BaseText(
                 text: item.month.endsWith('月')
                     ? item.month

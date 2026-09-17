@@ -4,9 +4,11 @@ import 'package:bocom/config/app_config.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
+import 'package:bocom/routes/app_pages.dart';
 
 import 'account_huoqi_yue_logic.dart';
 import 'account_huoqi_yue_state.dart';
+import '../account_asset_view.dart';
 
 class AccountHuoQiYuEPage extends BaseStateless {
   AccountHuoQiYuEPage({super.key}) : super(title: '活期余额');
@@ -71,6 +73,59 @@ class AccountHuoQiYuEPage extends BaseStateless {
                   fontSize: 16,
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
+                )
+            ),
+            Positioned(
+                top: position.getY(600),
+                left: position.getX(60),
+                right: position.getX(60),
+                height: position.getHeight(200),
+                child: Container(
+                  child: Row(
+                    children: [
+                      // 转账
+                      Container().withOnTap(onTap: (){
+                        Get.toNamed(Routes.homeTransfer);
+                      }).expanded(),
+                      // 收支账本
+                      Container().withOnTap(onTap: (){
+                        Get.toNamed(Routes.ledgerPage);
+                      }).expanded(),
+                      // 我的账户
+                      Container().withOnTap(onTap: (){
+                        Get.to(() => AccountAssetPage(initialTabIndex: 0));
+                      }).expanded(),
+                      // 活期盈
+                      Container().withOnTap(onTap: (){
+                        Get.toNamed(Routes.homeDemandDepositPlus);
+                      }).expanded(),
+                    ],
+                  ),
+                )
+            ),
+            Positioned(
+                top: position.getY(800),
+                left: position.getX(60),
+                right: position.getX(60),
+                height: position.getHeight(200),
+                child: Container(
+                  child: Row(
+                    children: [
+                      // 活期富
+                      Container().withOnTap(onTap: (){
+                      }).expanded(),
+                      // 理财
+                      Container().withOnTap(onTap: (){
+                      }).expanded(),
+                      // 存款
+                      Container().withOnTap(onTap: (){
+                        Get.toNamed(Routes.homeDeposit);
+                      }).expanded(),
+                      // 基金
+                      Container().withOnTap(onTap: (){
+                      }).expanded(),
+                    ],
+                  )
                 )
             ),
           ],
