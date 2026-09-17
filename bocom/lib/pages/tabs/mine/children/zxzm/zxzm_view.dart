@@ -1,10 +1,5 @@
-import 'dart:math' as math;
-import 'package:bocom/routes/app_pages.dart';
-import 'package:bocom/utils/stack_position.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:bocom/pages/other/fixed_nav/fixed_nav_view.dart';
-import 'package:bocom/pages/other/change_nav/change_nav_view.dart';
 import 'package:get/get.dart';
 import 'package:wb_base_widget/wb_base_widget.dart';
 
@@ -76,8 +71,6 @@ class ZxzmPage extends BaseStateless {
   @override
   Widget initBody(BuildContext context) {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
-    StackPosition position =
-        StackPosition(designWidth: 1080, designHeight: 2172, deviceWidth: 1.sw);
     return ListView(
       padding: EdgeInsets.only(top: 44.h + statusBarHeight),
       physics: const ClampingScrollPhysics(),

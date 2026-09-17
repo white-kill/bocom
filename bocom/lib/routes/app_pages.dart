@@ -71,6 +71,10 @@ class AppPages {
       page: () => const HomeDemandDepositPlusPage(),
     ),
     GetPage(
+      name: Routes.homeDemandDepositRich,
+      page: () => const HomeDemandDepositRichPage(),
+    ),
+    GetPage(
       name: Routes.homeCityZone,
       page: () => const HomeCityZonePage(),
     ),

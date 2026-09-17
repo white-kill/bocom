@@ -23,6 +23,8 @@ class Routes {
 
   static const homeDemandDepositPlus = '/homeDemandDepositPlus';
 
+  static const homeDemandDepositRich = '/homeDemandDepositRich';
+
   static const homeCityZone = '/homeCityZone';
 
   static const homeNews = '/homeNews';

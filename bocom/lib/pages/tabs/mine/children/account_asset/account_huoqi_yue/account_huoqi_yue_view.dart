@@ -9,6 +9,8 @@ import 'package:bocom/routes/app_pages.dart';
 import 'account_huoqi_yue_logic.dart';
 import 'account_huoqi_yue_state.dart';
 import '../account_asset_view.dart';
+import '../lc/lc_view.dart';
+import '../jijin/jijin_view.dart';
 
 class AccountHuoQiYuEPage extends BaseStateless {
   AccountHuoQiYuEPage({super.key}) : super(title: '活期余额');
@@ -113,9 +115,11 @@ class AccountHuoQiYuEPage extends BaseStateless {
                     children: [
                       // 活期富
                       Container().withOnTap(onTap: (){
+                        Get.toNamed(Routes.homeDemandDepositRich);
                       }).expanded(),
                       // 理财
                       Container().withOnTap(onTap: (){
+                        Get.to(() => LcPage());
                       }).expanded(),
                       // 存款
                       Container().withOnTap(onTap: (){
@@ -123,6 +127,7 @@ class AccountHuoQiYuEPage extends BaseStateless {
                       }).expanded(),
                       // 基金
                       Container().withOnTap(onTap: (){
+                         Get.to(() => JijinPage());
                       }).expanded(),
                     ],
                   )
