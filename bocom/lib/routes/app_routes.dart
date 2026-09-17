@@ -31,6 +31,8 @@ class Routes {
 
   static const homeDeposit = '/homeDeposit';
 
+  static const homeMyDeposit = '/homeMyDeposit';
+
   static const homeCouponCenter = '/homeCouponCenter';
 
   static const homeActivityCenter = '/homeActivityCenter';

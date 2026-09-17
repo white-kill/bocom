@@ -258,6 +258,17 @@ class HomeDepositPage extends StatelessWidget {
           ),
         ],
       ),
+      bodyHotspots: [
+        _ReferenceBodyHotspot(
+          key: Key('home-deposit-my-deposit-hotspot'),
+          semanticLabel: '我的存款',
+          left: 0,
+          top: 0,
+          width: 260.5,
+          height: 210,
+          routeName: Routes.homeMyDeposit,
+        ),
+      ],
     );
   }
 }
@@ -562,6 +573,7 @@ class _FixedNavigationReferencePage extends StatelessWidget {
     required this.navigationKey,
     required this.trailing,
     this.trailingRight = 16,
+    this.bodyHotspots = const [],
   });
 
   final String assetPath;
@@ -572,6 +584,7 @@ class _FixedNavigationReferencePage extends StatelessWidget {
   final Key navigationKey;
   final Widget trailing;
   final double trailingRight;
+  final List<_ReferenceBodyHotspot> bodyHotspots;
 
   @override
   Widget build(BuildContext context) {
@@ -642,12 +655,38 @@ class _FixedNavigationReferencePage extends StatelessWidget {
                       key: PageStorageKey(assetPath),
                       padding: EdgeInsets.zero,
                       physics: const ClampingScrollPhysics(),
-                      child: Image.asset(
-                        assetPath,
+                      child: SizedBox(
                         width: constraints.maxWidth,
                         height: sourceHeight * scale,
-                        fit: BoxFit.fill,
-                        gaplessPlayback: true,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Image.asset(
+                                assetPath,
+                                width: constraints.maxWidth,
+                                height: sourceHeight * scale,
+                                fit: BoxFit.fill,
+                                gaplessPlayback: true,
+                              ),
+                            ),
+                            for (final hotspot in bodyHotspots)
+                              Positioned(
+                                left: hotspot.left * scale,
+                                top: hotspot.top * scale,
+                                width: hotspot.width * scale,
+                                height: hotspot.height * scale,
+                                child: Semantics(
+                                  key: hotspot.key,
+                                  button: true,
+                                  label: hotspot.semanticLabel,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => Get.toNamed(hotspot.routeName),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -659,6 +698,26 @@ class _FixedNavigationReferencePage extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ReferenceBodyHotspot {
+  const _ReferenceBodyHotspot({
+    required this.key,
+    required this.semanticLabel,
+    required this.left,
+    required this.top,
+    required this.width,
+    required this.height,
+    required this.routeName,
+  });
+
+  final Key key;
+  final String semanticLabel;
+  final double left;
+  final double top;
+  final double width;
+  final double height;
+  final String routeName;
 }
 
 class _StaticNavigationAction extends StatelessWidget {
