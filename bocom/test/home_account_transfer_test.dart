@@ -275,6 +275,43 @@ void main() {
     expect(requestData?['accountsTime'], '2026-08-12 12:30:00');
   });
 
+  testWidgets('到账时间回显仅将时间关键词标红', (tester) async {
+    await tester.pumpWidget(
+      const GetMaterialApp(home: HomeAccountTransferPage()),
+    );
+
+    void expectArrivalSummary(String fullText, String highlightedText) {
+      final summary = tester.widget<Text>(
+        find.descendant(
+          of: find.byKey(const Key('arrival-summary-text')),
+          matching: find.byType(Text),
+        ),
+      );
+      final span = summary.textSpan! as TextSpan;
+      final children = span.children!.whereType<TextSpan>().toList();
+      expect(span.toPlainText(), fullText);
+      expect(
+          children.map((child) => child.text), ['预计', highlightedText, '到账']);
+      expect(children[0].style?.color, isNull);
+      expect(children[1].style?.color, const Color(0xFFFF575A));
+      expect(children[2].style?.color, isNull);
+    }
+
+    expectArrivalSummary('预计实时到账', '实时');
+
+    await tester.tap(find.text('更换到账时间'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('预计2小时后到账'));
+    await tester.pumpAndSettle();
+    expectArrivalSummary('预计2小时后到账', '2小时后');
+
+    await tester.tap(find.text('更换到账时间'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('预计次日到账'));
+    await tester.pumpAndSettle();
+    expectArrivalSummary('预计次日到账', '次日');
+  });
+
   testWidgets('金额空态、聚焦和失焦格式与补图一致', (tester) async {
     await tester.pumpWidget(
       const GetMaterialApp(home: HomeAccountTransferPage()),

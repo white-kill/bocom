@@ -17,13 +17,16 @@ void main() {
 
     expect(find.text('手机号转账'), findsOneWidget);
     expect(find.text('付款卡'), findsOneWidget);
-    expect(find.text('交通银行 借记卡(**2910)'), findsOneWidget);
-    expect(find.textContaining('II类账户'), findsNothing);
+    expect(find.text('交通银行 II类账户(**2910)'), findsOneWidget);
     expect(find.text('可用余额： 37.53元'), findsOneWidget);
     expect(find.text('请输入收款人的真实姓名'), findsOneWidget);
     expect(find.text('请输入收款人手机号'), findsOneWidget);
     expect(find.text('0手续费'), findsOneWidget);
     expect(find.text('限额说明'), findsNothing);
+    expect(
+      find.byKey(const Key('phone-transfer-unlinked-tip')),
+      findsNothing,
+    );
 
     final nextButton = tester.widget<ElevatedButton>(
       find.widgetWithText(ElevatedButton, '下一步'),
@@ -68,8 +71,18 @@ void main() {
     await tester.pump();
 
     expect(find.text('1,000.00'), findsOneWidget);
+    expect(find.text('131 1311 3113'), findsOneWidget);
+    expect(
+      find.text(
+        '该手机号尚未关联银行卡，需收款人在次日22:00之前回复卡号收款，否则资金将自动退回。',
+      ),
+      findsOneWidget,
+    );
     expect(button().onPressed, isNotNull);
-    await tester.tap(find.widgetWithText(ElevatedButton, '下一步'));
+    final nextButton = find.widgetWithText(ElevatedButton, '下一步');
+    await tester.ensureVisible(nextButton);
+    await tester.pump();
+    await tester.tap(nextButton);
     await tester.pump();
     expect(nextCount, 1);
     expect(find.byType(CircularProgressIndicator), findsNothing);

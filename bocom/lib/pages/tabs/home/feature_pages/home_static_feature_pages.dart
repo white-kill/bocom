@@ -297,6 +297,29 @@ class HomeDemandDepositPlusPage extends StatelessWidget {
       sourceHeight: 3922,
       title: '活期盈',
       pinnedAction: _PinnedNavigationAction.share,
+      shareAssetPath: 'assets/images/ic_nav_share.png',
+      backTapWidth: 150,
+      backTapHeight: 210,
+      initialStatusBarIconBrightness: Brightness.dark,
+    );
+  }
+}
+
+// 活期富页
+// 说明：复用活期盈的沉浸式滚动和白色固定导航栏交互。
+class HomeDemandDepositRichPage extends StatelessWidget {
+  const HomeDemandDepositRichPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const _ScrollingReferencePage(
+      pageKey: Key('home-demand-deposit-rich-scrolling-page'),
+      assetPath: 'assets/images/bg_hqf@3x.png',
+      sourceWidth: 728,
+      sourceHeight: 4096,
+      title: '活期富',
+      pinnedAction: _PinnedNavigationAction.share,
+      shareAssetPath: 'assets/images/ic_nav_share.png',
       backTapWidth: 150,
       backTapHeight: 210,
       initialStatusBarIconBrightness: Brightness.dark,
@@ -678,6 +701,7 @@ class _ScrollingReferencePage extends StatefulWidget {
     required this.backTapWidth,
     required this.backTapHeight,
     required this.initialStatusBarIconBrightness,
+    this.shareAssetPath,
   });
 
   final Key pageKey;
@@ -689,6 +713,7 @@ class _ScrollingReferencePage extends StatefulWidget {
   final double backTapWidth;
   final double backTapHeight;
   final Brightness initialStatusBarIconBrightness;
+  final String? shareAssetPath;
 
   @override
   State<_ScrollingReferencePage> createState() =>
@@ -799,6 +824,7 @@ class _ScrollingReferencePageState extends State<_ScrollingReferencePage> {
                     child: _PinnedWhiteNavigation(
                       title: widget.title,
                       action: widget.pinnedAction,
+                      shareAssetPath: widget.shareAssetPath,
                     ),
                   ),
                 ),
@@ -815,10 +841,12 @@ class _PinnedWhiteNavigation extends StatelessWidget {
   const _PinnedWhiteNavigation({
     required this.title,
     required this.action,
+    this.shareAssetPath,
   });
 
   final String title;
   final _PinnedNavigationAction? action;
+  final String? shareAssetPath;
 
   @override
   Widget build(BuildContext context) {
@@ -878,11 +906,17 @@ class _PinnedWhiteNavigation extends StatelessWidget {
   Widget _buildAction() {
     switch (action) {
       case _PinnedNavigationAction.share:
-        return _PinnedIconAction(
-          semanticLabel: '分享',
-          icon: Icons.ios_share_outlined,
-          onTap: () {},
-        );
+        return shareAssetPath == null
+            ? _PinnedIconAction(
+                semanticLabel: '分享',
+                icon: Icons.ios_share_outlined,
+                onTap: () {},
+              )
+            : _PinnedAssetAction(
+                semanticLabel: '分享',
+                assetPath: shareAssetPath!,
+                onTap: () {},
+              );
       case _PinnedNavigationAction.search:
         return _PinnedIconAction(
           semanticLabel: '搜索',

@@ -73,11 +73,20 @@ class LedgerOverviewTab extends StatelessWidget {
           Obx(
             () {
               final overview = logic.bookOverview.value;
+              final now = DateTime.now();
+              final selectedPeriod = logic.selectedPeriod.value;
+              final isYearMode = logic.periodMode.value == 1;
+              final showRecentTitle = isYearMode
+                  ? selectedPeriod.year == now.year
+                  : selectedPeriod.year == now.year &&
+                      selectedPeriod.month == now.month;
               return LedgerTrendChart(
-                title: logic.periodMode.value == 1 ? '近一年收支' : '近一月收支',
-                isYearMode: logic.periodMode.value == 1,
-                year: logic.selectedPeriod.value.year,
-                month: logic.selectedPeriod.value.month,
+                title: showRecentTitle
+                    ? (isYearMode ? '近一年收支' : '近一月收支')
+                    : '',
+                isYearMode: isYearMode,
+                year: selectedPeriod.year,
+                month: selectedPeriod.month,
                 incomeValues: overview.trendList
                     .map((item) => double.tryParse(item.incomeTotal) ?? 0)
                     .toList(),
@@ -125,6 +134,7 @@ class LedgerOverviewTab extends StatelessWidget {
                               : '${selectedPeriod.month}',
                           fontSize: 25,
                           color: const Color(0xFF111111),
+                          fontWeight: FontWeight.w500,
                         ),
                         BaseText(
                           text: isYearMode ? '年' : '月',
@@ -147,18 +157,21 @@ class LedgerOverviewTab extends StatelessWidget {
                       top: 250,
                       text: _value(logic.bookOverview.value.incomeTotal),
                       fontSize: 20,
+                    fontWeight: FontWeight.w500,
                     )),
                 Obx(() => _amount(
                       left: 540,
                       top: 250,
                       text: _value(logic.bookOverview.value.expensesTotal),
                       fontSize: 20,
+                  fontWeight: FontWeight.w500,
                     )),
                 Obx(() => _amount(
                       left: 175,
                       top: 340,
                       text: _value(logic.bookOverview.value.balance),
                       fontSize: 14,
+                  fontWeight: FontWeight.w400,
                     )),
               ],
             ),
@@ -206,11 +219,12 @@ class LedgerOverviewTab extends StatelessWidget {
     required double top,
     required String text,
     required double fontSize,
+    required FontWeight fontWeight,
   }) =>
       Positioned(
         left: _position.getX(left),
         top: _position.getX(top),
-        child: BaseText(text: text, fontSize: fontSize, color: const Color(0xFF111111)),
+        child: BaseText(text: text, fontSize: fontSize, fontWeight: fontWeight ,color: const Color(0xFF111111)),
       );
 
   Widget _ledgerEntry() => Container(

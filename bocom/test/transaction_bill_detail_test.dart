@@ -86,6 +86,45 @@ void main() {
     expect(arguments.recipient?.bankCard, '详情接口对方账户');
   });
 
+  testWidgets('详情请求未完成时点击转账会等待明文账号', (tester) async {
+    final completer = Completer<TransactionBillDetail>();
+    final loadedDetail = _transferDetail.withAccountDisplayValues(
+      bankCard: '6222620012342910',
+      oppositeAccount: '6217001630076962353',
+    );
+    await _pumpPage(
+      tester,
+      TransactionBillDetailPage(
+        billId: 11,
+        initialDetail: _transferDetail,
+        detailLoader: (_) => completer.future,
+      ),
+      getPages: [
+        GetPage(
+          name: Routes.homeAccountTransfer,
+          page: () => const Scaffold(body: Text('账号转账测试页')),
+        ),
+      ],
+      settle: false,
+    );
+    await tester.pump();
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey('transaction_bill_detail_transfer_button'),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('账号转账测试页'), findsNothing);
+
+    completer.complete(loadedDetail);
+    await tester.pumpAndSettle();
+
+    expect(find.text('账号转账测试页'), findsOneWidget);
+    final arguments = Get.arguments as AccountTransferRouteArguments;
+    expect(arguments.recipient?.bankCard, '6217001630076962353');
+  });
+
   testWidgets('入账金额显示加号并使用列表同款红色', (tester) async {
     await _pumpPage(
       tester,

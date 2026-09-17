@@ -539,7 +539,7 @@ class _FrequentPayeeRow extends StatelessWidget {
                     ),
                     SizedBox(height: 8 * scale),
                     Text(
-                      '${contact.bankName} 借记卡（**$_cardSuffix）',
+                      '${contact.bankName} 借记卡(**$_cardSuffix)',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

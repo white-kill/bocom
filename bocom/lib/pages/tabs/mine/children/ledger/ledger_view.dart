@@ -342,7 +342,10 @@ class LedgerPage extends BaseStateless {
     final expandedFilter = logic.waterFilterExpanded.value;
     final periodActive = expandedFilter == 1;
     final accountActive = expandedFilter == 2;
-    final amountActive = expandedFilter == 3;
+    final amountActive = expandedFilter == 3 ||
+        logic.waterAmountFilter.value.isNotEmpty ||
+        logic.waterMinAmount.value.isNotEmpty ||
+        logic.waterMaxAmount.value.isNotEmpty;
     final defaultPeriodText = isYearMode
         ? '${selectedPeriod.year}年'
         : '${selectedPeriod.year}年${selectedPeriod.month}月';

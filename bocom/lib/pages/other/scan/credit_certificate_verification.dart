@@ -6,11 +6,11 @@ import 'package:bocom/utils/sp_util.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+import 'credit_certificate_pdf_view.dart';
 
 typedef CreditCertificateLoader = Future<CreditCertificateVerificationResult>
     Function(String creNo);
-typedef ExternalPdfLauncher = Future<bool> Function(Uri uri);
 
 class CreditCertificateQrPayload {
   const CreditCertificateQrPayload({
@@ -94,7 +94,10 @@ class CreditCertificateVerificationResult {
       ],
     );
 
-    if (customerName == null || establishmentDate == null || pdfValue == null) {
+    if (pdfValue == null) {
+      throw const FormatException('未获取到证明电子版地址');
+    }
+    if (customerName == null || establishmentDate == null) {
       throw const FormatException('资信证明验真结果不完整');
     }
 
@@ -194,21 +197,15 @@ Future<CreditCertificateVerificationResult> verifyCreditCertificateQr(
   return loader(payload.creNo);
 }
 
-Future<bool> launchPdfInExternalBrowser(Uri uri) {
-  return launchUrl(uri, mode: LaunchMode.externalApplication);
-}
-
 // 资信证明二维码验证页
 // 说明：页面使用接口返回的证明编号、客户姓名、开立日期和 PDF 地址原生绘制，不保留参考图中的个人信息。
 class CreditCertificateVerificationPage extends StatefulWidget {
   const CreditCertificateVerificationPage({
     required this.result,
-    this.pdfLauncher,
     super.key,
   });
 
   final CreditCertificateVerificationResult result;
-  final ExternalPdfLauncher? pdfLauncher;
 
   @override
   State<CreditCertificateVerificationPage> createState() =>
@@ -217,28 +214,14 @@ class CreditCertificateVerificationPage extends StatefulWidget {
 
 class _CreditCertificateVerificationPageState
     extends State<CreditCertificateVerificationPage> {
-  bool _openingPdf = false;
-
-  Future<void> _openPdf() async {
-    if (_openingPdf) return;
-    setState(() => _openingPdf = true);
-    try {
-      final launcher = widget.pdfLauncher ?? launchPdfInExternalBrowser;
-      final opened = await launcher(widget.result.pdfUri);
-      if (!opened && mounted) {
-        _showMessage('无法打开证明电子版');
-      }
-    } catch (_) {
-      if (mounted) _showMessage('无法打开证明电子版');
-    } finally {
-      if (mounted) setState(() => _openingPdf = false);
-    }
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+  void _openPdf() {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => CreditCertificatePdfPage(
+          pdfUri: widget.result.pdfUri,
+        ),
+      ),
+    );
   }
 
   void _finish() {
@@ -301,7 +284,7 @@ class _CreditCertificateVerificationPageState
                             label: '查看此证明电子版',
                             child: FilledButton(
                               key: const Key('open-credit-certificate-pdf'),
-                              onPressed: _openingPdf ? null : _openPdf,
+                              onPressed: _openPdf,
                               style: FilledButton.styleFrom(
                                 backgroundColor: const Color(0xFF0B70F0),
                                 disabledBackgroundColor:

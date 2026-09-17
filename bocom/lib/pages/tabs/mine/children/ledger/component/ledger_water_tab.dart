@@ -26,6 +26,11 @@ class LedgerWaterTab extends StatelessWidget {
     deviceWidth: 1.sw,
   );
 
+  bool get _hasAppliedAmountFilter =>
+      logic.waterAmountFilter.value.isNotEmpty ||
+      logic.waterMinAmount.value.isNotEmpty ||
+      logic.waterMaxAmount.value.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox.expand(
@@ -52,26 +57,35 @@ class LedgerWaterTab extends StatelessWidget {
                 itemCount: dataList.isEmpty ? 2 : dataList.length + 1,
                 separatorBuilder: (_, __) => const SizedBox.shrink(),
                 itemBuilder: (context, index) {
-                  if (index == 0) return _overviewHeader();
+                  if (index == 0) {
+                    return _hasAppliedAmountFilter
+                        ? _countHeader()
+                        : _overviewHeader();
+                  }
                   if (dataList.isEmpty) return _emptyWidget();
                   return LedgerBillItem(
                     item: dataList[index - 1],
                     isFirst: index == 1,
                     isLast: index == dataList.length,
+                    showMonthSummary: false,
                     onDetailUpdated: () {
                       logic.bookWaterPage.refresh();
                       logic.getBookWaterPage();
                     },
-                    topCornerBackgroundGradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFECF7FF),
-                        Color(0xFFEBF4FF),
-                        Color(0xFFEAF5FF),
-                        Color(0xFFE7F3FE),
-                        Color(0xFFD8EFFE),
-                      ],
-                      stops: [0, 0.23, 0.5, 0.77, 1],
-                    ),
+                    topCornerBackgroundGradient: _hasAppliedAmountFilter
+                        ? const LinearGradient(
+                            colors: [Colors.white, Colors.white],
+                          )
+                        : const LinearGradient(
+                            colors: [
+                              Color(0xFFECF7FF),
+                              Color(0xFFEBF4FF),
+                              Color(0xFFEAF5FF),
+                              Color(0xFFE7F3FE),
+                              Color(0xFFD8EFFE),
+                            ],
+                            stops: [0, 0.23, 0.5, 0.77, 1],
+                          ),
                   ).marginSymmetric(horizontal: _position.getX(40));
                 },
               ),
@@ -125,26 +139,55 @@ class LedgerWaterTab extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        if(logic.periodMode.value == 1 && logic.waterBeginTime.value.isNullOrEmpty) ...[
+                        if (logic.periodMode.value == 1 &&
+                            logic.waterBeginTime.value.isNullOrEmpty) ...[
                           BaseText(
                             text: '${DateTime.now().year}年',
                             fontSize: 16,
                             color: const Color(0xFF333333),
                             fontWeight: FontWeight.w500,
                           ),
-                          SizedBox(width: 13.w,),
+                          SizedBox(width: 13.w),
                         ],
-                        const BaseText(text: '共', fontSize: 14, color: Color(0xFF999999)),
-                        BaseText(text: '${model.total}', fontSize: 14, color: const Color(0xFF333333))
-                            .marginOnly(left: 2.w),
-                        const BaseText(text: '笔', fontSize: 14, color: Color(0xFF999999))
-                            .marginOnly(left: 2.w),
+                        const BaseText(
+                          text: '共',
+                          fontSize: 14,
+                          color: Color(0xFF999999),
+                        ),
+                        BaseText(
+                          text: '${model.total}',
+                          fontSize: 14,
+                          color: const Color(0xFF333333),
+                        ).marginOnly(left: 2.w),
+                        const BaseText(
+                          text: '笔',
+                          fontSize: 14,
+                          color: Color(0xFF999999),
+                        ).marginOnly(left: 2.w),
                       ],
                     ),
                   ),
-                  _amount(left: 80, top: 255, text: _value(model.incomeTotal), fontSize: 20),
-                  _amount(left: 540, top: 255, text: _value(model.expensesTotal), fontSize: 20),
-                  _amount(left: 175, top: 360, text: (income - expenses).toStringAsFixed(2), fontSize: 14),
+                  _amount(
+                    left: 80,
+                    top: 255,
+                    text: _value(model.incomeTotal),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  _amount(
+                    left: 540,
+                    top: 255,
+                    text: _value(model.expensesTotal),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  _amount(
+                    left: 175,
+                    top: 360,
+                    text: (income - expenses).toStringAsFixed(2),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ],
               ),
             );
@@ -159,11 +202,39 @@ class LedgerWaterTab extends StatelessWidget {
     required double top,
     required String text,
     required double fontSize,
+    required FontWeight fontWeight,
   }) =>
       Positioned(
         left: _position.getX(left),
         top: _position.getX(top),
-        child: BaseText(text: text, fontSize: fontSize, color: const Color(0xFF111111)),
+        child: BaseText(
+          text: text,
+          fontSize: fontSize,
+          color: const Color(0xFF111111),
+          fontWeight: fontWeight,
+        ),
+      );
+
+  Widget _countHeader() => Container(
+        margin: EdgeInsets.fromLTRB(
+          _position.getX(40),
+          0,
+          _position.getX(40),
+          0,
+        ),
+        padding: EdgeInsets.only(left: 15.w, top: 15.w, bottom: 5.w),
+        alignment: Alignment.centerLeft,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(10.w)),
+        ),
+        child: Obx(
+          () => BaseText(
+            text: '共 ${logic.bookWaterPage.value.total} 笔',
+            fontSize: 14,
+            color: const Color(0xFF999999),
+          ),
+        ),
       );
 
   Widget _refreshHeader() => CustomHeader(

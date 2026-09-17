@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../../routes/app_pages.dart';
+import '../../mine/children/account_asset/account_asset_diary/account_asset_diary_view.dart';
 import '../../mine/children/account_asset/account_asset_view.dart';
 import '../../mine/children/profit_center/profit_center_view.dart';
 import '../../mine/children/user_info_manage/user_info_manage_view.dart';
@@ -12,7 +13,12 @@ import '../transfer/account_transfer/account_transfer_support_pages.dart';
 // 全部服务页
 // 说明：服务内容使用分类切图，导航、分类联动和已实现服务的跳转热区由 Flutter 绘制。
 class AllServicesPage extends StatefulWidget {
-  const AllServicesPage({super.key});
+  const AllServicesPage({
+    super.key,
+    this.onAssetDiaryTap,
+  });
+
+  final VoidCallback? onAssetDiaryTap;
 
   @override
   State<AllServicesPage> createState() => _AllServicesPageState();
@@ -63,6 +69,12 @@ class _AllServicesPageState extends State<AllServicesPage> {
         _ServiceHotspot('收支账本', 0, 2, _ServiceDestination.ledger),
         _ServiceHotspot('账单', 1, 0, _ServiceDestination.bill),
         _ServiceHotspot('收益中心', 1, 1, _ServiceDestination.profitCenter),
+        _ServiceHotspot(
+          '资产日记',
+          1,
+          2,
+          _ServiceDestination.accountAssetDiary,
+        ),
         _ServiceHotspot(
           '资信证明',
           2,
@@ -518,6 +530,13 @@ class _AllServicesPageState extends State<AllServicesPage> {
         Get.to<void>(() => AccountAssetPage(initialTabIndex: 1));
       case _ServiceDestination.profitCenter:
         Get.to<void>(() => ProfitCenterPage());
+      case _ServiceDestination.accountAssetDiary:
+        final callback = widget.onAssetDiaryTap;
+        if (callback != null) {
+          callback();
+        } else {
+          Get.to<void>(() => AccountAssetDiaryPage());
+        }
       case _ServiceDestination.recipients:
         Get.to<void>(() => const AccountTransferRecipientsPage());
       case _ServiceDestination.personalInfo:
@@ -681,6 +700,7 @@ class _ServiceHotspot {
 enum _ServiceDestination {
   transfer(Routes.homeTransfer),
   accountAsset(),
+  accountAssetDiary(),
   ledger(Routes.ledgerPage),
   transactionDetail(Routes.transactionDetail),
   bill(Routes.comprehensiveBillPage),

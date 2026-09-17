@@ -72,7 +72,7 @@ class AccountManageTwoPage extends BaseStateless {
                 )),
             Positioned(
                 top: position.getY(437),
-                left: position.getX(350),
+                left: position.getX(335),
                 child: const BaseText(
                   text: '柜面',
                   color: Color(0xFF777777),
@@ -80,7 +80,7 @@ class AccountManageTwoPage extends BaseStateless {
                 )),
             Positioned(
                 top: position.getY(495),
-                left: position.getX(350),
+                left: position.getX(335),
                 child: BaseText(
                   text: AppConfig.config.abcLogic.branchBelongs(),
                   color: const Color(0xFF777777),

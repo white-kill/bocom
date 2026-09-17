@@ -26,9 +26,7 @@ class AccountAssetPage extends BaseStateless {
     this.initialTabIndex = 1,
   })  : assert(initialTabIndex == 0 || initialTabIndex == 1),
         logic = Get.put(AccountAssetLogic()),
-        super(title: '') {
-    logic.onBottomItemClick(initialTabIndex);
-  }
+        super(title: '');
 
   /// 0：我的账户；1：我的资产。
   final int initialTabIndex;
@@ -138,6 +136,13 @@ class AccountAssetPage extends BaseStateless {
 
   @override
   Widget initBody(BuildContext context) {
+    if (logic.bottomItemIndex.value != initialTabIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (logic.bottomItemIndex.value != initialTabIndex) {
+          logic.onBottomItemClick(initialTabIndex);
+        }
+      });
+    }
     StackPosition positionBottom =
         StackPosition(designWidth: 1080, designHeight: 146, deviceWidth: 1.sw);
     return Column(
