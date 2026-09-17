@@ -17,7 +17,7 @@ void main() {
       );
     });
 
-    test('uses member city when no local address exists', () {
+    test('adds 公安局 to the member city when no local address exists', () {
       final logic = UserIdcardInfoLogic(
         readAddress: () => '',
         writeAddress: (_) {},
@@ -25,7 +25,7 @@ void main() {
 
       logic.loadLocalAddress();
 
-      expect(logic.addressValue('湖南长沙'), '湖南长沙');
+      expect(logic.addressValue('湖南长沙'), '湖南长沙公安局');
     });
 
     test('uses an empty address when local address and city are empty', () {
@@ -89,7 +89,7 @@ void main() {
     );
     logic.loadLocalAddress();
     final bocLogic = Get.put(BocLogic());
-    bocLogic.memberInfo.city = '北京市';
+    bocLogic.memberInfo.province = '北京市';
 
     await tester.pumpWidget(
       ScreenUtilInit(
@@ -99,7 +99,7 @@ void main() {
       ),
     );
 
-    expect(find.text('北京市'), findsOneWidget);
+    expect(find.text('北京市公安局'), findsOneWidget);
     await tester.longPress(find.byKey(const Key('user-card-manage-address')));
     await tester.pumpAndSettle();
 
@@ -111,5 +111,6 @@ void main() {
 
     expect(find.text('湖南长沙'), findsOneWidget);
     expect(savedAddress, '湖南长沙');
+    expect(bocLogic.memberInfo.province, '湖南长沙');
   });
 }

@@ -153,16 +153,19 @@ class LedgerWaterTab extends StatelessWidget {
                           text: '共',
                           fontSize: 14,
                           color: Color(0xFF999999),
+                          height: 1.0,
                         ),
                         BaseText(
                           text: '${model.total}',
                           fontSize: 14,
                           color: const Color(0xFF333333),
+                          height: 1.0,
                         ).marginOnly(left: 2.w),
                         const BaseText(
                           text: '笔',
                           fontSize: 14,
                           color: Color(0xFF999999),
+                          height: 1.0,
                         ).marginOnly(left: 2.w),
                       ],
                     ),
@@ -229,10 +232,28 @@ class LedgerWaterTab extends StatelessWidget {
           borderRadius: BorderRadius.vertical(top: Radius.circular(10.w)),
         ),
         child: Obx(
-          () => BaseText(
-            text: '共 ${logic.bookWaterPage.value.total} 笔',
-            fontSize: 14,
-            color: const Color(0xFF999999),
+          () => Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const BaseText(
+                text: '共',
+                fontSize: 14,
+                color: Color(0xFF999999),
+                height: 1.0,
+              ),
+              BaseText(
+                text: '${logic.bookWaterPage.value.total}',
+                fontSize: 14,
+                color: const Color(0xFF333333),
+                height: 1.0,
+              ).marginOnly(left: 2.w),
+              const BaseText(
+                text: '笔',
+                fontSize: 14,
+                color: Color(0xFF999999),
+                height: 1.0,
+              ).marginOnly(left: 2.w),
+            ],
           ),
         ),
       );

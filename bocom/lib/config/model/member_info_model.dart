@@ -19,6 +19,7 @@ class MemberInfoModel {
 	String branchBelongs = '';
 	String sex = '';
 	String city = '';
+	String province = '';
 	String openCity = '';
 	String phone = '';
 	String account = '';

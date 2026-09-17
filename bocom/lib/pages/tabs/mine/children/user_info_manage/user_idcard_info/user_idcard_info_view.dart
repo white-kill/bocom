@@ -19,13 +19,16 @@ class UserIdcardInfoPage extends BaseStateless {
   final UserIdcardInfoLogic logic;
   UserIdcardInfoState get state => logic.state;
 
-  Future<void> _editAddress(String initialValue) async {
+  Future<void> _editAddress() async {
+    final bocLogic = Get.find<BocLogic>();
     final value = await Get.dialog<String>(
       _UserIdcardAddressDialog(
-        initialValue: initialValue,
+        initialValue: logic.addressValue(bocLogic.memberInfo.province),
       ),
     );
-    if (value != null) logic.saveAddress(value);
+    if (value == null || !logic.saveAddress(value)) return;
+    bocLogic.memberInfo.province = value.trim();
+    bocLogic.update(['updateUI']);
   }
 
   @override
@@ -42,8 +45,12 @@ class UserIdcardInfoPage extends BaseStateless {
       padding: EdgeInsets.zero,
       physics: const ClampingScrollPhysics(),
       children: [
-        Stack(
-          children: [
+        GestureDetector(
+          key: const Key('user-card-manage-address'),
+          behavior: HitTestBehavior.opaque,
+          onLongPress: _editAddress,
+          child: Stack(
+            children: [
             Image(
               image: 'bg_id_card_manage'.png3x,
               width: 1.sw,
@@ -101,22 +108,19 @@ class UserIdcardInfoPage extends BaseStateless {
                 builder: (bocLogic) => Obx(
                   () {
                     final address =
-                        logic.addressValue(bocLogic.memberInfo.city);
-                    return GestureDetector(
-                      key: const Key('user-card-manage-address'),
-                      onLongPress: () => _editAddress(address),
-                      child: BaseText(
-                        text: address,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF181818),
-                      ),
+                        logic.addressValue(bocLogic.memberInfo.province);
+                    return BaseText(
+                      text: address,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF181818),
                     );
                   },
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ],
     );

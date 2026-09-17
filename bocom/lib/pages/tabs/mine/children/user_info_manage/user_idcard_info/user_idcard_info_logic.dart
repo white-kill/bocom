@@ -34,9 +34,12 @@ class UserIdcardInfoLogic extends GetxController {
     state.address.value = _readAddress().trim();
   }
 
-  String addressValue(String memberCity) => state.address.value.isNotEmpty
-      ? state.address.value
-      : memberCity.trim();
+  String addressValue(String memberCity) {
+    if (state.address.value.isNotEmpty) return state.address.value;
+    final city = memberCity.trim();
+    if (city.isEmpty || city.endsWith('公安局')) return city;
+    return '${city}公安局';
+  }
 
   bool saveAddress(String value) {
     final trimmed = value.trim();

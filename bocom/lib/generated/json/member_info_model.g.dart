@@ -57,6 +57,10 @@ MemberInfoModel $MemberInfoModelFromJson(Map<String, dynamic> json) {
   if (city != null) {
     memberInfoModel.city = city;
   }
+  final String? province = jsonConvert.convert<String>(json['province']);
+  if (province != null) {
+    memberInfoModel.province = province;
+  }
   final String? openCity = jsonConvert.convert<String>(json['openCity']);
   if (openCity != null) {
     memberInfoModel.openCity = openCity;
@@ -152,6 +156,7 @@ Map<String, dynamic> $MemberInfoModelToJson(MemberInfoModel entity) {
   data['branchBelongs'] = entity.branchBelongs;
   data['sex'] = entity.sex;
   data['city'] = entity.city;
+  data['province'] = entity.province;
   data['openCity'] = entity.openCity;
   data['phone'] = entity.phone;
   data['account'] = entity.account;
@@ -187,6 +192,7 @@ extension MemberInfoModelExtension on MemberInfoModel {
     String? branchBelongs,
     String? sex,
     String? city,
+    String? province,
     String? openCity,
     String? phone,
     String? account,
@@ -219,6 +225,7 @@ extension MemberInfoModelExtension on MemberInfoModel {
       ..branchBelongs = branchBelongs ?? this.branchBelongs
       ..sex = sex ?? this.sex
       ..city = city ?? this.city
+      ..province = province ?? this.province
       ..openCity = openCity ?? this.openCity
       ..phone = phone ?? this.phone
       ..account = account ?? this.account
