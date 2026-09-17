@@ -1,4 +1,5 @@
 import 'package:bocom/pages/other/scan/credit_certificate_verification.dart';
+import 'package:bocom/pages/other/scan/credit_certificate_pdf_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -76,15 +77,32 @@ void main() {
       ),
       throwsFormatException,
     );
+
+    expect(
+      () => CreditCertificateVerificationResult.fromResponse(
+        {
+          'custName': '示例用户',
+          'openDate': '2026-01-01 00:00:00',
+          'pdfUrl': '  ',
+        },
+        fallbackCertificateNumber: 'CERT-FALLBACK',
+      ),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          '未获取到证明电子版地址',
+        ),
+      ),
+    );
   });
 
-  testWidgets('验真结果页展示动态数据并把 PDF 交给外部打开', (tester) async {
+  testWidgets('验真结果页进入应用内 PDF 阅读页', (tester) async {
     tester.view.physicalSize = const Size(402, 874);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    Uri? launchedUri;
     final result = CreditCertificateVerificationResult(
       certificateNumber: 'CERT-DEMO-0000',
       customerName: '示例用户',
@@ -94,13 +112,7 @@ void main() {
 
     await tester.pumpWidget(
       GetMaterialApp(
-        home: CreditCertificateVerificationPage(
-          result: result,
-          pdfLauncher: (uri) async {
-            launchedUri = uri;
-            return true;
-          },
-        ),
+        home: CreditCertificateVerificationPage(result: result),
       ),
     );
 
@@ -111,7 +123,9 @@ void main() {
 
     await tester.tap(find.byKey(const Key('open-credit-certificate-pdf')));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
 
-    expect(launchedUri, Uri.parse('https://example.invalid/certificate.pdf'));
+    expect(find.byType(CreditCertificatePdfPage), findsOneWidget);
+    expect(find.text('资信证明电子版'), findsOneWidget);
   });
 }

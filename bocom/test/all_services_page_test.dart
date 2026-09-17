@@ -9,7 +9,10 @@ import 'package:get/get.dart';
 void main() {
   tearDown(Get.reset);
 
-  Future<void> pumpPage(WidgetTester tester) async {
+  Future<void> pumpPage(
+    WidgetTester tester, {
+    VoidCallback? onAssetDiaryTap,
+  }) async {
     tester.view.physicalSize = const Size(402, 874);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -21,7 +24,7 @@ void main() {
         splitScreenMode: true,
         builder: (_, __) => GetMaterialApp(
           getPages: AppPages.routes,
-          home: const AllServicesPage(),
+          home: AllServicesPage(onAssetDiaryTap: onAssetDiaryTap),
         ),
       ),
     );
@@ -135,5 +138,25 @@ void main() {
 
     expect(find.byType(ZxzmPage), findsOneWidget);
     expect(find.text('资信证明'), findsOneWidget);
+  });
+
+  testWidgets('点击查询中的资产日记会进入现有资产日记页', (tester) async {
+    var assetDiaryTapped = false;
+    await pumpPage(
+      tester,
+      onAssetDiaryTap: () => assetDiaryTapped = true,
+    );
+
+    await tester.tap(find.text('查询'));
+    await tester.pumpAndSettle();
+    final assetDiary = find.byKey(
+      const Key('all-services-service-query-资产日记'),
+    );
+    await tester.ensureVisible(assetDiary);
+    await tester.pump();
+    await tester.tap(assetDiary);
+    await tester.pump();
+
+    expect(assetDiaryTapped, isTrue);
   });
 }

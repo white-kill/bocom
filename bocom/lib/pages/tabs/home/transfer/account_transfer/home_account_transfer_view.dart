@@ -87,6 +87,21 @@ String formatTransferAccountNumber(String value) {
   return groups.join(' ');
 }
 
+String compactTransferPhoneNumber(String value) {
+  return value.replaceAll(RegExp(r'\D'), '');
+}
+
+String formatTransferPhoneNumber(String value) {
+  final digits = compactTransferPhoneNumber(value);
+  final limited = digits.length > 11 ? digits.substring(0, 11) : digits;
+  if (limited.length <= 3) return limited;
+  if (limited.length <= 7) {
+    return '${limited.substring(0, 3)} ${limited.substring(3)}';
+  }
+  return '${limited.substring(0, 3)} ${limited.substring(3, 7)} '
+      '${limited.substring(7)}';
+}
+
 // 账号转账页
 // 说明：当前页面是活页面，表单、账户信息和交互状态均由 Flutter 原生绘制。
 class HomeAccountTransferPage extends StatefulWidget {
@@ -157,6 +172,9 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
 
   bool get _isPhoneTransfer => widget.pageKind == TransferPageKind.phone;
 
+  bool get _hasCompletePhoneNumber =>
+      compactTransferPhoneNumber(_accountController.text).length == 11;
+
   List<TextEditingController> get _requiredControllers => _isPhoneTransfer
       ? [_nameController, _accountController, _amountController]
       : [
@@ -170,8 +188,7 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
       _requiredControllers.every(
         (controller) => controller.text.trim().isNotEmpty,
       ) &&
-      (!_isPhoneTransfer ||
-          _accountController.text.replaceAll(RegExp(r'\D'), '').length == 11) &&
+      (!_isPhoneTransfer || _hasCompletePhoneNumber) &&
       _amountValue >= 0.01 &&
       !_hasInsufficientBalance;
 
@@ -547,16 +564,19 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
         final digits = bank.bankCard.replaceAll(RegExp(r'\D'), '');
         final suffix =
             digits.length > 4 ? digits.substring(digits.length - 4) : digits;
+        final accountType = _isPhoneTransfer && bank.cardType.trim().isNotEmpty
+            ? bank.cardType.trim()
+            : '借记卡';
         return _PayerCard(
           label: _isPhoneTransfer ? '付款卡' : '付款账户',
           bankName: bank.bankName,
-          title: '${bank.bankName} 借记卡(**$suffix)',
+          title: '${bank.bankName} $accountType(**$suffix)',
           balance: _isPhoneTransfer
               ? '可用余额： ${bank.accountBalance.bankBalance}元'
               : '可用余额 ${bank.accountBalance.bankBalance}元',
           onTap: () => _showPayerAccountSheet(
             bankName: bank.bankName,
-            title: '${bank.bankName} 借记卡 (**$suffix)',
+            title: '${bank.bankName} $accountType (**$suffix)',
             balance: '可用余额${bank.accountBalance.bankBalance}元',
           ),
         );
@@ -576,21 +596,20 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
         ],
       );
     }
-    if (_arrivalTime != '预计实时到账') {
-      return _ArrivalSummaryButton(
-        onPressed: _showArrivalExplanation,
-        children: [TextSpan(text: _arrivalTime)],
-      );
-    }
+    final arrivalKeyword = switch (_arrivalTime) {
+      '预计2小时后到账' => '2小时后',
+      '预计次日到账' => '次日',
+      _ => '实时',
+    };
     return _ArrivalSummaryButton(
       onPressed: _showArrivalExplanation,
-      children: const [
-        TextSpan(text: '预计'),
+      children: [
+        const TextSpan(text: '预计'),
         TextSpan(
-          text: '实时',
-          style: TextStyle(color: Color(0xFFFF575A)),
+          text: arrivalKeyword,
+          style: const TextStyle(color: Color(0xFFFF575A)),
         ),
-        TextSpan(text: '到账'),
+        const TextSpan(text: '到账'),
       ],
     );
   }
@@ -730,12 +749,22 @@ class _HomeAccountTransferPageState extends State<HomeAccountTransferPage> {
               hint: '请输入收款人手机号',
               controller: _accountController,
               keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(11),
-              ],
-              showDivider: false,
+              inputFormatters: const [_PhoneNumberInputFormatter()],
+              showDivider: _hasCompletePhoneNumber,
             ),
+            if (_hasCompletePhoneNumber)
+              const Padding(
+                key: Key('phone-transfer-unlinked-tip'),
+                padding: EdgeInsets.fromLTRB(0, 10, 4, 11),
+                child: Text(
+                  '该手机号尚未关联银行卡，需收款人在次日22:00之前回复卡号收款，否则资金将自动退回。',
+                  style: TextStyle(
+                    color: Color(0xFF8B99AA),
+                    fontSize: 14,
+                    height: 1.55,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -960,6 +989,38 @@ class _BankAccountNumberInputFormatter extends TextInputFormatter {
         .length;
     final spacesBeforeCursor =
         digitsBeforeCursor == 0 ? 0 : (digitsBeforeCursor - 1) ~/ 4;
+    final cursor = (digitsBeforeCursor + spacesBeforeCursor).clamp(
+      0,
+      formatted.length,
+    );
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: cursor),
+    );
+  }
+}
+
+class _PhoneNumberInputFormatter extends TextInputFormatter {
+  const _PhoneNumberInputFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final formatted = formatTransferPhoneNumber(newValue.text);
+    final safeSelectionEnd = newValue.selection.end.clamp(
+      0,
+      newValue.text.length,
+    );
+    final digitsBeforeCursor = compactTransferPhoneNumber(
+      newValue.text.substring(0, safeSelectionEnd),
+    ).length.clamp(0, 11);
+    final spacesBeforeCursor = switch (digitsBeforeCursor) {
+      >= 8 => 2,
+      >= 4 => 1,
+      _ => 0,
+    };
     final cursor = (digitsBeforeCursor + spacesBeforeCursor).clamp(
       0,
       formatted.length,

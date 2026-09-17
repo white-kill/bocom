@@ -39,6 +39,7 @@ class TransactionBillDetailPage extends StatefulWidget {
 class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
   TransactionBillDetail? _detail;
   TransactionBillDetail? _loadedDetail;
+  Future<TransactionBillDetail?>? _detailRequest;
   late final String _listBankCard;
   late final String _listOppositeAccount;
   bool _loading = false;
@@ -50,13 +51,25 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
     _detail = widget.initialDetail;
     _listBankCard = widget.initialDetail?.bankCard.trim() ?? '';
     _listOppositeAccount = widget.initialDetail?.oppositeAccount.trim() ?? '';
-    _loadDetail();
+    _requestDetail();
   }
 
-  Future<void> _loadDetail() async {
+  Future<TransactionBillDetail?> _requestDetail() {
+    final activeRequest = _detailRequest;
+    if (activeRequest != null) return activeRequest;
+
+    final request = _loadDetail();
+    _detailRequest = request;
+    request.whenComplete(() {
+      if (identical(_detailRequest, request)) _detailRequest = null;
+    });
+    return request;
+  }
+
+  Future<TransactionBillDetail?> _loadDetail() async {
     if (widget.billId <= 0) {
       if (_detail == null) setState(() => _failed = true);
-      return;
+      return null;
     }
     setState(() {
       _loading = _detail == null;
@@ -66,7 +79,7 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
       final detail = await (widget.detailLoader ?? loadTransactionBillDetail)(
         widget.billId,
       );
-      if (!mounted) return;
+      if (!mounted) return null;
       setState(() {
         _loadedDetail = detail;
         // 列表接口提供用于页面展示的脱敏账号；详情接口结果只补齐其余字段，
@@ -79,23 +92,25 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
         );
         _loading = false;
       });
+      return detail;
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) return null;
       setState(() {
         _loading = false;
         _failed = _detail == null;
       });
+      return null;
     }
   }
 
-  void _handleTransferTap() {
+  Future<void> _handleTransferTap() async {
     final callback = widget.onTransferTap;
     if (callback != null) {
       callback();
       return;
     }
-    final detail = _loadedDetail ?? _detail;
-    if (detail == null) return;
+    final detail = _loadedDetail ?? await _requestDetail();
+    if (!mounted || detail == null) return;
     final recipient = ContactsModel()
       ..name = detail.oppositeName
       ..bankName = detail.oppositeBankName
@@ -148,7 +163,7 @@ class _TransactionBillDetailPageState extends State<TransactionBillDetailPage> {
       return Center(
         child: TextButton(
           key: const ValueKey('transaction_bill_detail_retry'),
-          onPressed: _loadDetail,
+          onPressed: _requestDetail,
           child: Text(
             '加载失败，点击重试',
             style: TextStyle(
