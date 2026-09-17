@@ -18,13 +18,11 @@ class ScanPage extends StatefulWidget {
     super.key,
     this.enableCamera = true,
     this.verificationLoader,
-    this.pdfLauncher,
   });
 
   /// 仅供无相机的测试环境使用。
   final bool enableCamera;
   final CreditCertificateLoader? verificationLoader;
-  final ExternalPdfLauncher? pdfLauncher;
 
   @override
   State<ScanPage> createState() => _ScanPageState();
@@ -118,7 +116,6 @@ class _ScanPageState extends State<ScanPage>
     await Get.to<void>(
       () => CreditCertificateVerificationPage(
         result: result,
-        pdfLauncher: widget.pdfLauncher,
       ),
     );
   }

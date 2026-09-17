@@ -122,7 +122,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('测试收款人'), findsOneWidget);
-    expect(find.text('测试银行 借记卡（**5678）'), findsOneWidget);
+    expect(find.text('测试银行 借记卡(**5678)'), findsOneWidget);
   });
 
   testWidgets('点击常用收款人进入快捷联系人模式', (tester) async {
