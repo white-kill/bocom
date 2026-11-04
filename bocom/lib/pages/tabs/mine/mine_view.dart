@@ -202,10 +202,10 @@ class MinePage extends BaseStateless {
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: [
-                Color(0xFFF2F4F1),
-                Color(0xFFF2F7FA),
-                Color(0xFFF7F7F5),
-                Color(0xFFE7F3FE),
+                Color(0xFFD8EDFA),
+                Color(0xFFD8ECFF),
+                Color(0xFFDAEFFC),
+                Color(0xFFE5F1FB),
               ],
               stops: [0, 0.34, 0.58, 1],
             ),
@@ -227,17 +227,17 @@ class MinePage extends BaseStateless {
                     fit: BoxFit.fill,
                   ),
                 ),
-                Positioned(
-                    left: position1.getX(70),
-                    top: position1.getY(255) - backgroundCropTop,
-                    child: Image(
-                      image: 'mine_user_icon'.png,
-                      width: position1.getWidth(130),
-                      fit: BoxFit.fitWidth,
-                    )),
+                // Positioned(
+                //     left: position1.getX(70),
+                //     top: position1.getY(255) - backgroundCropTop,
+                //     child: Image(
+                //       image: 'mine_user_icon'.png,
+                //       width: position1.getWidth(130),
+                //       fit: BoxFit.fitWidth,
+                //     )),
                 Positioned(
                     left: position1.getX(250),
-                    top: position1.getY(240) - backgroundCropTop,
+                    top: position1.getY(230) - backgroundCropTop,
                     child: BaseText(
                       text: AppConfig.config.abcLogic.realName(),
                       style: const TextStyle(
@@ -248,7 +248,7 @@ class MinePage extends BaseStateless {
                     )),
                 Positioned(
                     left: position1.getX(250),
-                    top: position1.getY(330) - backgroundCropTop,
+                    top: position1.getY(310) - backgroundCropTop,
                     child: Obx(
                       () => BaseText(
                         text: formatLastLogin(
@@ -256,7 +256,7 @@ class MinePage extends BaseStateless {
                           now: logic.loginTimeReference.value,
                         ),
                         // text: AppConfig.config.abcLogic.memberInfo.loginTime,
-                        fontSize: 13,
+                        fontSize: 12,
                         color: const Color(0xFF878787),
                       ),
                     )),
@@ -289,8 +289,8 @@ class MinePage extends BaseStateless {
                     })),
                 // 借记卡积分
                 Positioned(
-                    left: position1.getX(80),
-                    bottom: position1.getY(70),
+                    left: position1.getX(470),
+                    bottom: position1.getY(140),
                     child: SizedBox(
                       width: position1.getWidth(130),
                       child: Row(
@@ -300,10 +300,10 @@ class MinePage extends BaseStateless {
                           BaseText(
                             text: '${AppConfig.config.abcLogic.memberInfo.points}',
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             height: 1.0,
                             strutStyle: const StrutStyle(fontSize: 16, height: 1),
-                            color: const Color(0xFF181818),
+                            color: const Color(0xFFffffff),
                           )
                         ],
                       ).withOnTap(onTap: () {
@@ -312,8 +312,8 @@ class MinePage extends BaseStateless {
                     )),
                 // 信用卡积分
                 Positioned(
-                    left: position1.getX(290),
-                    bottom: position1.getY(70),
+                    left: position1.getX(670),
+                    bottom: position1.getY(140),
                     child: SizedBox(
                       width: position1.getWidth(130),
                       child: Row(
@@ -323,10 +323,10 @@ class MinePage extends BaseStateless {
                           BaseText(
                             text: AppConfig.config.abcLogic.memberInfo.credit == '0' ? '-':AppConfig.config.abcLogic.memberInfo.credit,
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             height: 1.0,
                             strutStyle: const StrutStyle(fontSize: 16, height: 1),
-                            color: Color(0xFF181818),
+                            color: Color(0xFFffffff),
                           )
                         ],
                       ).withOnTap(onTap: () {
@@ -344,8 +344,8 @@ class MinePage extends BaseStateless {
                     )),
                 // 优惠券
                 Positioned(
-                    left: position1.getX(515),
-                    bottom: position1.getY(70),
+                    left: position1.getX(890),
+                    bottom: position1.getY(140),
                     child: SizedBox(
                       width: position1.getWidth(130),
                       child: Row(
@@ -355,10 +355,10 @@ class MinePage extends BaseStateless {
                           BaseText(
                             text: '${AppConfig.config.abcLogic.memberInfo.couponsNum}',
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             height: 1.0,
                             strutStyle: const StrutStyle(fontSize: 16, height: 1),
-                            color: const Color(0xFF181818),
+                            color: const Color(0xFFFFFFFF),
                           ),
                           const SizedBox(
                             width: 2,
@@ -369,7 +369,7 @@ class MinePage extends BaseStateless {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             strutStyle: StrutStyle(fontSize: 16, height: 1),
-                            color: Color(0xFF181818),
+                            color: Color(0xFFFFFFFF),
                           )
                         ],
                       ).withOnTap(onTap: () {
@@ -388,7 +388,7 @@ class MinePage extends BaseStateless {
                     )),
                 // 更多权益
                 Positioned(
-                    right: position1.getX(230),
+                    left: position1.getX(240),
                     bottom: position1.getY(70),
                     width: position1.getWidth(130),
                     height: position1.getHeight(140),
@@ -407,7 +407,7 @@ class MinePage extends BaseStateless {
                     })),
                 // 去领券
                 Positioned(
-                    right: position1.getX(60),
+                    left: position1.getX(80),
                     bottom: position1.getY(70),
                     width: position1.getWidth(130),
                     height: position1.getHeight(140),
@@ -534,24 +534,6 @@ class MinePage extends BaseStateless {
               fit: BoxFit.fitWidth,
             ),
             Positioned(
-              left: position3.getX(200),
-              top: position3.getY(100),
-              child: Image(
-                image: 'ic_mine_note'.png,
-                width: position3.getWidth(35),
-                fit: BoxFit.fitWidth,
-              ),
-            ),
-            Positioned(
-              left: position3.getX(710),
-              top: position3.getY(100),
-              child: Image(
-                image: 'ic_mine_note'.png,
-                width: position3.getWidth(35),
-                fit: BoxFit.fitWidth,
-              ),
-            ),
-            Positioned(
                 left: position3.getX(80),
                 top: position3.getY(180),
                 child: Row(
@@ -565,7 +547,7 @@ class MinePage extends BaseStateless {
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 20,
-                          color: Colors.white,
+                          color: const Color(0xff181818),
                         ),
                       ),
                     ),
@@ -590,7 +572,7 @@ class MinePage extends BaseStateless {
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 20,
-                          color: Colors.white,
+                          color: Color(0xff181818),
                         ),
                       ),
                     ),
@@ -616,7 +598,7 @@ class MinePage extends BaseStateless {
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
-                      color: Colors.white,
+                      color: Color(0xff181818),
                     ),
                   ),
                 )),
@@ -629,7 +611,7 @@ class MinePage extends BaseStateless {
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: Colors.white,
+                    color: Color(0xff181818),
                   ),
                 ),
               ),
@@ -659,14 +641,14 @@ class MinePage extends BaseStateless {
             // 眼睛
             Positioned(
               right: position3.getX(70),
-              top: position3.getY(70),
+              top: position3.getY(90),
               child: Obx(
                 () => Image(
                   image: (logic.amountVisible.value
                           ? 'ic_mine_eye_open'
                           : 'ic_mine_eye_close')
                       .png,
-                  width: position3.getWidth(70),
+                  width: position3.getWidth(60),
                   fit: BoxFit.fitWidth,
                 ).withOnTap(onTap: logic.toggleAmountVisible),
               ),

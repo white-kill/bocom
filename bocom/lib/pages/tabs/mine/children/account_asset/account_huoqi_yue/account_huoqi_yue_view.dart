@@ -59,6 +59,16 @@ class AccountHuoQiYuEPage extends BaseStateless {
                 )
             ),
             Positioned(
+                top: position.getY(235),
+                right: position.getX(30),
+                child: Container(
+                  width: 150.w,
+                  height: 20.w,
+                ).withOnTap(onTap: (){
+                  Get.toNamed<void>(Routes.transactionDetail);
+                })
+            ),
+            Positioned(
                 top: position.getY(233),
                 left: position.getX(258),
                 child: BaseText(

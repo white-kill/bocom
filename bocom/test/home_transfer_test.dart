@@ -40,6 +40,21 @@ void main() {
     );
   });
 
+  testWidgets('转账页在预留区域提供可横向滑动的功能入口', (tester) async {
+    await tester.pumpWidget(
+      GetMaterialApp(
+        home: HomeTransferPage(contactsLoader: () async => const []),
+      ),
+    );
+
+    expect(find.byKey(const Key('home-transfer-quick-actions')), findsOneWidget);
+    expect(find.bySemanticsLabel('预约转账'), findsOneWidget);
+    expect(find.bySemanticsLabel('单笔资金转入'), findsOneWidget);
+    expect(find.bySemanticsLabel('定期资金转入'), findsOneWidget);
+    expect(find.bySemanticsLabel('全部收款人'), findsOneWidget);
+    expect(find.bySemanticsLabel('转账限额'), findsOneWidget);
+  });
+
   testWidgets('点击信用卡还款进入切图二级页', (tester) async {
     tester.view.physicalSize = const Size(1080, 2388);
     tester.view.devicePixelRatio = 1;

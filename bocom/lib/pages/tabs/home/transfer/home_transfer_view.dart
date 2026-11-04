@@ -3,8 +3,9 @@ import 'package:bocom/config/model/contacts_model.dart';
 import 'package:bocom/config/net_config/apis.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:wb_base_widget/wb_base_widget.dart';
 
 import '../../../../routes/app_pages.dart';
 import 'account_transfer/home_account_transfer_view.dart';
@@ -12,11 +13,11 @@ import 'account_transfer/account_transfer_support_pages.dart';
 
 // 转账页
 // 说明：当前页面使用裁掉系统状态栏、保留页面导航栏的参考图；常用收款人示例已覆盖并改为接口数据。
-class HomeTransferPage extends StatefulWidget {
+class HomeTransferPage extends BaseStateless {
   const HomeTransferPage({
     super.key,
     this.contactsLoader,
-  });
+  }) : super(title: '转账');
 
   static const double _sourceWidth = 1206;
   static const double _sourceHeight = 2445;
@@ -25,10 +26,87 @@ class HomeTransferPage extends StatefulWidget {
   final Future<List<ContactsModel>> Function()? contactsLoader;
 
   @override
-  State<HomeTransferPage> createState() => _HomeTransferPageState();
+  bool get isChangeNav => true;
+
+  @override
+  Color? get navColor => const Color(0xFFF8F8F8);
+
+  @override
+  Color? get background => const Color(0xFFF8F8F8);
+
+  @override
+  Color? get titleColor => const Color(0xFF181818);
+
+  @override
+  double? get lefItemWidth => 56.w;
+
+  @override
+  Widget? get leftItem => Row(
+        children: [
+          SizedBox(width: 15.w),
+          Semantics(
+            button: true,
+            label: '返回',
+            child: SizedBox(
+              width: 30.w,
+              height: 30.w,
+              child: Center(
+                child: Image(
+                  image: 'nav_back_light_white'.png,
+                  width: 29.5.w,
+                  height: 29.5.w,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ).withOnTap(onTap: () => Get.back()),
+          ),
+        ],
+      );
+
+  @override
+  List<Widget>? get rightAction => [
+        Semantics(
+          button: true,
+          label: '客服',
+          child: SizedBox(
+            width: 30.w,
+            height: 30.w,
+            child: Center(
+              child: Image(
+                image: 'nav_kf_light_white'.png,
+                width: 29.w,
+                height: 29.w,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ).withOnTap(onTap: () => Get.toNamed(Routes.customerService)),
+        ),
+        SizedBox(width: 15.w),
+      ];
+
+  @override
+  Widget initBody(BuildContext context) {
+    return _HomeTransferBody(
+      contactsLoader: contactsLoader,
+      topInset: MediaQuery.paddingOf(context).top + navHeight.w,
+    );
+  }
 }
 
-class _HomeTransferPageState extends State<HomeTransferPage> {
+class _HomeTransferBody extends StatefulWidget {
+  const _HomeTransferBody({
+    this.contactsLoader,
+    required this.topInset,
+  });
+
+  final Future<List<ContactsModel>> Function()? contactsLoader;
+  final double topInset;
+
+  @override
+  State<_HomeTransferBody> createState() => _HomeTransferBodyState();
+}
+
+class _HomeTransferBodyState extends State<_HomeTransferBody> {
   List<ContactsModel> _contacts = const [];
   bool _isLoading = true;
   bool _hasError = false;
@@ -86,28 +164,13 @@ class _HomeTransferPageState extends State<HomeTransferPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: Color(0xFFF8F8F8),
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF8F8F8),
-        resizeToAvoidBottomInset: false,
-        body: SafeArea(
-          bottom: false,
-          child: _TransferPageBody(
-            contacts: _contacts,
-            isLoading: _isLoading,
-            hasError: _hasError,
-            onRetry: _loadContacts,
-            contactsLoader: widget.contactsLoader,
-          ),
-        ),
-      ),
+    return _TransferPageBody(
+      contacts: _contacts,
+      isLoading: _isLoading,
+      hasError: _hasError,
+      onRetry: _loadContacts,
+      contactsLoader: widget.contactsLoader,
+      topInset: widget.topInset,
     );
   }
 }
@@ -119,6 +182,7 @@ class _TransferPageBody extends StatelessWidget {
     required this.hasError,
     required this.onRetry,
     required this.contactsLoader,
+    required this.topInset,
   });
 
   final List<ContactsModel> contacts;
@@ -126,8 +190,9 @@ class _TransferPageBody extends StatelessWidget {
   final bool hasError;
   final VoidCallback onRetry;
   final Future<List<ContactsModel>> Function()? contactsLoader;
+  final double topInset;
 
-  static const double _contactCardTop = 1374;
+  static const double _contactCardTop = 1080;
   static const double _contactHeaderHeight = 158;
   static const double _contactRowHeight = 217;
   static const double _contactCardBottomPadding = 58;
@@ -149,11 +214,13 @@ class _TransferPageBody extends StatelessWidget {
             ? constraints.maxHeight
             : requiredHeight;
         return SingleChildScrollView(
-          child: SizedBox(
-            width: constraints.maxWidth,
-            height: pageHeight,
-            child: Stack(
-              children: [
+          child: Padding(
+            padding: EdgeInsets.only(top: topInset),
+            child: SizedBox(
+              width: constraints.maxWidth,
+              height: pageHeight,
+              child: Stack(
+                children: [
                 Positioned(
                   left: 0,
                   right: 0,
@@ -175,55 +242,8 @@ class _TransferPageBody extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  right: 28 * scale,
-                  top: 735 * scale,
-                  width: 278 * scale,
-                  height: 238 * scale,
-                  child: Semantics(
-                    key: const ValueKey('home_transfer_all_recipients_hotspot'),
-                    button: true,
-                    label: '全部收款人',
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => Get.to(
-                        () => AccountTransferRecipientsPage(
-                          contactsLoader: contactsLoader,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 18 * scale,
-                  top: 0,
-                  width: 145 * scale,
-                  height: 135 * scale,
-                  child: Semantics(
-                    button: true,
-                    label: '返回',
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: Get.back,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 18 * scale,
-                  top: 0,
-                  width: 145 * scale,
-                  height: 135 * scale,
-                  child: Semantics(
-                    button: true,
-                    label: '客服',
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => Get.toNamed(Routes.customerService),
-                    ),
-                  ),
-                ),
-                Positioned(
                   left: 44 * scale,
-                  top: 180 * scale,
+                  top: 45 * scale,
                   width: 370 * scale,
                   height: 355 * scale,
                   child: Semantics(
@@ -237,7 +257,7 @@ class _TransferPageBody extends StatelessWidget {
                 ),
                 Positioned(
                   left: 414 * scale,
-                  top: 180 * scale,
+                  top: 45 * scale,
                   width: 370 * scale,
                   height: 355 * scale,
                   child: Semantics(
@@ -252,7 +272,7 @@ class _TransferPageBody extends StatelessWidget {
                 ),
                 Positioned(
                   left: 784 * scale,
-                  top: 180 * scale,
+                  top: 45 * scale,
                   width: 378 * scale,
                   height: 355 * scale,
                   child: Semantics(
@@ -269,9 +289,9 @@ class _TransferPageBody extends StatelessWidget {
                 ),
                 Positioned(
                   left: 44 * scale,
-                  top: 540 * scale,
+                  top: 405 * scale,
                   width: 558 * scale,
-                  height: 185 * scale,
+                  height: 145 * scale,
                   child: Semantics(
                     key: const ValueKey('home_transfer_record_hotspot'),
                     button: true,
@@ -284,9 +304,9 @@ class _TransferPageBody extends StatelessWidget {
                 ),
                 Positioned(
                   left: 602 * scale,
-                  top: 540 * scale,
-                  width: 370 * scale,
-                  height: 185 * scale,
+                  right: 44 * scale,
+                  top: 405 * scale,
+                  height: 145 * scale,
                   child: Semantics(
                     key: const ValueKey('home_transfer_settings_hotspot'),
                     button: true,
@@ -297,55 +317,15 @@ class _TransferPageBody extends StatelessWidget {
                     ),
                   ),
                 ),
-                _TransferFeatureHotspot(
-                  key: const ValueKey('home_appointment_transfer_hotspot'),
-                  label: '预约转账',
-                  left: 42,
-                  top: 735,
-                  width: 275,
-                  height: 238,
-                  scale: scale,
-                  route: Routes.appointmentTransfer,
-                ),
-                _TransferFeatureHotspot(
-                  key: const ValueKey('home_single_funds_transfer_hotspot'),
-                  label: '单笔资金转入',
-                  left: 318,
-                  top: 735,
-                  width: 286,
-                  height: 238,
-                  scale: scale,
-                  route: Routes.singleFundsTransfer,
-                ),
-                _TransferFeatureHotspot(
-                  key: const ValueKey('home_periodic_transfer_hotspot'),
-                  label: '定期资金转入',
-                  left: 604,
-                  top: 735,
-                  width: 286,
-                  height: 238,
-                  scale: scale,
-                  route: Routes.periodicTransferPlan,
-                ),
-                _TransferFeatureHotspot(
-                  key: const ValueKey('home_transfer_limit_hotspot'),
-                  label: '转账限额',
-                  left: 42,
-                  top: 973,
-                  width: 275,
-                  height: 226,
-                  scale: scale,
-                  route: Routes.transferLimit,
-                ),
-                _TransferFeatureHotspot(
-                  key: const ValueKey('home_cross_border_payment_hotspot'),
-                  label: '跨境支付通',
-                  left: 318,
-                  top: 973,
-                  width: 286,
-                  height: 226,
-                  scale: scale,
-                  route: Routes.crossBorderPayment,
+                Positioned(
+                  left: 44 * scale,
+                  right: 44 * scale,
+                  top: 650 * scale,
+                  height: 250 * scale,
+                  child: _TransferQuickActions(
+                    scale: scale,
+                    contactsLoader: contactsLoader,
+                  ),
                 ),
                 Positioned(
                   left: 44 * scale,
@@ -429,7 +409,8 @@ class _TransferPageBody extends StatelessWidget {
                     ),
                   ),
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -584,40 +565,214 @@ class _BankIconFallback extends StatelessWidget {
   }
 }
 
-class _TransferFeatureHotspot extends StatelessWidget {
-  const _TransferFeatureHotspot({
-    super.key,
-    required this.label,
-    required this.left,
-    required this.top,
-    required this.width,
-    required this.height,
+class _TransferQuickActions extends StatefulWidget {
+  const _TransferQuickActions({
     required this.scale,
-    required this.route,
+    required this.contactsLoader,
   });
 
-  final String label;
-  final double left;
-  final double top;
-  final double width;
-  final double height;
   final double scale;
-  final String route;
+
+  final Future<List<ContactsModel>> Function()? contactsLoader;
+
+  @override
+  State<_TransferQuickActions> createState() => _TransferQuickActionsState();
+}
+
+class _TransferQuickActionsState extends State<_TransferQuickActions> {
+  late final PageController _pageController = PageController(
+    viewportFraction: 1 / 5,
+  );
+  double _scrollProgress = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: left * scale,
-      top: top * scale,
-      width: width * scale,
-      height: height * scale,
-      child: Semantics(
-        button: true,
-        label: label,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => Get.toNamed(route),
+    final actions = [
+      _TransferQuickAction(
+        key: const ValueKey('home_appointment_transfer_hotspot'),
+        label: '预约转账',
+        assetPath: 'assets/images/ic_home_transfer_1.png',
+        onTap: () => Get.toNamed(Routes.appointmentTransfer),
+      ),
+      _TransferQuickAction(
+        key: const ValueKey('home_single_funds_transfer_hotspot'),
+        label: '单笔转入',
+        assetPath: 'assets/images/ic_home_transfer_2.png',
+        onTap: () => Get.toNamed(Routes.singleFundsTransfer),
+      ),
+      _TransferQuickAction(
+        key: const ValueKey('home_periodic_transfer_hotspot'),
+        label: '定期转入',
+        assetPath: 'assets/images/ic_home_transfer_3.png',
+        onTap: () => Get.toNamed(Routes.periodicTransferPlan),
+      ),
+      _TransferQuickAction(
+        key: const ValueKey('home_transfer_all_recipients_hotspot'),
+        label: '全部收款人',
+        assetPath: 'assets/images/ic_home_transfer_4.png',
+        onTap: () => Get.to(
+          () => AccountTransferRecipientsPage(
+            contactsLoader: widget.contactsLoader,
+          ),
         ),
+      ),
+      _TransferQuickAction(
+        key: const ValueKey('home_transfer_limit_hotspot'),
+        label: '转账限额',
+        assetPath: 'assets/images/ic_home_transfer_5.png',
+        onTap: () => Get.toNamed(Routes.transferLimit),
+      ),
+      _TransferQuickAction(
+        key: const ValueKey('home_cross_border_payment_hotspot'),
+        label: '跨境支付通',
+        assetPath: 'assets/images/ic_home_transfer_6.png',
+        onTap: () => Get.toNamed(Routes.crossBorderPayment),
+      ),
+    ];
+    final scale = widget.scale;
+
+    return Column(
+      key: const Key('home-transfer-quick-actions'),
+      children: [
+        SizedBox(
+          height: 205 * scale,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              final maxScrollExtent = notification.metrics.maxScrollExtent;
+              final progress = maxScrollExtent <= 0
+                  ? 0.0
+                  : (notification.metrics.pixels / maxScrollExtent)
+                      .clamp(0.0, 1.0);
+              if (progress != _scrollProgress) {
+                setState(() => _scrollProgress = progress);
+              }
+              return false;
+            },
+            child: PageView.builder(
+              controller: _pageController,
+              padEnds: false,
+              physics: const PageScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
+              itemCount: actions.length,
+              itemBuilder: (_, index) => _TransferQuickActionButton(
+                action: actions[index],
+                scale: scale,
+              ),
+            ),
+          ),
+        ),
+        _TransferQuickActionsIndicator(
+          progress: _scrollProgress,
+          scale: scale,
+        ),
+      ],
+    );
+  }
+}
+
+class _TransferQuickAction {
+  const _TransferQuickAction({
+    required this.key,
+    required this.label,
+    required this.assetPath,
+    required this.onTap,
+  });
+
+  final Key key;
+  final String label;
+  final String assetPath;
+  final VoidCallback onTap;
+}
+
+class _TransferQuickActionButton extends StatelessWidget {
+  const _TransferQuickActionButton({
+    required this.action,
+    required this.scale,
+  });
+
+  final _TransferQuickAction action;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      key: action.key,
+      button: true,
+      label: action.label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: action.onTap,
+        child: Padding(
+          padding: EdgeInsets.only(top: 28 * scale),
+          child: Column(
+            children: [
+              SizedBox(
+                width: 76 * scale,
+                height: 76 * scale,
+                child: Image.asset(action.assetPath, fit: BoxFit.contain),
+              ),
+              SizedBox(height: 15 * scale),
+              Text(
+                action.label,
+                maxLines: 1,
+                overflow: TextOverflow.visible,
+                style: TextStyle(
+                  color: const Color(0xFF252525),
+                  fontSize: 38 * scale,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TransferQuickActionsIndicator extends StatelessWidget {
+  const _TransferQuickActionsIndicator({
+    required this.progress,
+    required this.scale,
+  });
+
+  final double progress;
+  final double scale;
+
+  @override
+  Widget build(BuildContext context) {
+    const trackWidth = 66.0;
+    const thumbWidth = 24.0;
+    const height = 8.0;
+
+    return Container(
+      width: trackWidth * scale,
+      height: height * scale,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE7EAF0),
+        borderRadius: BorderRadius.circular(height * scale / 2),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            left: (trackWidth - thumbWidth) * scale * progress,
+            child: Container(
+              width: thumbWidth * scale,
+              height: height * scale,
+              decoration: BoxDecoration(
+                color: const Color(0xFFBFC5CF),
+                borderRadius: BorderRadius.circular(height * scale / 2),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
