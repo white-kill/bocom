@@ -52,6 +52,8 @@ class TransactionBillQuery {
     TransactionAdvancedFilterValue filter,
   ) {
     switch (filter.amountRange) {
+      case '小于1万':
+        params['maxAmount'] = 10000;
       case '1百以下':
         params['maxAmount'] = 100;
       case '1百-1千':

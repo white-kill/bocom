@@ -544,6 +544,7 @@ class PrintBillListPage extends BaseStateless {
         initialValue: logic.advancedFilter.value,
       ),
     );
+    print(result.toString());
     if (result != null) logic.completeAdvancedFilter(result);
     logic.closeAdvancedFilter();
   }

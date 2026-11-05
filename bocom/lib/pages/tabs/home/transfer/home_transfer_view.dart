@@ -197,6 +197,8 @@ class _TransferPageBody extends StatelessWidget {
   static const double _contactRowHeight = 217;
   static const double _contactCardBottomPadding = 58;
 
+
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(

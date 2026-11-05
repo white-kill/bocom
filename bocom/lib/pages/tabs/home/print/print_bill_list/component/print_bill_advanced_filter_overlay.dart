@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../transaction_detail/filter/transaction_advanced_filter_model.dart';
-import '../../../transaction_detail/filter/transaction_advanced_filter_panel.dart';
+import 'print_bill_advanced_filter_panel.dart';
 
 class PrintBillAdvancedFilterOverlay extends StatelessWidget {
   const PrintBillAdvancedFilterOverlay({
@@ -67,7 +67,7 @@ class PrintBillAdvancedFilterOverlay extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: TransactionAdvancedFilterPanel(
+                  child: PrintBillAdvancedFilterPanel(
                     initialValue: initialValue,
                     actionsRequireChange: true,
                     onComplete: (value) => Navigator.of(context).pop(value),

@@ -57,6 +57,16 @@ void main() {
     expect(params['oppositeBankName'], '建设银行');
   });
 
+  test('小于1万仅传最大金额10000', () {
+    final params = TransactionBillQuery.build(
+      pageNum: 1,
+      filter: const TransactionAdvancedFilterValue(amountRange: '小于1万'),
+    );
+
+    expect(params.containsKey('minAmount'), isFalse);
+    expect(params['maxAmount'], 10000);
+  });
+
   test('接口分页响应兼容字符串金额并修正支出符号', () {
     final page = TransactionBillPage.fromJson({
       'data': {
